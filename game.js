@@ -41,6 +41,7 @@ function createGameState(socket, player) {
 }
 
 function joinGameState(socket, player) {
+  console.log('inside game state');
 	try {
 		let playerObj = {
 			playerId: socket.id,

@@ -18,27 +18,38 @@ io.on("connection", socket => {
 	});
 
 	//join a game room event
-	socket.on("joinRoom", player => {
-		player = JSON.parse(player);
-		joinGameState(socket, player);
-	});
+	socket.on("joinRoom", client => {
+		client = JSON.parse(client);
+    joinGameState(socket, client);
+    console.log('rooms', rooms);
+    rooms.forEach(room => {
+			room.players.forEach(player => {
+				if (player.playerId === client.hostCode) {
+					sendLandingPageGameState(player, room, socket);
+				}
+			});
+		});
+  });
 
 	//start a game event
-	socket.on("startGame", client => {
+	socket.on("startGame", clientId => {
 		rooms.forEach(room => {
 			room.players.forEach(player => {
-				if (player.playerId === client) {
-					startGameInterval(client, room, socket);
+				if (player.playerId === clientId) {
+					startGameInterval(clientId, room, socket);
 				}
 			});
 		});
 	});
 });
 
+function sendLandingPageGameState(client, room, socket) {
+  socket.emit("gameState", JSON.stringify(room));
+}
+
 function startGameInterval(client, room, socket) {
 	const intervalId = setInterval(() => {
-		const winner = gameLoop(room);
-
+    const winner = gameLoop(room);
 		if (!winner) {
 			socket.emit("gameState", JSON.stringify(room));
 		} else {
