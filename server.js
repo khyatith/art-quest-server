@@ -1,5 +1,5 @@
 const { createGameState, joinGameState, gameLoop } = require("./game");
-const frameRate = 30;
+const frameRate = 500;
 const io = require("socket.io")(5000, {
 	cors: {
 		origin: "http://localhost:3000",
@@ -18,18 +18,10 @@ io.on("connection", socket => {
 	});
 
 	//join a game room event
-	socket.on("joinRoom", client => {
-		client = JSON.parse(client);
-    joinGameState(socket, client);
-    console.log('rooms', rooms);
-    rooms.forEach(room => {
-			room.players.forEach(player => {
-				if (player.playerId === client.hostCode) {
-					sendLandingPageGameState(player, room, socket);
-				}
-			});
-		});
-  });
+	socket.on("joinRoom", player => {
+		player = JSON.parse(player);
+		joinGameState(socket, player);
+	});
 
 	//start a game event
 	socket.on("startGame", clientId => {
@@ -43,13 +35,9 @@ io.on("connection", socket => {
 	});
 });
 
-function sendLandingPageGameState(client, room, socket) {
-  socket.emit("gameState", JSON.stringify(room));
-}
-
 function startGameInterval(client, room, socket) {
 	const intervalId = setInterval(() => {
-    const winner = gameLoop(room);
+		const winner = gameLoop(room);
 		if (!winner) {
 			socket.emit("gameState", JSON.stringify(room));
 		} else {
