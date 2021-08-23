@@ -1,4 +1,4 @@
-const { createGameState, joinGameState, gameLoop } = require("./game");
+const { createGameState, joinGameState, gameLoop, getNextObjectForLiveAuction } = require("./game");
 const frameRate = 500;
 const io = require("socket.io")(5000, {
 	cors: {
@@ -32,7 +32,12 @@ io.on("connection", socket => {
 				}
 			});
 		});
-	});
+  });
+  
+  socket.on("startLiveAuctions", () => {
+    const nextAuctionObj = getNextObjectForLiveAuction();
+    socket.emit("startNextAuction", nextAuctionObj);
+  });
 });
 
 function startGameInterval(client, room, socket) {

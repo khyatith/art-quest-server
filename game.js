@@ -74,8 +74,19 @@ function gameLoop(state) {
 	}
 }
 
+function getNextObjectForLiveAuction() {
+	const obj = auctionsObj.artifacts.filter(auctionObj => {
+    console.log('auctionObj', auctionObj);
+		return !auctionObj.isAuctioned;
+  });
+  if (!obj) return null;
+	obj[0].isAuctioned = true;
+	return obj[0];
+}
+
 module.exports = {
 	createGameState,
 	gameLoop,
-	joinGameState,
+  joinGameState,
+  getNextObjectForLiveAuction,
 };
