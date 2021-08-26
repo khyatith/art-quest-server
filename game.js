@@ -76,7 +76,6 @@ function gameLoop(state) {
 
 function getNextObjectForLiveAuction() {
 	const obj = auctionsObj.artifacts.filter(auctionObj => {
-    console.log('auctionObj', auctionObj);
 		return !auctionObj.isAuctioned;
   });
   if (!obj) return null;
@@ -84,9 +83,21 @@ function getNextObjectForLiveAuction() {
 	return obj[0];
 }
 
+function getRemainingTime(deadline) {
+  const total = Date.parse(deadline) - Date.parse(new Date());
+  const seconds = Math.floor( (total/1000) % 60 );
+  const minutes = Math.floor( (total/1000/60) % 60 );
+  return {
+    total,
+    minutes,
+    seconds
+  };
+}
+
 module.exports = {
 	createGameState,
 	gameLoop,
   joinGameState,
   getNextObjectForLiveAuction,
+  getRemainingTime
 };

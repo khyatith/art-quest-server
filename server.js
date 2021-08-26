@@ -1,4 +1,4 @@
-const { createGameState, joinGameState, gameLoop, getNextObjectForLiveAuction } = require("./game");
+const { createGameState, joinGameState, gameLoop, getNextObjectForLiveAuction, getRemainingTime } = require("./game");
 const frameRate = 500;
 const io = require("socket.io")(5000, {
 	cors: {
@@ -6,6 +6,21 @@ const io = require("socket.io")(5000, {
 	},
 });
 require("dotenv").config();
+
+const currentTime = Date.parse(new Date());
+// 10 mins landing page timer
+const landingPageTimerDeadline = new Date(currentTime + 10*60*1000);
+let landingPageTimeInterval;
+
+function updateLandingPageClock() {
+  const t = getRemainingTime(landingPageTimerDeadline);
+
+  if (t.total <= 0) {
+    clearInterval(landingPageTimeInterval);
+  } else {
+    io.emit("timerValue", t);
+  }
+}
 
 var mod = require("./constants");
 var rooms = mod.rooms;
@@ -37,6 +52,10 @@ io.on("connection", socket => {
   socket.on("startLiveAuctions", () => {
     const nextAuctionObj = getNextObjectForLiveAuction();
     socket.emit("startNextAuction", nextAuctionObj);
+  });
+
+  socket.on("startLandingPageTimer", timeInMinutes => {
+    landingPageTimeInterval = setInterval(updateLandingPageClock, 1000);
   });
 });
 
