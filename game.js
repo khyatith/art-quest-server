@@ -7,6 +7,9 @@ const Redis = require("redis");
 
 const expiration = 3600;
 
+const firebaseMod = require("./firebase/firebase");
+const db = firebaseMod.db;
+
 function createGameState(socket, player) {
 	try {
 		let playerObj = {
@@ -33,6 +36,15 @@ function createGameState(socket, player) {
 			gameClock: gameClockObj,
 		});
 
+		//add room to database
+		db.collection("rooms").doc(socket.id).set({
+			roomCode: socket.id,
+			gameClock: gameClockObj,
+			auctions: auctionsObj,
+		});
+
+		db.collection("rooms").doc(socket.id).collection("players").add(playerObj);
+
 		//redis
 		//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
 	} catch (err) {
@@ -57,6 +69,7 @@ function joinGameState(socket, player) {
 		rooms.forEach(room => {
 			if (room.roomCode === player.hostCode) {
 				room.players.push(playerObj);
+				db.collection("rooms").doc(player.hostCode).collection("players").add(playerObj);
 			} else {
 				console.log("not found");
 			}
@@ -76,10 +89,10 @@ function gameLoop(state) {
 
 function getNextObjectForLiveAuction() {
 	const obj = auctionsObj.artifacts.filter(auctionObj => {
-    console.log('auctionObj', auctionObj);
+		console.log("auctionObj", auctionObj);
 		return !auctionObj.isAuctioned;
-  });
-  if (!obj) return null;
+	});
+	if (!obj) return null;
 	obj[0].isAuctioned = true;
 	return obj[0];
 }
@@ -87,6 +100,6 @@ function getNextObjectForLiveAuction() {
 module.exports = {
 	createGameState,
 	gameLoop,
-  joinGameState,
-  getNextObjectForLiveAuction,
+	joinGameState,
+	getNextObjectForLiveAuction,
 };
