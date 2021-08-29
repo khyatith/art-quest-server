@@ -24,20 +24,21 @@ io.on("connection", socket => {
 	});
 
 	//start a game event
-	socket.on("startGame", clientId => {
+	socket.on("startGame", client => {
+		client = JSON.parse(client);
 		rooms.forEach(room => {
 			room.players.forEach(player => {
-				if (player.playerId === clientId) {
-					startGameInterval(clientId, room, socket);
+				if (player.playerId === client.playerId) {
+					startGameInterval(client.playerId, room, socket);
 				}
 			});
 		});
-  });
-  
-  socket.on("startLiveAuctions", () => {
-    const nextAuctionObj = getNextObjectForLiveAuction();
-    socket.emit("startNextAuction", nextAuctionObj);
-  });
+	});
+
+	socket.on("startLiveAuctions", () => {
+		const nextAuctionObj = getNextObjectForLiveAuction();
+		socket.emit("startNextAuction", nextAuctionObj);
+	});
 });
 
 function startGameInterval(client, room, socket) {

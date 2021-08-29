@@ -13,7 +13,8 @@ const db = firebaseMod.db;
 function createGameState(socket, player) {
 	try {
 		let playerObj = {
-			playerId: socket.id,
+			socketId: socket.id,
+			playerId: player.playerId,
 			playerName: player.playerName,
 			teamName: player.teamName,
 			gold: 1000000,
@@ -30,20 +31,20 @@ function createGameState(socket, player) {
 		};
 
 		rooms.push({
-			roomCode: socket.id,
+			roomCode: player.playerId,
 			players: [playerObj],
 			auctions: auctionsObj,
 			gameClock: gameClockObj,
 		});
 
 		//add room to database
-		db.collection("rooms").doc(socket.id).set({
-			roomCode: socket.id,
+		db.collection("rooms").doc(player.playerId).set({
+			roomCode: player.playerId,
 			gameClock: gameClockObj,
 			auctions: auctionsObj,
 		});
 
-		db.collection("rooms").doc(socket.id).collection("players").add(playerObj);
+		db.collection("rooms").doc(player.playerId).collection("players").doc(player.playerId).set(playerObj);
 
 		//redis
 		//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
@@ -55,7 +56,8 @@ function createGameState(socket, player) {
 function joinGameState(socket, player) {
 	try {
 		let playerObj = {
-			playerId: socket.id,
+			socketId: socket.id,
+			playerId: player.playerId,
 			playerName: player.playerName,
 			teamName: player.teamName,
 			gold: 1000000,
@@ -69,7 +71,7 @@ function joinGameState(socket, player) {
 		rooms.forEach(room => {
 			if (room.roomCode === player.hostCode) {
 				room.players.push(playerObj);
-				db.collection("rooms").doc(player.hostCode).collection("players").add(playerObj);
+				db.collection("rooms").doc(player.hostCode).collection("players").doc(player.playerId).set(playerObj);
 			} else {
 				console.log("not found");
 			}
