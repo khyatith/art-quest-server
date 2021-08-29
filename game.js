@@ -99,9 +99,21 @@ function getNextObjectForLiveAuction() {
 	return obj[0];
 }
 
+function getRemainingTime(deadline) {
+	const total = Date.parse(deadline) - Date.parse(new Date());
+	const seconds = Math.floor( (total/1000) % 60 );
+	const minutes = Math.floor( (total/1000/60) % 60 );
+	return {
+	  total,
+	  minutes,
+	  seconds
+	};
+  }
+
 module.exports = {
 	createGameState,
 	gameLoop,
 	joinGameState,
 	getNextObjectForLiveAuction,
+	getRemainingTime,
 };
