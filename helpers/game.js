@@ -1,13 +1,14 @@
-var mod = require("./constants");
-var rooms = mod.rooms;
-var auctionsObj = require("./auctionData.json");
+var CONSTANTS = require("../constants");
+var rooms = CONSTANTS.rooms;
+var auctionsObj = require("../auctionData.json");
+var { FirstPricedSealedBidAuction } = require("../auctions/FirstPricedSealedBidAuction");
 
 const Redis = require("redis");
 // const redisClient = Redis.createClient();
 
 const expiration = 3600;
 
-const firebaseMod = require("./firebase/firebase");
+const firebaseMod = require("../firebase/firebase");
 const db = firebaseMod.db;
 
 function createGameState(socket, player) {
@@ -91,12 +92,29 @@ function gameLoop(state) {
 
 function getNextObjectForLiveAuction() {
 	const obj = auctionsObj.artifacts.filter(auctionObj => {
-		console.log("auctionObj", auctionObj);
-		return !auctionObj.isAuctioned;
+		if (auctionObj.auctionState === 1) {
+			console.log("the one auction obj in progress", auctionObj);
+			return auctionObj;
+		}
+		return auctionObj.auctionState === 0;
 	});
-	if (!obj) return null;
-	obj[0].isAuctioned = true;
+	if (!obj || obj.length === 0) return null;
+	//auctionState can be one of 'todo','in-progress', 'done' which can be denoted by 0, 1 and 2
+	obj[0].auctionState = 1;
 	return obj[0];
+}
+
+function updateAuctionState(currentAuction, newState) {
+	console.log("auctionObj", currentAuction);
+	if (CONSTANTS.AUCTION_STATES.includes(newState)) {
+		auctionsObj.artifacts.map(currentObj => {
+			if (currentObj.id === currentAuction.id) {
+				currentObj.auctionState = newState;
+				currentAuction.auctionState = newState;
+			}
+		});
+	}
+	return currentAuction;
 }
 
 function getRemainingTime(deadline) {
@@ -110,10 +128,41 @@ function getRemainingTime(deadline) {
 	};
 }
 
+function getBidWinner(allBidsInfo) {
+	console.log("inside get bid winner");
+	const { currentAuctionType } = allBidsInfo;
+	const service = AUCTION_TYPES[currentAuctionType];
+	console.log("service", service);
+}
+
+function addNewFirstPricedSealedBid(bidInfo) {
+	const { auctionObj, bidAt, bidAmount } = bidInfo;
+	const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
+	const updatedObj = firstPriceSealedBidObj.updateBidObject();
+	console.log("udpatedObj", updatedObj);
+	return updatedObj;
+}
+
+function getBidWinner(auctionObj) {
+	const { auctionType } = auctionObj;
+	switch (auctionType) {
+		case "1":
+			const firstPricedSealedBidObj = new FirstPricedSealedBidAuction();
+			const winner = firstPricedSealedBidObj.calculateWinner();
+			console.log("winner", winner);
+			return winner;
+		default:
+			return;
+	}
+}
+
 module.exports = {
 	createGameState,
 	gameLoop,
 	joinGameState,
 	getNextObjectForLiveAuction,
 	getRemainingTime,
+	updateAuctionState,
+	getBidWinner,
+	addNewFirstPricedSealedBid,
 };

@@ -21,7 +21,7 @@
 				"buyingTeam": "",
 				"buyingPrice": 0
       },
-      "isAuctioned": false
+      "auctionState": 0
 		},
 		{
 			"id": 2,
@@ -44,7 +44,7 @@
 				"buyingTeam": "",
 				"buyingPrice": 0
       },
-      "isAuctioned": false
+      "auctionState": 0
 		},
 		{
 			"id": 3,
@@ -67,7 +67,7 @@
 				"buyingTeam": "",
 				"buyingPrice": 0
       },
-      "isAuctioned": false
+      "auctionState": 0
 		}
 	]
 }
