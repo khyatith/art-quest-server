@@ -56,29 +56,39 @@ function createGameState(socket, player) {
 
 function joinGameState(socket, player) {
 	try {
-		let playerObj = {
-			socketId: socket.id,
-			playerId: player.playerId,
-			playerName: player.playerName,
-			teamName: player.teamName,
-			gold: 1000000,
-			inventory: [],
-			playerCoordinates: {
-				longitude: 0,
-				latitude: 0,
-			},
-		};
+		db.collection("rooms")
+			.doc(player.hostCode)
+			.collection("players")
+			.where("playerId", "==", player.playerId)
+			.onSnapshot(snapshot => {
+				if (snapshot.docs === undefined) {
+					let playerObj = {
+						socketId: socket.id,
+						playerId: player.playerId,
+						playerName: player.playerName,
+						teamName: player.teamName,
+						gold: 1000000,
+						inventory: [],
+						playerCoordinates: {
+							longitude: 0,
+							latitude: 0,
+						},
+					};
 
-		rooms.forEach(room => {
-			if (room.roomCode === player.hostCode) {
-				room.players.push(playerObj);
-				db.collection("rooms").doc(player.hostCode).collection("players").doc(player.playerId).set(playerObj);
-			} else {
-				console.log("not found");
-			}
-		});
-		//redis
-		//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
+					rooms.forEach(room => {
+						if (room.roomCode === player.hostCode) {
+							room.players.push(playerObj);
+							db.collection("rooms").doc(player.hostCode).collection("players").doc(player.playerId).set(playerObj);
+						} else {
+							console.log("not found");
+						}
+					});
+					//redis
+					//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
+				} else {
+					console.log("player already exists");
+				}
+			});
 	} catch (err) {
 		console.log(err);
 	}
