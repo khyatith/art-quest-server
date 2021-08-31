@@ -61,7 +61,8 @@ function joinGameState(socket, player) {
 			.collection("players")
 			.where("playerId", "==", player.playerId)
 			.onSnapshot(snapshot => {
-				if (snapshot.docs === undefined) {
+				if (snapshot.empty) {
+					console.log("no player found");
 					let playerObj = {
 						socketId: socket.id,
 						playerId: player.playerId,
