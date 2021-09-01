@@ -9,6 +9,7 @@ const Redis = require("redis");
 const expiration = 3600;
 
 const firebaseMod = require("../firebase/firebase");
+
 const db = firebaseMod.db;
 
 function createGameState(socket, player) {
@@ -146,11 +147,12 @@ function getBidWinner(allBidsInfo) {
 	console.log("service", service);
 }
 
-function addNewFirstPricedSealedBid(bidInfo) {
-	const { auctionObj, bidAt, bidAmount } = bidInfo;
+function addNewFirstPricedSealedBid(bidInfo, socket) {
+	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
 	const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
 	const updatedObj = firstPriceSealedBidObj.updateBidObject();
 	console.log("udpatedObj", updatedObj);
+	socket.emit("setLiveStyles", player.teamName);
 	return updatedObj;
 }
 
