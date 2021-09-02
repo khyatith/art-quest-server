@@ -1,13 +1,4 @@
-const {
-	createGameState,
-	joinGameState,
-	gameLoop,
-	getNextObjectForLiveAuction,
-	getRemainingTime,
-	updateAuctionState,
-	addNewFirstPricedSealedBid,
-	getBidWinner,
-} = require("./helpers/game");
+const { createGameState, joinGameState, gameLoop, getNextObjectForLiveAuction, getRemainingTime, addNewFirstPricedSealedBid, getBidWinner } = require("./helpers/game");
 const frameRate = 500;
 const io = require("socket.io")(5000, {
 	cors: {
@@ -39,19 +30,19 @@ function updateLandingPageClock() {
 }
 
 async function updateAuctionClock() {
-	isAuctionTimerStarted = true;
-	const t = getRemainingTime(auctionsTimer);
-	if (t.total <= 0) {
-		isAuctionTimerStarted = false;
-		clearInterval(auctionTimerInterval);
-		const bidWinner = getBidWinner(currentAuction);
-		if (bidWinner) {
-			currentAuction = updateAuctionState(currentAuction, 2);
-			io.emit("displayBidWinner", bidWinner);
-		}
-	} else if (isAuctionTimerStarted && t.total > 0) {
-		io.emit("auctionTimerValue", t);
-	}
+  isAuctionTimerStarted = true;
+  let bidWinner = {};
+  const t = getRemainingTime(auctionsTimer);
+  if (t.total <=0) {
+    isAuctionTimerStarted = false;
+    clearInterval(auctionTimerInterval);
+    bidWinner = getBidWinner(currentAuction);
+    if (bidWinner) {
+      io.emit("displayBidWinner", bidWinner);
+    }
+  } else if (isAuctionTimerStarted && t.total > 0) {
+    io.emit("auctionTimerValue", t);
+  }
 }
 
 var mod = require("./constants");
@@ -81,16 +72,12 @@ io.on("connection", socket => {
 				}
 			});
 		});
-	});
-
-	socket.on("startLiveAuctions", () => {
-		console.log("inside start live auctions");
-		if (!currentAuction || currentAuction.auctionState !== 1) {
-			console.log("inside current auction");
-			currentAuction = getNextObjectForLiveAuction();
-		}
-		socket.emit("startNextAuction", currentAuction);
-	});
+  });
+  
+  socket.on("startLiveAuctions", prevAuctionObj => {
+    currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
+    socket.emit("startNextAuction", currentAuction);
+  });
 
 	socket.on("startLandingPageTimer", timerInMinutes => {
 		if (!landingPageTimerStarted) {
@@ -109,10 +96,11 @@ io.on("connection", socket => {
 	});
 
 	socket.on("addNewBid", bidInfo => {
-		const { auctionType } = bidInfo;
+		const { auctionType, player } = bidInfo;
 		switch (auctionType) {
 			case "1":
-				addNewFirstPricedSealedBid(bidInfo, socket);
+        addNewFirstPricedSealedBid(bidInfo, socket);
+        socket.emit("setLiveStyles", player.teamName);
 				break;
 			default:
 				return;
