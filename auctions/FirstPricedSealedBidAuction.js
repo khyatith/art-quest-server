@@ -10,7 +10,6 @@ class FirstPricedSealedBidAuction {
   }
 
   updateBidObject() {
-    console.log('inside updated bid object');
     FIRST_PRICED_SEALED_BID_AUCTIONS.push({
       auctionObj: this.currentAuctionObject,
       bidTeam: this.bidTeam,

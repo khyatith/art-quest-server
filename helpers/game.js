@@ -102,22 +102,22 @@ function gameLoop(state) {
 	}
 }
 
-function getNextObjectForLiveAuction() {
-	const obj = auctionsObj.artifacts.filter(auctionObj => {
-		if (auctionObj.auctionState === 1) {
-			console.log("the one auction obj in progress", auctionObj);
-			return auctionObj;
-		}
-		return auctionObj.auctionState === 0;
-	});
-	if (!obj || obj.length === 0) return null;
-	//auctionState can be one of 'todo','in-progress', 'done' which can be denoted by 0, 1 and 2
-	obj[0].auctionState = 1;
-	return obj[0];
+function getNextObjectForLiveAuction(prevAuction) {
+  let newAuction;
+  if (!prevAuction) {
+    newAuction = auctionsObj.artifacts[0];
+  } else {
+    const { id } = prevAuction;
+    const nextId = id + 1;
+    newAuction = auctionsObj.artifacts.filter(item => item.id === nextId)[0];
+    prevAuction.auctionState = 2;
+  }
+  if (!newAuction) return null;
+	newAuction.auctionState = 1;
+	return newAuction;
 }
 
 function updateAuctionState(currentAuction, newState) {
-	console.log("auctionObj", currentAuction);
 	if (CONSTANTS.AUCTION_STATES.includes(newState)) {
 		auctionsObj.artifacts.map(currentObj => {
 			if (currentObj.id === currentAuction.id) {
@@ -140,19 +140,10 @@ function getRemainingTime(deadline) {
 	};
 }
 
-function getBidWinner(allBidsInfo) {
-	console.log("inside get bid winner");
-	const { currentAuctionType } = allBidsInfo;
-	const service = AUCTION_TYPES[currentAuctionType];
-	console.log("service", service);
-}
-
 function addNewFirstPricedSealedBid(bidInfo, socket) {
 	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
 	const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
 	const updatedObj = firstPriceSealedBidObj.updateBidObject();
-	console.log("udpatedObj", updatedObj);
-	socket.emit("setLiveStyles", player.teamName);
 	return updatedObj;
 }
 
@@ -162,7 +153,6 @@ function getBidWinner(auctionObj) {
 		case "1":
 			const firstPricedSealedBidObj = new FirstPricedSealedBidAuction();
 			const winner = firstPricedSealedBidObj.calculateWinner();
-			console.log("winner", winner);
 			return winner;
 		default:
 			return;
