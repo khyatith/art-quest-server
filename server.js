@@ -1,4 +1,4 @@
-const { createGameState, joinGameState, gameLoop, getNextObjectForLiveAuction, getRemainingTime, addNewFirstPricedSealedBid, getBidWinner } = require("./helpers/game");
+const { createGameState, joinGameState, gameLoop, getNextObjectForLiveAuction, getRemainingTime, addNewFirstPricedSealedBid, getBidWinner, addNewEnglishAuctionBid } = require("./helpers/game");
 const frameRate = 500;
 const io = require("socket.io")(5000, {
 	cors: {
@@ -96,12 +96,15 @@ io.on("connection", socket => {
 	});
 
 	socket.on("addNewBid", bidInfo => {
-		const { auctionType, player } = bidInfo;
+    const { auctionType, player } = bidInfo;
 		switch (auctionType) {
 			case "1":
-        addNewFirstPricedSealedBid(bidInfo, socket);
+        addNewFirstPricedSealedBid(bidInfo);
         socket.emit("setLiveStyles", player.teamName);
-				break;
+        break;
+      case "2":
+        const prevBid = addNewEnglishAuctionBid(bidInfo);
+        io.emit("setPreviousBid", prevBid);
 			default:
 				return;
 		}
