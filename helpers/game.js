@@ -2,6 +2,7 @@ var CONSTANTS = require("../constants");
 var rooms = CONSTANTS.rooms;
 var auctionsObj = require("../auctionData.json");
 var { FirstPricedSealedBidAuction } = require("../auctions/FirstPricedSealedBidAuction");
+var { EnglishAuction } = require("../auctions/EnglishAuction");
 
 const Redis = require("redis");
 // const redisClient = Redis.createClient();
@@ -140,19 +141,31 @@ function getRemainingTime(deadline) {
 	};
 }
 
-function addNewFirstPricedSealedBid(bidInfo, socket) {
+function addNewFirstPricedSealedBid(bidInfo) {
 	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
 	const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
 	const updatedObj = firstPriceSealedBidObj.updateBidObject();
 	return updatedObj;
 }
 
+function addNewEnglishAuctionBid(bidInfo) {
+	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
+	const englishAuctionObj = new EnglishAuction(auctionObj, "blue", bidAmount, bidAt);
+	const updatedObj = englishAuctionObj.updateBidObject();
+	return updatedObj;
+}
+
 function getBidWinner(auctionObj) {
-	const { auctionType } = auctionObj;
+  const { auctionType } = auctionObj;
+  let winner;
 	switch (auctionType) {
 		case "1":
 			const firstPricedSealedBidObj = new FirstPricedSealedBidAuction();
-			const winner = firstPricedSealedBidObj.calculateWinner();
+			winner = firstPricedSealedBidObj.calculateWinner();
+			return winner;
+		case "2":
+			const englishAuctionObj = new EnglishAuction();
+			winner = englishAuctionObj.calculateWinner();
 			return winner;
 		default:
 			return;
@@ -167,5 +180,6 @@ module.exports = {
 	getRemainingTime,
 	updateAuctionState,
 	getBidWinner,
-	addNewFirstPricedSealedBid,
+  addNewFirstPricedSealedBid,
+  addNewEnglishAuctionBid
 };

@@ -12,8 +12,8 @@
         "type": "Point",
         "coordinates": [23.7275, 45.9838]
     },
-    "auctionType": "1",
-    "auctionDescription": "First priced sealed-bid auction",
+    "auctionType": "2",
+    "auctionDescription": "English Auction",
     "originalValue": 10000,
     "render": true,
     "sellingPrice": 16000,
@@ -32,7 +32,7 @@
         "type": "Point",
         "coordinates": [27.4303, 54.0745]
     },
-    "auctionType": "1",
+    "auctionType": "2",
     "auctionDescription": "First priced sealed-bid auction",
     "originalValue": 15000,
     "render": true,
