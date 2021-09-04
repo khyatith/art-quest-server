@@ -1,4 +1,13 @@
-const { createGameState, joinGameState, gameLoop, getNextObjectForLiveAuction, getRemainingTime, addNewFirstPricedSealedBid, getBidWinner, addNewEnglishAuctionBid } = require("./helpers/game");
+const {
+	createGameState,
+	joinGameState,
+	gameLoop,
+	getNextObjectForLiveAuction,
+	getRemainingTime,
+	addNewFirstPricedSealedBid,
+	getBidWinner,
+	addNewEnglishAuctionBid,
+} = require("./helpers/game");
 const frameRate = 500;
 const io = require("socket.io")(5000, {
 	cors: {
@@ -8,6 +17,9 @@ const io = require("socket.io")(5000, {
 require("dotenv").config();
 
 let currentAuction = {};
+
+const firebaseMod = require("./firebase/firebase");
+const db = firebaseMod.db;
 
 // 10 mins landing page timer
 let landingPageTimerDeadline;
@@ -30,19 +42,21 @@ function updateLandingPageClock() {
 }
 
 async function updateAuctionClock() {
-  isAuctionTimerStarted = true;
-  let bidWinner = {};
-  const t = getRemainingTime(auctionsTimer);
-  if (t.total <=0) {
-    isAuctionTimerStarted = false;
-    clearInterval(auctionTimerInterval);
-    bidWinner = getBidWinner(currentAuction);
-    if (bidWinner) {
-      io.emit("displayBidWinner", bidWinner);
-    }
-  } else if (isAuctionTimerStarted && t.total > 0) {
-    io.emit("auctionTimerValue", t);
-  }
+	isAuctionTimerStarted = true;
+	let bidWinner = {};
+	const t = getRemainingTime(auctionsTimer);
+	if (t.total <= 0) {
+		isAuctionTimerStarted = false;
+		clearInterval(auctionTimerInterval);
+		bidWinner = getBidWinner(currentAuction);
+		if (bidWinner) {
+			//send a save bid winner
+			// db.collection('rooms').doc()
+			io.emit("displayBidWinner", bidWinner);
+		}
+	} else if (isAuctionTimerStarted && t.total > 0) {
+		io.emit("auctionTimerValue", t);
+	}
 }
 
 var mod = require("./constants");
@@ -72,12 +86,12 @@ io.on("connection", socket => {
 				}
 			});
 		});
-  });
-  
-  socket.on("startLiveAuctions", prevAuctionObj => {
-    currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
-    socket.emit("startNextAuction", currentAuction);
-  });
+	});
+
+	socket.on("startLiveAuctions", prevAuctionObj => {
+		currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
+		socket.emit("startNextAuction", currentAuction);
+	});
 
 	socket.on("startLandingPageTimer", timerInMinutes => {
 		if (!landingPageTimerStarted) {
@@ -96,15 +110,15 @@ io.on("connection", socket => {
 	});
 
 	socket.on("addNewBid", bidInfo => {
-    const { auctionType, player } = bidInfo;
+		const { auctionType, player } = bidInfo;
 		switch (auctionType) {
 			case "1":
-        addNewFirstPricedSealedBid(bidInfo);
-        socket.emit("setLiveStyles", player.teamName);
-        break;
-      case "2":
-        const prevBid = addNewEnglishAuctionBid(bidInfo);
-        io.emit("setPreviousBid", prevBid);
+				addNewFirstPricedSealedBid(bidInfo);
+				socket.emit("setLiveStyles", player.teamName);
+				break;
+			case "2":
+				const prevBid = addNewEnglishAuctionBid(bidInfo);
+				io.emit("setPreviousBid", prevBid);
 			default:
 				return;
 		}
