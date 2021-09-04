@@ -35,7 +35,8 @@ function updateLandingPageClock() {
 	const t = getRemainingTime(landingPageTimerDeadline);
 	if (t.total <= 0) {
 		landingPageTimerStarted = false;
-		clearInterval(landingPageTimeInterval);
+    clearInterval(landingPageTimeInterval);
+    io.emit("landingPageTimerEnded", t);
 	} else if (landingPageTimerStarted && t.total > 0) {
 		io.emit("landingPageTimerValue", t);
 	}
