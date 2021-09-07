@@ -12,13 +12,14 @@
         "type": "Point",
         "coordinates": [23.7275, 45.9838]
     },
-    "auctionType": "2",
+    "auctionType": "1",
     "auctionDescription": "English Auction",
     "originalValue": 10000,
     "render": true,
     "sellingPrice": 16000,
     "buyingPrice": 14000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 2,
@@ -32,13 +33,14 @@
         "type": "Point",
         "coordinates": [27.4303, 54.0745]
     },
-    "auctionType": "2",
+    "auctionType": "1",
     "auctionDescription": "First priced sealed-bid auction",
     "originalValue": 15000,
     "render": true,
     "sellingPrice": 16000,
     "buyingPrice": 12000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 3,
@@ -58,7 +60,8 @@
     "render": true,
     "sellingPrice": 22000,
     "buyingPrice": 18000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 4,
@@ -78,7 +81,8 @@
     "render": true,
     "sellingPrice": 28000,
     "buyingPrice": 26000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 5,
@@ -98,7 +102,8 @@
     "render": true,
     "sellingPrice": 34000,
     "buyingPrice": 29000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 6,
@@ -118,7 +123,8 @@
     "render": true,
     "sellingPrice": 9000,
     "buyingPrice": 10000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 7,
@@ -138,7 +144,8 @@
     "render": true,
     "sellingPrice": 45000,
     "buyingPrice": 35000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 8,
@@ -158,7 +165,8 @@
     "render": true,
     "sellingPrice": 55000,
     "buyingPrice": 61000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 9,
@@ -178,7 +186,8 @@
     "render": true,
     "sellingPrice": 38000,
     "buyingPrice": 33000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 10,
@@ -198,7 +207,8 @@
     "render": true,
     "sellingPrice": 47000,
     "buyingPrice": 40000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 11,
@@ -218,7 +228,8 @@
     "render": true,
     "sellingPrice": 30000,
     "buyingPrice": 36000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 12,
@@ -238,7 +249,8 @@
     "render": true,
     "sellingPrice": 60000,
     "buyingPrice": 59000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 13,
@@ -258,7 +270,8 @@
     "render": true,
     "sellingPrice": 55000,
     "buyingPrice": 60000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 14,
@@ -278,7 +291,8 @@
     "render": true,
     "sellingPrice": 60000,
     "buyingPrice": 45000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 15,
@@ -298,7 +312,8 @@
     "render": true,
     "sellingPrice": 35000,
     "buyingPrice": 28000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 16,
@@ -318,7 +333,8 @@
     "render": true,
     "sellingPrice": 66000,
     "buyingPrice": 55000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 17,
@@ -338,7 +354,8 @@
     "render": true,
     "sellingPrice": 48000,
     "buyingPrice": 45000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 18,
@@ -358,7 +375,8 @@
     "render": true,
     "sellingPrice": 57000,
     "buyingPrice": 60000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   },
   {
     "id": 19,
@@ -378,7 +396,8 @@
     "render": true,
     "sellingPrice": 60000,
     "buyingPrice": 79000,
-    "auctionState": 0
+    "auctionState": 0,
+    "isWinnerCalculated": false
   }
   ]
 }

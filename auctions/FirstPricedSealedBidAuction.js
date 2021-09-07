@@ -30,9 +30,11 @@ class FirstPricedSealedBidAuction {
       }
       return (acc.bidAmount > obj.bidAmount) ? acc : obj;
     }, {});
-    console.log('winner', winner);
+    if (Object.keys(winner).length > 0) {
+      winner.auctionObj.isWinnerCalculated = true;
+      winner.auctionObj.auctionState = 2;
+    }
     return winner;
-    //const maxBidAmount = Math.max(...allBidAmounts);
   }
 }
 

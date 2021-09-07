@@ -29,14 +29,15 @@ let landingPageTimerStarted = false;
 let auctionsTimer;
 let isAuctionTimerStarted = false;
 let auctionTimerInterval;
+let bidWinner = {};
 
 function updateLandingPageClock() {
 	landingPageTimerStarted = true;
 	const t = getRemainingTime(landingPageTimerDeadline);
 	if (t.total <= 0) {
 		landingPageTimerStarted = false;
-    clearInterval(landingPageTimeInterval);
-    io.emit("landingPageTimerEnded", t);
+		clearInterval(landingPageTimeInterval);
+		io.emit("landingPageTimerEnded", t);
 	} else if (landingPageTimerStarted && t.total > 0) {
 		io.emit("landingPageTimerValue", t);
 	}
@@ -44,18 +45,23 @@ function updateLandingPageClock() {
 
 async function updateAuctionClock() {
 	isAuctionTimerStarted = true;
-	let bidWinner = {};
+	bidWinner = {};
 	const t = getRemainingTime(auctionsTimer);
 	if (t.total <= 0) {
 		isAuctionTimerStarted = false;
 		clearInterval(auctionTimerInterval);
-		bidWinner = getBidWinner(currentAuction);
-		if (bidWinner) {
-			//send a save bid winner
-			// db.collection('rooms').doc()
-			io.emit("displayBidWinner", bidWinner);
+		console.log("currentAuction in t.total < 0", bidWinner);
+		if (!bidWinner || !bidWinner.isWinnerCalculated) {
+			bidWinner = getBidWinner(currentAuction);
+			if (bidWinner) {
+				io.emit("displayBidWinner", bidWinner);
+				bidWinner = {};
+			}
+		} else {
+			io.emit("displayBidWinner", null);
 		}
 	} else if (isAuctionTimerStarted && t.total > 0) {
+		bidWinner = {};
 		io.emit("auctionTimerValue", t);
 	}
 }
@@ -90,6 +96,7 @@ io.on("connection", socket => {
 	});
 
 	socket.on("startLiveAuctions", prevAuctionObj => {
+		bidWinner = {};
 		currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
 		socket.emit("startNextAuction", currentAuction);
 	});
@@ -97,7 +104,7 @@ io.on("connection", socket => {
 	socket.on("startLandingPageTimer", timerInMinutes => {
 		if (!landingPageTimerStarted) {
 			const currentTime = Date.parse(new Date());
-			landingPageTimerDeadline = new Date(currentTime + 1 * 60 * 1000);
+			landingPageTimerDeadline = new Date(currentTime + 0.3 * 60 * 1000);
 		}
 		landingPageTimeInterval = setInterval(updateLandingPageClock, 1000);
 	});
@@ -105,7 +112,7 @@ io.on("connection", socket => {
 	socket.on("startAuctionsTimer", timerInMinutes => {
 		if (!isAuctionTimerStarted) {
 			const current = Date.parse(new Date());
-			auctionsTimer = new Date(current + timerInMinutes * 60 * 1000);
+			auctionsTimer = new Date(current + 0.5 * 60 * 1000);
 		}
 		auctionTimerInterval = setInterval(updateAuctionClock, 1000);
 	});

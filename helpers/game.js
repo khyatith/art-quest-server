@@ -111,7 +111,8 @@ function getNextObjectForLiveAuction(prevAuction) {
     const { id } = prevAuction;
     const nextId = id + 1;
     newAuction = auctionsObj.artifacts.filter(item => item.id === nextId)[0];
-    prevAuction.auctionState = 2;
+		prevAuction.auctionState = 2;
+		prevAuction.isWinnerCalculated = true;
   }
   if (!newAuction) return null;
 	newAuction.auctionState = 1;
@@ -156,13 +157,16 @@ function addNewEnglishAuctionBid(bidInfo) {
 }
 
 function getBidWinner(auctionObj) {
-  const { auctionType } = auctionObj;
+  const { auctionType, isWinnerCalculated } = auctionObj;
   let winner;
 	switch (auctionType) {
 		case "1":
-			const firstPricedSealedBidObj = new FirstPricedSealedBidAuction();
-			winner = firstPricedSealedBidObj.calculateWinner();
-			return winner;
+			if (!isWinnerCalculated) {
+				const firstPricedSealedBidObj = new FirstPricedSealedBidAuction();
+				winner = firstPricedSealedBidObj.calculateWinner();
+				return winner;
+			}
+			return {};
 		case "2":
 			const englishAuctionObj = new EnglishAuction();
 			winner = englishAuctionObj.calculateWinner();
