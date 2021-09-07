@@ -104,17 +104,16 @@ function gameLoop(state) {
 }
 
 function getNextObjectForLiveAuction(prevAuction) {
-  let newAuction;
-  if (!prevAuction) {
-    newAuction = auctionsObj.artifacts[0];
-  } else {
-    const { id } = prevAuction;
-    const nextId = id + 1;
-    newAuction = auctionsObj.artifacts.filter(item => item.id === nextId)[0];
+	let newAuction;
+	if (!prevAuction.auctions) {
+		newAuction = auctionsObj.artifacts[0];
+	} else {
+		const { id } = prevAuction.auctions;
+		const nextId = id + 1;
+		newAuction = auctionsObj.artifacts.filter(item => item.id === nextId)[0];
 		prevAuction.auctionState = 2;
-		prevAuction.isWinnerCalculated = true;
-  }
-  if (!newAuction) return null;
+	}
+	if (!newAuction) return null;
 	newAuction.auctionState = 1;
 	return newAuction;
 }
@@ -144,9 +143,24 @@ function getRemainingTime(deadline) {
 
 function addNewFirstPricedSealedBid(bidInfo) {
 	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
-	const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
-	const updatedObj = firstPriceSealedBidObj.updateBidObject();
-	return updatedObj;
+	//const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
+	rooms.forEach(room => {
+		if (room.roomCode === player.hostCode) {
+			room.auctions.artifacts.forEach(auction => {
+				if (auction.id === auctionObj.id) {
+					if (auction.bid.currentBid === 0) {
+						auction.bid.currentBid = bidAmount;
+						auction.bid.biddingteam = player.teamName;
+					} else if (auction.bid.currentBid < bidAmount) {
+						auction.bid.currentBid = bidAmount;
+						auction.bid.biddingteam = player.teamName;
+					}
+				}
+			});
+		}
+	});
+	//const updatedObj = firstPriceSealedBidObj.updateBidObject();
+	//return updatedObj;
 }
 
 function addNewEnglishAuctionBid(bidInfo) {
@@ -157,8 +171,8 @@ function addNewEnglishAuctionBid(bidInfo) {
 }
 
 function getBidWinner(auctionObj) {
-  const { auctionType, isWinnerCalculated } = auctionObj;
-  let winner;
+	const { auctionType } = auctionObj;
+	let winner;
 	switch (auctionType) {
 		case "1":
 			if (!isWinnerCalculated) {
@@ -184,6 +198,6 @@ module.exports = {
 	getRemainingTime,
 	updateAuctionState,
 	getBidWinner,
-  addNewFirstPricedSealedBid,
-  addNewEnglishAuctionBid
+	addNewFirstPricedSealedBid,
+	addNewEnglishAuctionBid,
 };

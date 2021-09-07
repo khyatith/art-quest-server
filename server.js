@@ -43,30 +43,34 @@ function updateLandingPageClock() {
 	}
 }
 
-async function updateAuctionClock() {
-	isAuctionTimerStarted = true;
-	bidWinner = {};
-	const t = getRemainingTime(auctionsTimer);
-	if (t.total <= 0) {
-		isAuctionTimerStarted = false;
-		clearInterval(auctionTimerInterval);
-		console.log("currentAuction in t.total < 0", bidWinner);
-		if (!bidWinner || !bidWinner.isWinnerCalculated) {
-			bidWinner = getBidWinner(currentAuction);
-			if (bidWinner) {
-				io.emit("displayBidWinner", bidWinner);
-				bidWinner = {};
-			}
-		} else {
-			io.emit("displayBidWinner", null);
-		}
-	} else if (isAuctionTimerStarted && t.total > 0) {
-		bidWinner = {};
-		io.emit("auctionTimerValue", t);
-	}
-}
+// async function updateAuctionClock(player) {
+// 	isAuctionTimerStarted = true;
+// 	let bidWinner = {};
+// 	const t = getRemainingTime(auctionsTimer);
+// 	if (t.total <= 0) {
+// 		isAuctionTimerStarted = false;
+// 		clearInterval(auctionTimerInterval);
+// 		rooms.forEach(room => {
+// 			if (room.roomCode === player.hostCode) {
+// 				room.auctions.artifacts.forEach(auction => {
+// 					if (auction.id === currentAuction.id) {
+// 						bidWinner = auction.bid;
+// 					}
+// 				});
+// 			}
+// 		});
+// 		if (bidWinner) {
+// 			//send a save bid winner
+// 			// db.collection('rooms').doc()
+// 			io.emit("displayBidWinner", bidWinner);
+// 		}
+// 	} else if (isAuctionTimerStarted && t.total > 0) {
+// 		io.emit("auctionTimerValue", t);
+// 	}
+// }
 
 var mod = require("./constants");
+
 var rooms = mod.rooms;
 
 io.on("connection", socket => {
@@ -112,9 +116,32 @@ io.on("connection", socket => {
 	socket.on("startAuctionsTimer", timerInMinutes => {
 		if (!isAuctionTimerStarted) {
 			const current = Date.parse(new Date());
-			auctionsTimer = new Date(current + 0.5 * 60 * 1000);
+			auctionsTimer = new Date(current + timerInMinutes.auctionType * 60 * 1000);
 		}
-		auctionTimerInterval = setInterval(updateAuctionClock, 1000);
+		auctionTimerInterval = setInterval(async function updateAuctionClock() {
+			isAuctionTimerStarted = true;
+			let bidWinner = {};
+			const t = getRemainingTime(auctionsTimer);
+			if (t.total <= 0) {
+				isAuctionTimerStarted = false;
+				clearInterval(auctionTimerInterval);
+				rooms.forEach(room => {
+					if (room.roomCode === timerInMinutes.client.hostCode) {
+						room.auctions.artifacts.forEach(auction => {
+							if (auction.id === currentAuction.id) {
+								bidWinner = auction.bid;
+							}
+						});
+					}
+				});
+				if (bidWinner) {
+					//send a save bid winner
+					io.emit("displayBidWinner", bidWinner);
+				}
+			} else if (isAuctionTimerStarted && t.total > 0) {
+				io.emit("auctionTimerValue", t);
+			}
+		}, 1000);
 	});
 
 	socket.on("addNewBid", bidInfo => {
