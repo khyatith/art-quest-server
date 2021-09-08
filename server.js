@@ -116,7 +116,8 @@ io.on("connection", socket => {
 	socket.on("startAuctionsTimer", timerInMinutes => {
 		if (!isAuctionTimerStarted) {
 			const current = Date.parse(new Date());
-			auctionsTimer = new Date(current + timerInMinutes.auctionType * 60 * 1000);
+			//auctionsTimer = new Date(current + timerInMinutes.auctionType * 60 * 1000);
+			auctionsTimer = new Date(current + 60 * 1000 * 0.5);
 		}
 		auctionTimerInterval = setInterval(async function updateAuctionClock() {
 			isAuctionTimerStarted = true;
@@ -129,7 +130,7 @@ io.on("connection", socket => {
 					if (room.roomCode === timerInMinutes.client.hostCode) {
 						room.auctions.artifacts.forEach(auction => {
 							if (auction.id === currentAuction.id) {
-								bidWinner = auction.bid;
+								bidWinner = auction;
 							}
 						});
 					}
@@ -153,7 +154,9 @@ io.on("connection", socket => {
 				break;
 			case "2":
 				const prevBid = addNewEnglishAuctionBid(bidInfo);
+				console.log(prevBid);
 				io.emit("setPreviousBid", prevBid);
+
 			default:
 				return;
 		}

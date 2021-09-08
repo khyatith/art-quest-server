@@ -20,8 +20,8 @@
 			"buyingPrice": 14000,
 			"auctionState": 0,
 			"bid": {
-				"currentBid": 0,
-				"biddingTeam": ""
+				"bidAmount": 0,
+				"bidTeam": ""
 			}
 		},
 		{

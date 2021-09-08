@@ -148,12 +148,12 @@ function addNewFirstPricedSealedBid(bidInfo) {
 		if (room.roomCode === player.hostCode) {
 			room.auctions.artifacts.forEach(auction => {
 				if (auction.id === auctionObj.id) {
-					if (auction.bid.currentBid === 0) {
-						auction.bid.currentBid = bidAmount;
-						auction.bid.biddingteam = player.teamName;
-					} else if (auction.bid.currentBid < bidAmount) {
-						auction.bid.currentBid = bidAmount;
-						auction.bid.biddingteam = player.teamName;
+					if (auction.bid.bidAmount === 0) {
+						auction.bid.bidAmount = bidAmount;
+						auction.bid.bidTeam = player.teamName;
+					} else if (auction.bid.bidAmount < bidAmount) {
+						auction.bid.bidAmount = bidAmount;
+						auction.bid.bidTeam = player.teamName;
 					}
 				}
 			});
@@ -172,9 +172,10 @@ function addNewEnglishAuctionBid(bidInfo) {
 		if (room.roomCode === player.hostCode) {
 			room.auctions.artifacts.forEach(auction => {
 				if (auction.id === auctionObj.id) {
-					if (auction.bid.currentBid < bidAmount) {
-						auction.bid.currentBid = bidAmount;
-						auction.bid.biddingteam = player.teamName;
+					if (auction.bid.bidAmount < bidAmount) {
+						auction.bid.bidAmount = bidAmount;
+
+						auction.bid.bidTeam = player.teamName;
 						updatedObj = auction;
 					}
 				}
