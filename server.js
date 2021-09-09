@@ -131,12 +131,13 @@ io.on("connection", socket => {
 						room.auctions.artifacts.forEach(auction => {
 							if (auction.id === currentAuction.id) {
 								bidWinner = auction;
+								db.collection("rooms").doc(room.roomCode).set(room.auctions, { merge: true });
 							}
 						});
 					}
 				});
 				if (bidWinner) {
-					//send a save bid winner
+					//send and save bid winner
 					io.emit("displayBidWinner", bidWinner);
 				}
 			} else if (isAuctionTimerStarted && t.total > 0) {
