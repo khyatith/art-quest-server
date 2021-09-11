@@ -131,6 +131,7 @@ io.on("connection", socket => {
 						room.auctions.artifacts.forEach(auction => {
 							if (auction.id === currentAuction.id) {
 								bidWinner = auction;
+								auction.auctionState = 2;
 								db.collection("rooms").doc(room.roomCode).set(room.auctions, { merge: true });
 							}
 						});
