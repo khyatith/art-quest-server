@@ -1,5 +1,6 @@
 var CONSTANTS = require("../constants");
 var rooms = CONSTANTS.rooms;
+var boardArray = CONSTANTS.boardArray;
 var auctionsObj = require("../auctionData.json");
 var { FirstPricedSealedBidAuction } = require("../auctions/FirstPricedSealedBidAuction");
 var { EnglishAuction } = require("../auctions/EnglishAuction");
@@ -205,6 +206,35 @@ function getBidWinner(auctionObj) {
 	}
 }
 
+function getUpdatedLeaderBoard(client) {
+	db.collection("rooms")
+		.doc(client.hostCode)
+		.onSnapshot(snapshot => {
+			let data = snapshot.data();
+			data.auctions.artifacts.forEach(artifact => {
+				if (artifact.bid.bidTeam) {
+					switch (artifact.bid.bidTeam) {
+						case "Blue":
+							boardArray[0].artifacts.push(artifact);
+							break;
+						case "Red":
+							boardArray[1].artifacts.push(artifact);
+							break;
+						case "Green":
+							boardArray[2].artifacts.push(artifact);
+							break;
+						case "Yellow":
+							boardArray[3].artifacts.push(artifact);
+							break;
+						case "Purple":
+							boardArray[4].artifacts.push(artifact);
+							break;
+					}
+				}
+			});
+		});
+}
+
 module.exports = {
 	createGameState,
 	gameLoop,
@@ -215,4 +245,5 @@ module.exports = {
 	getBidWinner,
 	addNewFirstPricedSealedBid,
 	addNewEnglishAuctionBid,
+	getUpdatedLeaderBoard,
 };

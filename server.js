@@ -7,6 +7,7 @@ const {
 	addNewFirstPricedSealedBid,
 	getBidWinner,
 	addNewEnglishAuctionBid,
+	getUpdatedLeaderBoard,
 } = require("./helpers/game");
 const frameRate = 500;
 const io = require("socket.io")(5000, {
@@ -43,35 +44,10 @@ function updateLandingPageClock() {
 	}
 }
 
-// async function updateAuctionClock(player) {
-// 	isAuctionTimerStarted = true;
-// 	let bidWinner = {};
-// 	const t = getRemainingTime(auctionsTimer);
-// 	if (t.total <= 0) {
-// 		isAuctionTimerStarted = false;
-// 		clearInterval(auctionTimerInterval);
-// 		rooms.forEach(room => {
-// 			if (room.roomCode === player.hostCode) {
-// 				room.auctions.artifacts.forEach(auction => {
-// 					if (auction.id === currentAuction.id) {
-// 						bidWinner = auction.bid;
-// 					}
-// 				});
-// 			}
-// 		});
-// 		if (bidWinner) {
-// 			//send a save bid winner
-// 			// db.collection('rooms').doc()
-// 			io.emit("displayBidWinner", bidWinner);
-// 		}
-// 	} else if (isAuctionTimerStarted && t.total > 0) {
-// 		io.emit("auctionTimerValue", t);
-// 	}
-// }
-
 var mod = require("./constants");
 
 var rooms = mod.rooms;
+var boardArray = mod.boardArray;
 
 io.on("connection", socket => {
 	//create a game room event
@@ -102,7 +78,9 @@ io.on("connection", socket => {
 	socket.on("startLiveAuctions", prevAuctionObj => {
 		bidWinner = {};
 		currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
+		getUpdatedLeaderBoard(prevAuctionObj.client);
 		socket.emit("startNextAuction", currentAuction);
+		socket.emit("updatedLeaderBoard", boardArray);
 	});
 
 	socket.on("startLandingPageTimer", timerInMinutes => {
@@ -132,7 +110,8 @@ io.on("connection", socket => {
 							if (auction.id === currentAuction.id) {
 								bidWinner = auction;
 								auction.auctionState = 2;
-								db.collection("rooms").doc(room.roomCode).set(room.auctions, { merge: true });
+
+								db.collection("rooms").doc(room.roomCode).set(room, { merge: true });
 							}
 						});
 					}
