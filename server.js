@@ -78,9 +78,13 @@ io.on("connection", socket => {
 	socket.on("startLiveAuctions", prevAuctionObj => {
 		bidWinner = {};
 		currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
-		updatedLeaderBoard = getUpdatedLeaderBoard(prevAuctionObj.client);
+		getUpdatedLeaderBoard(prevAuctionObj.client);
 		socket.emit("startNextAuction", currentAuction);
-		socket.emit("updatedLeaderBoard", updatedLeaderBoard);
+		rooms.forEach(room => {
+			if (room.roomCode === prevAuctionObj.client.hostCode) {
+				socket.emit("updatedLeaderBoard", room.leaderBoard);
+			}
+		});
 	});
 
 	socket.on("startLandingPageTimer", timerInMinutes => {

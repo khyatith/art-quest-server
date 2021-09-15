@@ -260,14 +260,11 @@ function getUpdatedLeaderBoard(client) {
 									if (!found) room.leaderBoard[0].artifacts.push(artifact);
 									break;
 							}
-							board = room.leaderBoard;
 						}
 					});
 				});
 		}
 	});
-
-	return board;
 }
 
 module.exports = {
