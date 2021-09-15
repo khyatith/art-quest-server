@@ -9,6 +9,7 @@ const Redis = require("redis");
 // const redisClient = Redis.createClient();
 
 const expiration = 3600;
+var found = 0;
 
 const firebaseMod = require("../firebase/firebase");
 
@@ -39,6 +40,7 @@ function createGameState(socket, player) {
 			players: [playerObj],
 			auctions: auctionsObj,
 			gameClock: gameClockObj,
+			leaderBoard: boardArray,
 		});
 
 		//add room to database
@@ -207,32 +209,65 @@ function getBidWinner(auctionObj) {
 }
 
 function getUpdatedLeaderBoard(client) {
-	db.collection("rooms")
-		.doc(client.hostCode)
-		.onSnapshot(snapshot => {
-			let data = snapshot.data();
-			data.auctions.artifacts.forEach(artifact => {
-				if (artifact.bid.bidTeam) {
-					switch (artifact.bid.bidTeam) {
-						case "Blue":
-							boardArray[0].artifacts.push(artifact);
-							break;
-						case "Red":
-							boardArray[1].artifacts.push(artifact);
-							break;
-						case "Green":
-							boardArray[2].artifacts.push(artifact);
-							break;
-						case "Yellow":
-							boardArray[3].artifacts.push(artifact);
-							break;
-						case "Purple":
-							boardArray[4].artifacts.push(artifact);
-							break;
-					}
-				}
-			});
-		});
+	var board = [];
+	rooms.forEach(room => {
+		if (room.roomCode === client.hostCode) {
+			db.collection("rooms")
+				.doc(client.hostCode)
+				.onSnapshot(snapshot => {
+					let data = snapshot.data();
+					data.auctions.artifacts.forEach(artifact => {
+						if (artifact.bid.bidTeam) {
+							switch (artifact.bid.bidTeam) {
+								case "Blue":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "Red":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "Green":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "Yellow":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "Purple":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "Orange":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "Indigo":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "White":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "Black":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+								case "Gold":
+									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
+									if (!found) room.leaderBoard[0].artifacts.push(artifact);
+									break;
+							}
+							board = room.leaderBoard;
+						}
+					});
+				});
+		}
+	});
+
+	return board;
 }
 
 module.exports = {

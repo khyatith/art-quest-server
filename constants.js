@@ -18,5 +18,10 @@ module.exports = {
 		{ team: "Green", artifacts: [] },
 		{ team: "Yellow", artifacts: [] },
 		{ team: "Purple", artifacts: [] },
+		{ team: "Orange", artifacts: [] },
+		{ team: "Indigo", artifacts: [] },
+		{ team: "White", artifacts: [] },
+		{ team: "Black", artifacts: [] },
+		{ team: "Gold", artifacts: [] },
 	],
 };

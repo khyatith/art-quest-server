@@ -18,6 +18,7 @@ const io = require("socket.io")(5000, {
 require("dotenv").config();
 
 let currentAuction = {};
+let updatedLeaderBoard = [];
 
 const firebaseMod = require("./firebase/firebase");
 const db = firebaseMod.db;
@@ -47,7 +48,6 @@ function updateLandingPageClock() {
 var mod = require("./constants");
 
 var rooms = mod.rooms;
-var boardArray = mod.boardArray;
 
 io.on("connection", socket => {
 	//create a game room event
@@ -78,9 +78,9 @@ io.on("connection", socket => {
 	socket.on("startLiveAuctions", prevAuctionObj => {
 		bidWinner = {};
 		currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
-		getUpdatedLeaderBoard(prevAuctionObj.client);
+		updatedLeaderBoard = getUpdatedLeaderBoard(prevAuctionObj.client);
 		socket.emit("startNextAuction", currentAuction);
-		socket.emit("updatedLeaderBoard", boardArray);
+		socket.emit("updatedLeaderBoard", updatedLeaderBoard);
 	});
 
 	socket.on("startLandingPageTimer", timerInMinutes => {
@@ -135,12 +135,20 @@ io.on("connection", socket => {
 				break;
 			case "2":
 				const prevBid = addNewEnglishAuctionBid(bidInfo);
-				console.log(prevBid);
 				io.emit("setPreviousBid", prevBid);
 
 			default:
 				return;
 		}
+	});
+
+	socket.on("setTeams", teams => {
+		rooms.forEach(room => {
+			if (room.roomCode === teams.client.hostCode) {
+				room.leaderBoard.splice(teams.teams, 10 - teams.teams);
+				db.collection("rooms").doc(room.roomCode).set(room, { merge: true });
+			}
+		});
 	});
 });
 
