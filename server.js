@@ -45,6 +45,35 @@ function updateLandingPageClock() {
 	}
 }
 
+function updateAuctionClock(info) {
+	isAuctionTimerStarted = true;
+	let bidWinner = {};
+	const t = getRemainingTime(auctionsTimer);
+	console.log('time', t);
+	if (t.total <= 0) {
+		isAuctionTimerStarted = false;
+		clearInterval(auctionTimerInterval);
+		rooms.forEach(room => {
+			if (room.roomCode === info.client.hostCode) {
+				room.auctions.artifacts.forEach(auction => {
+					if (auction.id === currentAuction.id) {
+						bidWinner = auction;
+						auction.auctionState = 2;
+
+						db.collection("rooms").doc(room.roomCode).set(room, { merge: true });
+					}
+				});
+			}
+		});
+		if (bidWinner) {
+			//send and save bid winner
+			io.emit("displayBidWinner", bidWinner);
+		}
+	}  else if (isAuctionTimerStarted && t.total > 0) {
+		io.emit("auctionTimerValue", t);
+	}
+}
+
 var mod = require("./constants");
 
 var rooms = mod.rooms;
@@ -95,39 +124,13 @@ io.on("connection", socket => {
 		landingPageTimeInterval = setInterval(updateLandingPageClock, 1000);
 	});
 
-	socket.on("startAuctionsTimer", timerInMinutes => {
+	socket.on("startAuctionsTimer", info => {
 		if (!isAuctionTimerStarted) {
 			const current = Date.parse(new Date());
 			//auctionsTimer = new Date(current + timerInMinutes.auctionType * 60 * 1000);
-			auctionsTimer = new Date(current + 60 * 1000 * 0.5);
+			auctionsTimer = new Date(current + 0.5 * 60 * 1000);
 		}
-		auctionTimerInterval = setInterval(async function updateAuctionClock() {
-			isAuctionTimerStarted = true;
-			let bidWinner = {};
-			const t = getRemainingTime(auctionsTimer);
-			if (t.total <= 0) {
-				isAuctionTimerStarted = false;
-				clearInterval(auctionTimerInterval);
-				rooms.forEach(room => {
-					if (room.roomCode === timerInMinutes.client.hostCode) {
-						room.auctions.artifacts.forEach(auction => {
-							if (auction.id === currentAuction.id) {
-								bidWinner = auction;
-								auction.auctionState = 2;
-
-								db.collection("rooms").doc(room.roomCode).set(room, { merge: true });
-							}
-						});
-					}
-				});
-				if (bidWinner) {
-					//send and save bid winner
-					io.emit("displayBidWinner", bidWinner);
-				}
-			} else if (isAuctionTimerStarted && t.total > 0) {
-				io.emit("auctionTimerValue", t);
-			}
-		}, 1000);
+		auctionTimerInterval = setInterval(() => updateAuctionClock(info), 1000);
 	});
 
 	socket.on("addNewBid", bidInfo => {
@@ -140,7 +143,7 @@ io.on("connection", socket => {
 			case "2":
 				const prevBid = addNewEnglishAuctionBid(bidInfo);
 				io.emit("setPreviousBid", prevBid);
-
+				break;
 			default:
 				return;
 		}

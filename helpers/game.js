@@ -169,18 +169,13 @@ function addNewFirstPricedSealedBid(bidInfo) {
 function addNewEnglishAuctionBid(bidInfo) {
 	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
 	let updatedObj = {};
-	//const englishAuctionObj = new EnglishAuction(auctionObj, "blue", bidAmount, bidAt);
-	//const updatedObj = englishAuctionObj.updateBidObject();
 	rooms.forEach(room => {
 		if (room.roomCode === player.hostCode) {
 			room.auctions.artifacts.forEach(auction => {
-				if (auction.id === auctionObj.id) {
-					if (auction.bid.bidAmount < bidAmount) {
-						auction.bid.bidAmount = bidAmount;
-
-						auction.bid.bidTeam = player.teamName;
-						updatedObj = auction;
-					}
+				if (auction.id === auctionObj.id && auction.bid.bidAmount < bidAmount)  {
+					auction.bid.bidAmount = bidAmount;
+					auction.bid.bidTeam = player.teamName;
+					updatedObj = auction;
 				}
 			});
 		}
