@@ -29,28 +29,24 @@ function createGameState(socket, player) {
 				latitude: 0,
 			},
 		};
-		let time = new Date().getTime();
-		let gameClockObj = {
-			timerState: true,
-			timeStamp: time,
-		};
 
-		rooms.push({
+		rooms[player.hostCode] = {
 			roomCode: player.playerId,
 			players: [playerObj],
 			auctions: auctionsObj,
-			gameClock: gameClockObj,
-			leaderBoard: boardArray,
-		});
+			leaderBoard: {},
+			englishAuctionBids: {},
+			firstPricedSealedBids: {}
+		};
 
 		//add room to database
-		db.collection("rooms").doc(player.playerId).set({
-			roomCode: player.playerId,
-			gameClock: gameClockObj,
-			auctions: auctionsObj,
-		});
+		// db.collection("rooms").doc(player.playerId).set({
+		// 	roomCode: player.playerId,
+		// 	gameClock: gameClockObj,
+		// 	auctions: auctionsObj,
+		// });
 
-		db.collection("rooms").doc(player.playerId).collection("players").doc(player.playerId).set(playerObj);
+		// db.collection("rooms").doc(player.playerId).collection("players").doc(player.playerId).set(playerObj);
 
 		//redis
 		//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
@@ -60,45 +56,98 @@ function createGameState(socket, player) {
 }
 
 function joinGameState(socket, player) {
-	try {
-		db.collection("rooms")
-			.doc(player.hostCode)
-			.collection("players")
-			.where("playerId", "==", player.playerId)
-			.onSnapshot(snapshot => {
-				if (snapshot.empty) {
-					console.log("no player found");
-					let playerObj = {
-						socketId: socket.id,
-						playerId: player.playerId,
-						playerName: player.playerName,
-						teamName: player.teamName,
-						gold: 1000000,
-						inventory: [],
-						playerCoordinates: {
-							longitude: 0,
-							latitude: 0,
-						},
-					};
-
-					rooms.forEach(room => {
-						if (room.roomCode === player.hostCode) {
-							room.players.push(playerObj);
-							db.collection("rooms").doc(player.hostCode).collection("players").doc(player.playerId).set(playerObj);
-						} else {
-							console.log("not found");
-						}
-					});
-					//redis
-					//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
-				} else {
-					console.log("player already exists");
-				}
-			});
-	} catch (err) {
-		console.log(err);
-	}
+	if (!player || !player.hostCode) return null;
+	const hostCode = player.hostCode;
+	rooms[hostCode].players.push(player);
 }
+
+function getLeaderboard(roomCode) {
+	const leaderboard = {};
+	const currentRoom = rooms[roomCode];
+  const englishAuctionsObj = currentRoom.englishAuctionBids;
+  const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
+	//englishAuctions
+	if (englishAuctionsObj) {
+		for (var englishAuction in englishAuctionsObj) {
+			const leaderBoardKeys = Object.keys(leaderboard);
+      const auctionItem = englishAuctionsObj[englishAuction];
+      console.log('inside english auction item', auctionItem);
+			const EAwinningTeam = auctionItem.bidTeam;
+			if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam)) {
+        leaderboard[`${EAwinningTeam}`].push(auctionItem);
+      } else {
+        leaderboard[`${EAwinningTeam}`] = [auctionItem];
+      }
+		}
+  }
+  
+  //firstPricedSealedBidAuctions
+  if (firstPricedSealedBidAuctionsObj) {
+    for (var fristPricedSealedAuction in firstPricedSealedBidAuctionsObj) {
+      const leaderBoardFSBKeys = Object.keys(leaderboard);
+      const FPSBItem = firstPricedSealedBidAuctionsObj[fristPricedSealedAuction];
+      const FPSBwinner = FPSBItem.reduce((acc, obj) => {
+        if (acc.bidAmount === obj.bidAmount) {
+          if (acc.bidAt < obj.bidAt) {
+            return acc;
+          } else {
+            return obj;
+          }
+        }
+        return (acc.bidAmount > obj.bidAmount) ? acc : obj;
+      }, {});
+      FPSBwinningteam = FPSBwinner.bidTeam;
+      if (leaderBoardFSBKeys && leaderBoardFSBKeys.includes(FPSBwinningteam)) {
+        leaderboard[`${FPSBwinningteam}`].push(FPSBwinner);
+      } else {
+        leaderboard[`${FPSBwinningteam}`] = [FPSBwinner];
+      }
+    }
+  }
+
+  return leaderboard;
+}
+
+// function joinGameState(socket, player) {
+// 	try {
+// 		db.collection("rooms")
+// 			.doc(player.hostCode)
+// 			.collection("players")
+// 			.where("playerId", "==", player.playerId)
+// 			.onSnapshot(snapshot => {
+// 				if (snapshot.empty) {
+// 					console.log("no player found");
+// 					let playerObj = {
+// 						socketId: socket.id,
+// 						playerId: player.playerId,
+// 						playerName: player.playerName,
+// 						teamName: player.teamName,
+// 						gold: 1000000,
+// 						inventory: [],
+// 						playerCoordinates: {
+// 							longitude: 0,
+// 							latitude: 0,
+// 						},
+// 					};
+
+// 					rooms.forEach(room => {
+// 						if (room.roomCode === player.hostCode) {
+// 							room.players.push(playerObj);
+// 							db.collection("rooms").doc(player.hostCode).collection("players").doc(player.playerId).set(playerObj);
+// 						} else {
+// 							console.log("not found");
+// 						}
+// 					});
+// 					//redis
+// 					//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
+// 				} else {
+// 					console.log("player already exists");
+// 				}
+// 			});
+// 	} catch (err) {
+// 		console.log(err);
+// 	}
+// }
 
 function gameLoop(state) {
 	if (!state) {
@@ -108,13 +157,19 @@ function gameLoop(state) {
 
 function getNextObjectForLiveAuction(prevAuction) {
 	let newAuction;
-	if (!prevAuction.auctions) {
-		newAuction = auctionsObj.artifacts[0];
+	console.log('>>>>>prevAuction', JSON.stringify(prevAuction));
+	const { currentAuctionObj, client } = prevAuction;
+	if (!currentAuctionObj) {
+		newAuction = rooms[client.hostCode].auctions.artifacts[0];
 	} else {
-		const { id } = prevAuction.auctions;
+		const { id } = prevAuction.currentAuctionObj;
 		const nextId = id + 1;
-		newAuction = auctionsObj.artifacts.filter(item => item.id === nextId)[0];
-		prevAuction.auctionState = 2;
+		newAuction = rooms[client.hostCode].auctions.artifacts.filter(item => item.id === nextId)[0];
+		rooms[client.hostCode].auctions.artifacts.forEach(item => {
+			if (item.id === currentAuctionObj.id) {
+				item.auctionState = 2;
+			}
+		});
 	}
 	if (!newAuction) return null;
 	newAuction.auctionState = 1;
@@ -144,44 +199,44 @@ function getRemainingTime(deadline) {
 	};
 }
 
-function addNewFirstPricedSealedBid(bidInfo) {
-	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
-	//const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
-	rooms.forEach(room => {
-		if (room.roomCode === player.hostCode) {
-			room.auctions.artifacts.forEach(auction => {
-				if (auction.id === auctionObj.id) {
-					if (auction.bid.bidAmount === 0) {
-						auction.bid.bidAmount = bidAmount;
-						auction.bid.bidTeam = player.teamName;
-					} else if (auction.bid.bidAmount < bidAmount) {
-						auction.bid.bidAmount = bidAmount;
-						auction.bid.bidTeam = player.teamName;
-					}
-				}
-			});
-		}
-	});
-	//const updatedObj = firstPriceSealedBidObj.updateBidObject();
-	//return updatedObj;
-}
+// function addNewFirstPricedSealedBid(bidInfo) {
+// 	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
+// 	//const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
+// 	rooms.forEach(room => {
+// 		if (room.roomCode === player.hostCode) {
+// 			room.auctions.artifacts.forEach(auction => {
+// 				if (auction.id === auctionObj.id) {
+// 					if (auction.bid.bidAmount === 0) {
+// 						auction.bid.bidAmount = bidAmount;
+// 						auction.bid.bidTeam = player.teamName;
+// 					} else if (auction.bid.bidAmount < bidAmount) {
+// 						auction.bid.bidAmount = bidAmount;
+// 						auction.bid.bidTeam = player.teamName;
+// 					}
+// 				}
+// 			});
+// 		}
+// 	});
+// 	//const updatedObj = firstPriceSealedBidObj.updateBidObject();
+// 	//return updatedObj;
+// }
 
-function addNewEnglishAuctionBid(bidInfo) {
-	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
-	let updatedObj = {};
-	rooms.forEach(room => {
-		if (room.roomCode === player.hostCode) {
-			room.auctions.artifacts.forEach(auction => {
-				if (auction.id === auctionObj.id && auction.bid.bidAmount < bidAmount)  {
-					auction.bid.bidAmount = bidAmount;
-					auction.bid.bidTeam = player.teamName;
-					updatedObj = auction;
-				}
-			});
-		}
-	});
-	return updatedObj;
-}
+// function addNewEnglishAuctionBid(bidInfo) {
+// 	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
+// 	let updatedObj = {};
+// 	rooms.forEach(room => {
+// 		if (room.roomCode === player.hostCode) {
+// 			room.auctions.artifacts.forEach(auction => {
+// 				if (auction.id === auctionObj.id && auction.bid.bidAmount < bidAmount)  {
+// 					auction.bid.bidAmount = bidAmount;
+// 					auction.bid.bidTeam = player.teamName;
+// 					updatedObj = auction;
+// 				}
+// 			});
+// 		}
+// 	});
+// 	return updatedObj;
+// }
 
 function getBidWinner(auctionObj) {
 	const { auctionType } = auctionObj;
@@ -203,7 +258,7 @@ function getBidWinner(auctionObj) {
 	}
 }
 
-function getUpdatedLeaderBoard(client) {
+function updateLeaderBoard(client) {
 	var board = [];
 	rooms.forEach(room => {
 		if (room.roomCode === client.hostCode) {
@@ -269,8 +324,8 @@ module.exports = {
 	getNextObjectForLiveAuction,
 	getRemainingTime,
 	updateAuctionState,
-	getBidWinner,
-	addNewFirstPricedSealedBid,
-	addNewEnglishAuctionBid,
-	getUpdatedLeaderBoard,
+  getBidWinner,
+  getLeaderboard,
+	//addNewFirstPricedSealedBid,
+	//addNewEnglishAuctionBid,
 };
