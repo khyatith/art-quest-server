@@ -8,7 +8,7 @@ const FIRST_PRICED_SEALED_BID_AUCTIONS = [];
 const ENGLISH_AUCTIONS = [];
 
 module.exports = {
-	rooms: [],
+	rooms: {},
 	AUCTION_STATES,
 	FIRST_PRICED_SEALED_BID_AUCTIONS,
 	ENGLISH_AUCTIONS,
