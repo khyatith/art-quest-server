@@ -62,19 +62,21 @@ function joinGameState(socket, player) {
 }
 
 function getLeaderboard(roomCode) {
-	const leaderboard = {};
+	const leaderboard = rooms[roomCode].leaderBoard;
 	const currentRoom = rooms[roomCode];
-  const englishAuctionsObj = currentRoom.englishAuctionBids;
+  const englishAuctionsObj = currentRoom.englishAuctionBids;;
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
 	//englishAuctions
 	if (englishAuctionsObj) {
 		for (var englishAuction in englishAuctionsObj) {
 			const leaderBoardKeys = Object.keys(leaderboard);
       const auctionItem = englishAuctionsObj[englishAuction];
-      console.log('inside english auction item', auctionItem);
-			const EAwinningTeam = auctionItem.bidTeam;
+      const EAwinningTeam = auctionItem.bidTeam;
 			if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam)) {
-        leaderboard[`${EAwinningTeam}`].push(auctionItem);
+        const isExistingAuction = leaderboard[EAwinningTeam].filter(item => item.auctionObj.id === auctionItem.auctionId)[0];
+        if (!isExistingAuction) {
+          leaderboard[`${EAwinningTeam}`].push(auctionItem);
+        }
       } else {
         leaderboard[`${EAwinningTeam}`] = [auctionItem];
       }
@@ -96,9 +98,12 @@ function getLeaderboard(roomCode) {
         }
         return (acc.bidAmount > obj.bidAmount) ? acc : obj;
       }, {});
-      FPSBwinningteam = FPSBwinner.bidTeam;
+      const FPSBwinningteam = FPSBwinner.bidTeam;
       if (leaderBoardFSBKeys && leaderBoardFSBKeys.includes(FPSBwinningteam)) {
-        leaderboard[`${FPSBwinningteam}`].push(FPSBwinner);
+        const isExistingFPSBAuction = leaderboard[FPSBwinningteam].filter(item => item.auctionObj.id === FPSBwinner.auctionId)[0];
+        if (!isExistingFPSBAuction) {
+          leaderboard[`${FPSBwinningteam}`].push(FPSBwinner);
+        }
       } else {
         leaderboard[`${FPSBwinningteam}`] = [FPSBwinner];
       }
@@ -157,7 +162,6 @@ function gameLoop(state) {
 
 function getNextObjectForLiveAuction(prevAuction) {
 	let newAuction;
-	console.log('>>>>>prevAuction', JSON.stringify(prevAuction));
 	const { currentAuctionObj, client } = prevAuction;
 	if (!currentAuctionObj) {
 		newAuction = rooms[client.hostCode].auctions.artifacts[0];

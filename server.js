@@ -124,18 +124,13 @@ io.on("connection", socket => {
 		const { auctionType, player, auctionId, auction } = bidInfo;
 		switch (auctionType) {
 			case "1":
-        //addNewFirstPricedSealedBid(bidInfo);
-        console.log('auctionId', auctionId);
         const allFirstPricedSealedBids = rooms[player.hostCode].firstPricedSealedBids;
         const fpsbObj = Object.keys(allFirstPricedSealedBids);
-        console.log('fpsbObj', fpsbObj);
         if (fpsbObj.includes(`${auctionId}`)) {
-          console.log('inside includes');
           rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`].push(bidInfo);
         } else {
           rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`] = [bidInfo];
         }
-        console.log('>>>>fbsd', rooms[player.hostCode].firstPricedSealedBids);
 				socket.emit("setLiveStyles", player.teamName);
 				break;
 			case "2":
@@ -146,29 +141,26 @@ io.on("connection", socket => {
 				return;
 		}
 	});
-
-	socket.on("getBidWinner", (info) => {
-		console.log('info', info);
-		console.log('inside bid winner', rooms[info.client.hostCode]);
-	});
-
-	// socket.on("getLeaderBoard", (player) => {
-  //   const { hostCode } = player;
-  //   const leaderboard = getLeaderboard(hostCode);
-  //   rooms[hostCode].leaderBoard = leaderboard;
-  //   console.log('leaderboard', leaderboard);
-  //   io.sockets.in(hostCode).emit("leaderboard", leaderboard);
-	// });
-
-	// socket.on("setTeams", teams => {
-	// 	rooms.forEach(room => {
-	// 		if (room.roomCode === teams.client.hostCode) {
-	// 			room.leaderBoard.splice(teams.teams, 10 - teams.teams);
-	// 			db.collection("rooms").doc(room.roomCode).set(room, { merge: true });
-	// 		}
-	// 	});
-	// });
 });
+
+//leaderboard namespace
+
+const leaderboardns = io.of("/leaderboard-namespace");
+
+leaderboardns.use((socket, next) => {
+  // ensure the user has sufficient rights
+  next();
+});
+
+leaderboardns.on("connection", socket => {
+  socket.on("getLeaderBoard", (player) => {
+    socket.join(player.hostCode);
+    const leaderboard = getLeaderboard(player.hostCode);
+    rooms[player.hostCode].leaderBoard = leaderboard;
+    leaderboardns.to(player.hostCode).emit("leaderboard", leaderboard);
+  })
+});
+
 
 function startGameInterval(client, room, socket) {
 	const intervalId = setInterval(() => {
