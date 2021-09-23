@@ -24,3 +24,4 @@ yarn-error.log*
 
 # firebase
 auctions-service-key.json
+auctions-service-key.txt
