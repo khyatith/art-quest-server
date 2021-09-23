@@ -9,12 +9,12 @@ const {
   getLeaderboard,
 } = require("./helpers/game");
 const socketIO = require("socket.io");
-const redis = require("socket.io-redis");
 const frameRate = 500;
-
+const redis = require("socket.io-redis");
+var redisURL = new URL(process.env.REDISCLOUD_URL);
 var express = require('express'),
-    app = express(),
-		server = require('http').createServer(app);
+  app = express(),
+  server = require('http').createServer(app);
 
 const io = socketIO(server, {
 	cors: {
@@ -23,7 +23,7 @@ const io = socketIO(server, {
 	},
 });
 
-io.adapter(redis({ host: "localhost", port: 6379 }));
+io.adapter(redis({ host: redisURL.hostname || "localhost", port: redisURL.port || 6379 }));
 
 require("dotenv").config();
 
