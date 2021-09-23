@@ -36,6 +36,10 @@ const io = socketIO(server, {
 
 require("dotenv").config();
 
+app.get("/", (req,res) => {
+  res.send("Hello World")
+});
+
 let currentAuction = {};
 let updatedLeaderBoard = [];
 

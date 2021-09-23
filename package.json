@@ -2,7 +2,7 @@
 	"name": "art-quest-server",
 	"version": "1.0.0",
 	"description": "",
-	"main": "index.js",
+	"main": "server.js",
 	"engines": {
 		"node": "16.x",
 		"npm": "7.x"
