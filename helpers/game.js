@@ -174,7 +174,7 @@ function getNextObjectForLiveAuction(prevAuction) {
 				item.auctionState = 2;
 			}
 		});
-	}
+  }
 	if (!newAuction) return null;
 	newAuction.auctionState = 1;
 	return newAuction;

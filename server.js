@@ -10,10 +10,6 @@ const {
 } = require("./helpers/game");
 const socketIO = require("socket.io");
 const frameRate = 500;
-//const redis = require("socket.io-redis");
-// var redisAdapter = require('socket.io-redis');
-// var redis = require('redis');
-// var redisURL = new URL(process.env.REDISCLOUD_URL);
 var express = require('express'),
   app = express(),
   server = require('http').createServer(app);
@@ -24,15 +20,6 @@ const io = socketIO(server, {
 		credentials: true
 	},
 });
-// io.adapter(redisAdapter({
-//   pubClient: redis.createClient(redisURL.port, redisURL.hostname, {return_buffers: true}),
-//   subClient: redis.createClient(redisURL.port, redisURL.hostname, {return_buffers: true})
-// }));
-//console.log('redisURL', redisURL);
-// const pubClient = createClient({ host: redisURL.hostname, port: redisURL.port });
-// const subClient = pubClient.duplicate();
-// io.adapter(createAdapter(pubClient, subClient));
-//io.adapter(redis({ host: redisURL.hostname || "localhost", port: redisURL.port || 6379 }));
 
 require("dotenv").config();
 
@@ -50,7 +37,6 @@ let landingPageTimerStarted = false;
 let auctionsTimer;
 let isAuctionTimerStarted = false;
 let auctionTimerInterval;
-let bidWinner = {};
 
 var mod = require("./constants");
 
@@ -109,8 +95,8 @@ io.on("connection", socket => {
 	});
 
 	socket.on("startLiveAuctions", prevAuctionObj => {
-		currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
-		socket.emit("startNextAuction", currentAuction);
+    currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
+    socket.emit("startNextAuction", currentAuction);
 	});
 
 	socket.on("startLandingPageTimer", ({ roomCode, timerInMinutes }) => {
@@ -149,7 +135,7 @@ io.on("connection", socket => {
 			default:
 				return;
 		}
-	});
+  });
 });
 
 //leaderboard namespace
@@ -157,7 +143,6 @@ io.on("connection", socket => {
 const leaderboardns = io.of("/leaderboard-namespace");
 
 leaderboardns.use((socket, next) => {
-  // ensure the user has sufficient rights
   next();
 });
 
