@@ -36,20 +36,9 @@ function createGameState(socket, player) {
 			auctions: auctionsObj,
 			leaderBoard: {},
 			englishAuctionBids: {},
-			firstPricedSealedBids: {}
+      firstPricedSealedBids: {},
+      secondPricedSealedBids: {}
 		};
-
-		//add room to database
-		// db.collection("rooms").doc(player.playerId).set({
-		// 	roomCode: player.playerId,
-		// 	gameClock: gameClockObj,
-		// 	auctions: auctionsObj,
-		// });
-
-		// db.collection("rooms").doc(player.playerId).collection("players").doc(player.playerId).set(playerObj);
-
-		//redis
-		//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
 	} catch (err) {
 		console.log(err);
 	}
@@ -61,11 +50,34 @@ function joinGameState(socket, player) {
 	rooms[hostCode].players.push(player);
 }
 
+function findSecondHighestBid(arr, arrSize) {
+  let i;
+
+  if (arrSize < 2) {
+    return arr.bidAmount;
+  }
+
+  // sort the array
+  arr.sort();
+
+  for (i = arrSize - 2; i >= 0; i--) {
+      // if the element is not
+      // equal to largest element
+      if (arr[i] != arr[arrSize - 1]) {
+        return arr[i];
+      }
+  }
+
+  return null;
+}
+
 function getLeaderboard(roomCode) {
 	const leaderboard = rooms[roomCode].leaderBoard;
 	const currentRoom = rooms[roomCode];
   const englishAuctionsObj = currentRoom.englishAuctionBids;;
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
+  const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
+
 	//englishAuctions
 	if (englishAuctionsObj) {
 		for (var englishAuction in englishAuctionsObj) {
@@ -89,14 +101,16 @@ function getLeaderboard(roomCode) {
       const leaderBoardFSBKeys = Object.keys(leaderboard);
       const FPSBItem = firstPricedSealedBidAuctionsObj[fristPricedSealedAuction];
       const FPSBwinner = FPSBItem.reduce((acc, obj) => {
-        if (acc.bidAmount === obj.bidAmount) {
+        const accBid = parseInt(acc.bidAmount);
+        const objBid = parseInt(obj.bidAmount);
+        if (accBid === objBid) {
           if (acc.bidAt < obj.bidAt) {
             return acc;
           } else {
             return obj;
           }
         }
-        return (acc.bidAmount > obj.bidAmount) ? acc : obj;
+        return (accBid > objBid) ? acc : obj;
       }, {});
       const FPSBwinningteam = FPSBwinner.bidTeam;
       if (leaderBoardFSBKeys && leaderBoardFSBKeys.includes(FPSBwinningteam)) {
@@ -110,49 +124,37 @@ function getLeaderboard(roomCode) {
     }
   }
 
+  //secondPricedSealedBidAuctions
+  if (secondPricedSealedBidAuctionObj) {
+    for (var secondPricedSealedAuction in secondPricedSealedBidAuctionObj) {
+      const leaderBoardSPSBKeys = Object.keys(leaderboard);
+      const SPSBItem = secondPricedSealedBidAuctionObj[secondPricedSealedAuction];
+      //Find the second highest bid amount
+      const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
+      const secondHighestBid = findSecondHighestBid(allBidsArr, allBidsArr.length);
+      let SPSBwinner = SPSBItem.filter(item => parseInt(item.bidAmount) > parseInt(secondHighestBid));
+      if (SPSBwinner.length > 1) {
+        SPSBwinner = SPSBwinner.reduce((acc, winner) => {
+          return winner.bidAt < acc.bidAt ? winner : acc;
+        });
+      } else {
+        SPSBwinner = SPSBwinner[0];
+      }
+      const SBSPWinnerFinal = Object.assign({}, SPSBwinner);
+      SBSPWinnerFinal.bidAmount = secondHighestBid;
+      const SPSBwinningteam = SBSPWinnerFinal.bidTeam;
+      if (leaderBoardSPSBKeys && leaderBoardSPSBKeys.includes(SPSBwinningteam)) {
+        const isExistingSPSBAuction = leaderboard[SPSBwinningteam].filter(item => item.auctionObj.id === SBSPWinnerFinal.auctionId)[0];
+        if (!isExistingSPSBAuction) {
+          leaderboard[`${SPSBwinningteam}`].push(SBSPWinnerFinal);
+        }
+      } else {
+        leaderboard[`${SPSBwinningteam}`] = [SBSPWinnerFinal];
+      }
+    }
+  }
   return leaderboard;
 }
-
-// function joinGameState(socket, player) {
-// 	try {
-// 		db.collection("rooms")
-// 			.doc(player.hostCode)
-// 			.collection("players")
-// 			.where("playerId", "==", player.playerId)
-// 			.onSnapshot(snapshot => {
-// 				if (snapshot.empty) {
-// 					console.log("no player found");
-// 					let playerObj = {
-// 						socketId: socket.id,
-// 						playerId: player.playerId,
-// 						playerName: player.playerName,
-// 						teamName: player.teamName,
-// 						gold: 1000000,
-// 						inventory: [],
-// 						playerCoordinates: {
-// 							longitude: 0,
-// 							latitude: 0,
-// 						},
-// 					};
-
-// 					rooms.forEach(room => {
-// 						if (room.roomCode === player.hostCode) {
-// 							room.players.push(playerObj);
-// 							db.collection("rooms").doc(player.hostCode).collection("players").doc(player.playerId).set(playerObj);
-// 						} else {
-// 							console.log("not found");
-// 						}
-// 					});
-// 					//redis
-// 					//redisClient.setex("rooms", expiration, JSON.stringify(rooms));
-// 				} else {
-// 					console.log("player already exists");
-// 				}
-// 			});
-// 	} catch (err) {
-// 		console.log(err);
-// 	}
-// }
 
 function gameLoop(state) {
 	if (!state) {
@@ -180,18 +182,6 @@ function getNextObjectForLiveAuction(prevAuction) {
 	return newAuction;
 }
 
-function updateAuctionState(currentAuction, newState) {
-	if (CONSTANTS.AUCTION_STATES.includes(newState)) {
-		auctionsObj.artifacts.map(currentObj => {
-			if (currentObj.id === currentAuction.id) {
-				currentObj.auctionState = newState;
-				currentAuction.auctionState = newState;
-			}
-		});
-	}
-	return currentAuction;
-}
-
 function getRemainingTime(deadline) {
 	const total = Date.parse(deadline) - Date.parse(new Date());
 	const seconds = Math.floor((total / 1000) % 60);
@@ -203,133 +193,11 @@ function getRemainingTime(deadline) {
 	};
 }
 
-// function addNewFirstPricedSealedBid(bidInfo) {
-// 	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
-// 	//const firstPriceSealedBidObj = new FirstPricedSealedBidAuction(auctionObj, "blue", bidAmount, bidAt);
-// 	rooms.forEach(room => {
-// 		if (room.roomCode === player.hostCode) {
-// 			room.auctions.artifacts.forEach(auction => {
-// 				if (auction.id === auctionObj.id) {
-// 					if (auction.bid.bidAmount === 0) {
-// 						auction.bid.bidAmount = bidAmount;
-// 						auction.bid.bidTeam = player.teamName;
-// 					} else if (auction.bid.bidAmount < bidAmount) {
-// 						auction.bid.bidAmount = bidAmount;
-// 						auction.bid.bidTeam = player.teamName;
-// 					}
-// 				}
-// 			});
-// 		}
-// 	});
-// 	//const updatedObj = firstPriceSealedBidObj.updateBidObject();
-// 	//return updatedObj;
-// }
-
-// function addNewEnglishAuctionBid(bidInfo) {
-// 	const { auctionObj, bidAt, bidAmount, player } = bidInfo;
-// 	let updatedObj = {};
-// 	rooms.forEach(room => {
-// 		if (room.roomCode === player.hostCode) {
-// 			room.auctions.artifacts.forEach(auction => {
-// 				if (auction.id === auctionObj.id && auction.bid.bidAmount < bidAmount)  {
-// 					auction.bid.bidAmount = bidAmount;
-// 					auction.bid.bidTeam = player.teamName;
-// 					updatedObj = auction;
-// 				}
-// 			});
-// 		}
-// 	});
-// 	return updatedObj;
-// }
-
-function getBidWinner(auctionObj) {
-	const { auctionType } = auctionObj;
-	let winner;
-	switch (auctionType) {
-		case "1":
-			if (!isWinnerCalculated) {
-				const firstPricedSealedBidObj = new FirstPricedSealedBidAuction();
-				winner = firstPricedSealedBidObj.calculateWinner();
-				return winner;
-			}
-			return {};
-		case "2":
-			const englishAuctionObj = new EnglishAuction();
-			winner = englishAuctionObj.calculateWinner();
-			return winner;
-		default:
-			return;
-	}
-}
-
-function updateLeaderBoard(client) {
-	var board = [];
-	rooms.forEach(room => {
-		if (room.roomCode === client.hostCode) {
-			db.collection("rooms")
-				.doc(client.hostCode)
-				.onSnapshot(snapshot => {
-					let data = snapshot.data();
-					data.auctions.artifacts.forEach(artifact => {
-						if (artifact.bid.bidTeam) {
-							switch (artifact.bid.bidTeam) {
-								case "Blue":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "Red":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "Green":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "Yellow":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "Purple":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "Orange":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "Indigo":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "White":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "Black":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-								case "Gold":
-									found = room.leaderBoard[0].artifacts.some(el => el.id === artifact.id);
-									if (!found) room.leaderBoard[0].artifacts.push(artifact);
-									break;
-							}
-						}
-					});
-				});
-		}
-	});
-}
-
 module.exports = {
 	createGameState,
 	gameLoop,
 	joinGameState,
 	getNextObjectForLiveAuction,
 	getRemainingTime,
-	updateAuctionState,
-  getBidWinner,
   getLeaderboard,
-	//addNewFirstPricedSealedBid,
-	//addNewEnglishAuctionBid,
 };

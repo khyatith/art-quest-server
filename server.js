@@ -4,8 +4,6 @@ const {
 	gameLoop,
 	getNextObjectForLiveAuction,
 	getRemainingTime,
-	//addNewFirstPricedSealedBid,
-	//addNewEnglishAuctionBid,
   getLeaderboard,
 } = require("./helpers/game");
 const socketIO = require("socket.io");
@@ -116,7 +114,7 @@ io.on("connection", socket => {
 	});
 
 	socket.on("addNewBid", (bidInfo) => {
-		const { auctionType, player, auctionId, auction } = bidInfo;
+    const { auctionType, player, auctionId } = bidInfo;
 		switch (auctionType) {
 			case "1":
         const allFirstPricedSealedBids = rooms[player.hostCode].firstPricedSealedBids;
@@ -131,6 +129,16 @@ io.on("connection", socket => {
 			case "2":
         rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = bidInfo;
 				io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
+        break;
+      case "3":
+        const allSecondPricedSealedBids = rooms[player.hostCode].secondPricedSealedBids;
+        const spsbObj = Object.keys(allSecondPricedSealedBids);
+        if (spsbObj.includes(`${auctionId}`)) {
+          rooms[player.hostCode].secondPricedSealedBids[`${auctionId}`].push(bidInfo);
+        } else {
+          rooms[player.hostCode].secondPricedSealedBids[`${auctionId}`] = [bidInfo];
+        }
+				socket.emit("setLiveStyles", player.teamName);
 				break;
 			default:
 				return;
