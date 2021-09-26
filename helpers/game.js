@@ -34,7 +34,8 @@ function createGameState(socket, player) {
 			roomCode: player.playerId,
 			players: [playerObj],
 			auctions: auctionsObj,
-			leaderBoard: {},
+      leaderBoard: {},
+      totalAmountSpentByTeam: {},
 			englishAuctionBids: {},
       firstPricedSealedBids: {},
       secondPricedSealedBids: {}
@@ -131,8 +132,8 @@ function getLeaderboard(roomCode) {
       const SPSBItem = secondPricedSealedBidAuctionObj[secondPricedSealedAuction];
       //Find the second highest bid amount
       const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
-      const secondHighestBid = findSecondHighestBid(allBidsArr, allBidsArr.length);
-      let SPSBwinner = SPSBItem.filter(item => parseInt(item.bidAmount) > parseInt(secondHighestBid));
+      const secondHighestBid = allBidsArr.length === 1 ? allBidsArr[0]: findSecondHighestBid(allBidsArr, allBidsArr.length);
+      let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) > parseInt(secondHighestBid));
       if (SPSBwinner.length > 1) {
         SPSBwinner = SPSBwinner.reduce((acc, winner) => {
           return winner.bidAt < acc.bidAt ? winner : acc;
@@ -154,6 +155,24 @@ function getLeaderboard(roomCode) {
     }
   }
   return leaderboard;
+}
+
+function calculateTotalAmountSpent(leaderboard) {
+  if (!leaderboard) return null;
+  const totalAmt = Object.values(leaderboard).map(items => {
+    let total = 0;
+    return items.reduce((acc, item) => {
+      const bidAmount = parseInt(item.bidAmount);
+      const currentTeam = item.bidTeam;
+      total += bidAmount;
+      acc = {
+        ...acc,
+        [currentTeam]: total
+      };
+      return acc;
+    }, {});
+  });
+  return totalAmt;
 }
 
 function gameLoop(state) {
@@ -200,4 +219,5 @@ module.exports = {
 	getNextObjectForLiveAuction,
 	getRemainingTime,
   getLeaderboard,
+  calculateTotalAmountSpent,
 };

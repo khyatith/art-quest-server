@@ -5,6 +5,7 @@ const {
 	getNextObjectForLiveAuction,
 	getRemainingTime,
   getLeaderboard,
+  calculateTotalAmountSpent,
 } = require("./helpers/game");
 const socketIO = require("socket.io");
 const frameRate = 500;
@@ -155,12 +156,14 @@ leaderboardns.use((socket, next) => {
 });
 
 leaderboardns.on("connection", socket => {
-  socket.on("getLeaderBoard", (player) => {
+  socket.on("getLeaderBoard", async (player) => {
     socket.join(player.hostCode);
-    const leaderboard = getLeaderboard(player.hostCode);
+    const leaderboard = await getLeaderboard(player.hostCode);
     rooms[player.hostCode].leaderBoard = leaderboard;
-    leaderboardns.to(player.hostCode).emit("leaderboard", leaderboard);
-  })
+    const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard);
+    rooms[player.hostCode].totalAmountSpentByTeam = totalAmountByTeam;
+    leaderboardns.to(player.hostCode).emit("leaderboard", { leaderboard, totalAmountByTeam});
+  });
 });
 
 
