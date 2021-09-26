@@ -38,7 +38,8 @@ function createGameState(socket, player) {
       totalAmountSpentByTeam: {},
 			englishAuctionBids: {},
       firstPricedSealedBids: {},
-      secondPricedSealedBids: {}
+      secondPricedSealedBids: {},
+      allPayAuctions: {},
 		};
 	} catch (err) {
 		console.log(err);
@@ -72,12 +73,42 @@ function findSecondHighestBid(arr, arrSize) {
   return null;
 }
 
+function updateTotalAmountsForAllPayAuctions(allPayBids, currentRoom) {
+  if (allPayBids) {
+    let finalResult;
+    const prevTotalAmt = currentRoom.totalAmountSpentByTeam;
+    for (var allPayBidObj in allPayBids) {
+      const allBidsArr = allPayBids[allPayBidObj];
+      finalResult = allBidsArr.reduce((acc, currentObj) => {
+        const currentTeam = currentObj.bidTeam;
+        const bidAmountToAdd = parseInt(currentObj.bidAmount);
+        if (finalResult && finalResult[currentTeam]) {
+          let existingValue = finalResult[currentTeam];
+          existingValue += bidAmountToAdd;
+          acc = {
+            ...acc,
+            [currentTeam]: existingValue
+          }
+        } else {
+          acc = {
+            ...acc,
+            [currentTeam]: bidAmountToAdd
+          }
+        }
+        return acc;
+      }, {});
+    }
+    return finalResult;
+  }
+}
+
 function getLeaderboard(roomCode) {
-	const leaderboard = rooms[roomCode].leaderBoard;
+  const leaderboard = rooms[roomCode].leaderBoard;
 	const currentRoom = rooms[roomCode];
   const englishAuctionsObj = currentRoom.englishAuctionBids;;
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
   const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
+  const allPayAuctionBidObj = currentRoom.allPayAuctions;
 
 	//englishAuctions
 	if (englishAuctionsObj) {
@@ -154,25 +185,85 @@ function getLeaderboard(roomCode) {
       }
     }
   }
+
+  //allPayAuctions
+  if (allPayAuctionBidObj) {
+    for (var allPayAuctionBids in allPayAuctionBidObj) {
+      const leaderBoardAllAuctionKeys = Object.keys(leaderboard);
+      const allAuctionItem = allPayAuctionBidObj[allPayAuctionBids];
+      const allAuctionwinner = allAuctionItem.reduce((acc, obj) => {
+        const accBid = parseInt(acc.bidAmount);
+        const objBid = parseInt(obj.bidAmount);
+        if (accBid === objBid) {
+          if (acc.bidAt < obj.bidAt) {
+            return acc;
+          } else {
+            return obj;
+          }
+        }
+        return (accBid > objBid) ? acc : obj;
+      }, {});
+      const allAuctionwinningteam = allAuctionwinner.bidTeam;
+      if (leaderBoardAllAuctionKeys && leaderBoardAllAuctionKeys.includes(allAuctionwinningteam)) {
+        const isExistingAllAuction = leaderboard[allAuctionwinningteam].filter(item => item.auctionObj.id === allAuctionwinner.auctionId)[0];
+        if (!isExistingAllAuction) {
+          leaderboard[`${allAuctionwinningteam}`].push(allAuctionwinner);
+        }
+      } else {
+        leaderboard[`${allAuctionwinningteam}`] = [allAuctionwinner];
+      }
+    }
+  }
+
   return leaderboard;
 }
 
-function calculateTotalAmountSpent(leaderboard) {
-  if (!leaderboard) return null;
-  const totalAmt = Object.values(leaderboard).map(items => {
+function calculateTotalAmountSpent(leaderboard, roomCode) {
+  if (!leaderboard || !roomCode) return null;
+  const currentRoom = rooms[roomCode];
+  const allPayAuctionBidObj = currentRoom.allPayAuctions;
+  let result;
+  let totalAmt = Object.values(leaderboard).map(items => {
     let total = 0;
     return items.reduce((acc, item) => {
-      const bidAmount = parseInt(item.bidAmount);
-      const currentTeam = item.bidTeam;
-      total += bidAmount;
-      acc = {
-        ...acc,
-        [currentTeam]: total
-      };
+      if (item.auctionType !== '4') {
+        const bidAmount = parseInt(item.bidAmount);
+        const currentTeam = item.bidTeam;
+        total += bidAmount;
+        const newObj = {
+          key: currentTeam,
+          value: total
+        };
+        acc = {
+          ...acc,
+          ...newObj
+        }
+      }
       return acc;
     }, {});
   });
-  return totalAmt;
+  if (Object.keys(totalAmt[0]).length !== 0) {
+  result = totalAmt && totalAmt.reduce(
+    (obj, item) => Object.assign(obj, { [item.key]: item.value }), {});
+  }
+
+  if (allPayAuctionBidObj) {
+    const allPayAuctionAmt = updateTotalAmountsForAllPayAuctions(allPayAuctionBidObj, currentRoom);
+    if (result) {
+      result = Object.entries(result).reduce((acc, [key, value]) => {
+        const total = value + allPayAuctionAmt[key];
+        acc = {
+          ...acc,
+          [key]: total
+        }
+        return acc;
+      }, {})
+    } else {
+      result = allPayAuctionAmt;
+    }
+  }
+  currentRoom.totalAmountSpentByTeam = result;
+  return currentRoom.totalAmountSpentByTeam;
 }
 
 function gameLoop(state) {

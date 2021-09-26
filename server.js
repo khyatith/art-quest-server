@@ -140,7 +140,17 @@ io.on("connection", socket => {
           rooms[player.hostCode].secondPricedSealedBids[`${auctionId}`] = [bidInfo];
         }
 				socket.emit("setLiveStyles", player.teamName);
-				break;
+        break;
+      case "4":
+        const allPayAuctionBids = rooms[player.hostCode].allPayAuctions;
+        const allPayObj = Object.keys(allPayAuctionBids);
+        if (allPayObj.includes(`${auctionId}`)) {
+          rooms[player.hostCode].allPayAuctions[`${auctionId}`].push(bidInfo);
+        } else {
+          rooms[player.hostCode].allPayAuctions[`${auctionId}`] = [bidInfo];
+        }
+        socket.emit("setLiveStyles", player.teamName);
+      break;
 			default:
 				return;
 		}
@@ -160,7 +170,7 @@ leaderboardns.on("connection", socket => {
     socket.join(player.hostCode);
     const leaderboard = await getLeaderboard(player.hostCode);
     rooms[player.hostCode].leaderBoard = leaderboard;
-    const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard);
+    const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, player.hostCode);
     rooms[player.hostCode].totalAmountSpentByTeam = totalAmountByTeam;
     leaderboardns.to(player.hostCode).emit("leaderboard", { leaderboard, totalAmountByTeam});
   });
