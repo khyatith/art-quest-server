@@ -40,14 +40,17 @@ function createGameState(socket, player) {
       firstPricedSealedBids: {},
       secondPricedSealedBids: {},
       allPayAuctions: {},
-		};
+    };
+    console.log('rooms inside create game state', rooms);
 	} catch (err) {
 		console.log(err);
 	}
 }
 
 function joinGameState(socket, player) {
-	if (!player || !player.hostCode) return null;
+  if (!player || !player.hostCode) return null;
+  console.log('player inside join game state', player);
+  console.log('rooms inside join game state', rooms);
 	const hostCode = player.hostCode;
 	rooms[hostCode].players.push(player);
 }
