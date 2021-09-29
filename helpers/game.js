@@ -29,19 +29,21 @@ function createGameState(socket, player) {
 				latitude: 0,
 			},
 		};
-
-		rooms[player.hostCode] = {
-			roomCode: player.playerId,
-			players: [playerObj],
-			auctions: auctionsObj,
+    rooms[player.hostCode] = {
+      roomCode: player.playerId,
+      players: [playerObj],
+      auctions: auctionsObj,
       leaderBoard: {},
       totalAmountSpentByTeam: {},
-			englishAuctionBids: {},
+      englishAuctionBids: {},
       firstPricedSealedBids: {},
       secondPricedSealedBids: {},
       allPayAuctions: {},
+      landingPageTimer: {
+        interval: 0,
+        timerValue: {},
+      }
     };
-    console.log('rooms inside create game state', rooms);
 	} catch (err) {
 		console.log(err);
 	}
