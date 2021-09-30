@@ -308,6 +308,7 @@ function getRemainingTime(deadline) {
 	};
 }
 
+
 module.exports = {
 	createGameState,
 	gameLoop,
