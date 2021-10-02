@@ -1,12 +1,11 @@
 const {
-	createGameState,
-	joinGameState,
 	gameLoop,
 	getNextObjectForLiveAuction,
 	getRemainingTime,
   getLeaderboard,
   calculateTotalAmountSpent,
 } = require("./helpers/game");
+
 const socketIO = require("socket.io");
 const frameRate = 500;
 var express = require('express'),
@@ -23,7 +22,6 @@ const io = socketIO(server, {
 require("dotenv").config();
 
 let currentAuction = {};
-let updatedLeaderBoard = [];
 
 const firebaseMod = require("./firebase/firebase");
 const db = firebaseMod.db;
@@ -72,7 +70,7 @@ io.on("connection", socket => {
 	});
 	//create a game room event
 	socket.on("createRoom", player => {
-		player = JSON.parse(player);
+    player = JSON.parse(player);
 		socket.join(player.hostCode);
 		createGameState(socket, player);
 	});
