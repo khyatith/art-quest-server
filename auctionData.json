@@ -19,6 +19,8 @@
 			"sellingPrice": 16000,
 			"buyingPrice": 14000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 1,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -43,6 +45,8 @@
 			"sellingPrice": 16000,
 			"buyingPrice": 12000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 1,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -66,6 +70,8 @@
 			"render": true,
 			"sellingPrice": 22000,
 			"buyingPrice": 18000,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 1,
 			"auctionState": 0,
 			"bid": {
 				"bidAmount": 0,
@@ -91,6 +97,8 @@
 			"sellingPrice": 28000,
 			"buyingPrice": 26000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -114,6 +122,8 @@
 			"render": true,
 			"sellingPrice": 34000,
 			"buyingPrice": 29000,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 1,
 			"auctionState": 0,
 			"bid": {
 				"bidAmount": 0,
@@ -137,6 +147,8 @@
 			"originalValue": 10000,
 			"render": true,
 			"sellingPrice": 9000,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"buyingPrice": 10000,
 			"auctionState": 0,
 			"bid": {
@@ -162,6 +174,8 @@
 			"render": true,
 			"sellingPrice": 45000,
 			"buyingPrice": 35000,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"auctionState": 0,
 			"bid": {
 				"bidAmount": 0,
@@ -186,6 +200,8 @@
 			"render": true,
 			"sellingPrice": 55000,
 			"buyingPrice": 61000,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"auctionState": 0,
 			"bid": {
 				"bidAmount": 0,
@@ -210,6 +226,8 @@
 			"render": true,
 			"sellingPrice": 38000,
 			"buyingPrice": 33000,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"auctionState": 0,
 			"bid": {
 				"bidAmount": 0,
@@ -234,6 +252,8 @@
 			"render": true,
 			"sellingPrice": 47000,
 			"buyingPrice": 40000,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"auctionState": 0,
 			"bid": {
 				"bidAmount": 0,
@@ -259,6 +279,8 @@
 			"sellingPrice": 30000,
 			"buyingPrice": 36000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -283,6 +305,8 @@
 			"sellingPrice": 60000,
 			"buyingPrice": 59000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -307,6 +331,8 @@
 			"sellingPrice": 55000,
 			"buyingPrice": 60000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -331,6 +357,8 @@
 			"sellingPrice": 60000,
 			"buyingPrice": 45000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -355,6 +383,8 @@
 			"sellingPrice": 35000,
 			"buyingPrice": 28000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -379,6 +409,8 @@
 			"sellingPrice": 66000,
 			"buyingPrice": 55000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -403,6 +435,8 @@
 			"sellingPrice": 48000,
 			"buyingPrice": 45000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -427,6 +461,8 @@
 			"sellingPrice": 57000,
 			"buyingPrice": 60000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -451,6 +487,8 @@
 			"sellingPrice": 60000,
 			"buyingPrice": 79000,
 			"auctionState": 0,
+			"hasAuctionTimerStarted": false,
+			"auctionTimerDeadline": 0.5,
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""

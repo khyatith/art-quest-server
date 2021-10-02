@@ -15,48 +15,6 @@ const firebaseMod = require("../firebase/firebase");
 
 const db = firebaseMod.db;
 
-function createGameState(socket, player) {
-	try {
-		let playerObj = {
-			socketId: socket.id,
-			playerId: player.playerId,
-			playerName: player.playerName,
-			teamName: player.teamName,
-			gold: 1000000,
-			inventory: [],
-			playerCoordinates: {
-				longitude: 0,
-				latitude: 0,
-			},
-		};
-    rooms[player.hostCode] = {
-      roomCode: player.playerId,
-      players: [playerObj],
-      auctions: auctionsObj,
-      leaderBoard: {},
-      totalAmountSpentByTeam: {},
-      englishAuctionBids: {},
-      firstPricedSealedBids: {},
-      secondPricedSealedBids: {},
-      allPayAuctions: {},
-      landingPageTimer: {
-        interval: 0,
-        timerValue: {},
-      }
-    };
-	} catch (err) {
-		console.log(err);
-	}
-}
-
-function joinGameState(socket, player) {
-  if (!player || !player.hostCode) return null;
-  console.log('player inside join game state', player);
-  console.log('rooms inside join game state', rooms);
-	const hostCode = player.hostCode;
-	rooms[hostCode].players.push(player);
-}
-
 function findSecondHighestBid(arr, arrSize) {
   let i;
 
@@ -107,7 +65,7 @@ function updateTotalAmountsForAllPayAuctions(allPayBids, currentRoom) {
   }
 }
 
-function getLeaderboard(roomCode) {
+function getLeaderboard(rooms, roomCode) {
   const leaderboard = rooms[roomCode].leaderBoard;
 	const currentRoom = rooms[roomCode];
   const englishAuctionsObj = currentRoom.englishAuctionBids;;
@@ -223,7 +181,7 @@ function getLeaderboard(roomCode) {
   return leaderboard;
 }
 
-function calculateTotalAmountSpent(leaderboard, roomCode) {
+function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
   if (!leaderboard || !roomCode) return null;
   const currentRoom = rooms[roomCode];
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
@@ -247,7 +205,7 @@ function calculateTotalAmountSpent(leaderboard, roomCode) {
       return acc;
     }, {});
   });
-  if (Object.keys(totalAmt[0]).length !== 0) {
+  if (totalAmt.length !== 0 && Object.keys(totalAmt[0]).length !== 0) {
   result = totalAmt && totalAmt.reduce(
     (obj, item) => Object.assign(obj, { [item.key]: item.value }), {});
   }
@@ -277,25 +235,31 @@ function gameLoop(state) {
 	}
 }
 
-function getNextObjectForLiveAuction(prevAuction) {
+function getNextObjectForLiveAuction(parsedRoom, prevAuction) {
 	let newAuction;
-	const { currentAuctionObj, client } = prevAuction;
+	const { currentAuctionObj } = prevAuction;
 	if (!currentAuctionObj) {
-		newAuction = rooms[client.hostCode].auctions.artifacts[0];
+    newAuction = parsedRoom.auctions.artifacts[0];
+    parsedRoom.auctions.artifacts[0].auctionState = 1;
 	} else {
 		const { id } = prevAuction.currentAuctionObj;
 		const nextId = id + 1;
-		newAuction = rooms[client.hostCode].auctions.artifacts.filter(item => item.id === nextId)[0];
-		rooms[client.hostCode].auctions.artifacts.forEach(item => {
+    newAuction = parsedRoom.auctions.artifacts.filter(item => item.id === nextId)[0];
+    //update parsed rooms
+		parsedRoom.auctions.artifacts.forEach(item => {
 			if (item.id === currentAuctionObj.id) {
 				item.auctionState = 2;
-			}
+      }
+      if (item.id === newAuction.id) {
+        item.auctionState = 1;
+      }
 		});
   }
 	if (!newAuction) return null;
 	newAuction.auctionState = 1;
-	return newAuction;
+	return { newAuction, parsedRoom };
 }
+
 
 function getRemainingTime(deadline) {
 	const total = Date.parse(deadline) - Date.parse(new Date());
@@ -310,9 +274,7 @@ function getRemainingTime(deadline) {
 
 
 module.exports = {
-	createGameState,
 	gameLoop,
-	joinGameState,
 	getNextObjectForLiveAuction,
 	getRemainingTime,
   getLeaderboard,

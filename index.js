@@ -15,7 +15,11 @@ const net = require('net');
 const socketio = require('socket.io');
 const Redis = require("ioredis");
 const redis = new Redis();
-const socketMain = require('./socketMain');
+const socketMain = require('./events/socketMain');
+const auctionEvents = require('./events/auctionEvents');
+const leaderboard = require('./events/leaderboard');
+var mod = require("./constants");
+let rooms = mod.rooms;
 
 const port = 3001;
 const num_processes = require('os').cpus().length;
@@ -71,10 +75,17 @@ if (cluster.isMaster) {
 
   io.adapter(io_redis({ host: 'localhost', port: 6379 }));
 
-  io.on('connection', function(socket) {
-    console.log('inside');
-		socketMain(io,socket, redis);
-		console.log(`connected to worker: ${cluster.worker.id}`);
+  const onConnection = (socket) => {
+    socketMain(io, socket, redis, rooms);
+    auctionEvents(io,socket,redis, rooms);
+  }
+
+  io.on("connection", onConnection);
+
+  const leaderboardns = io.of("/leaderboard-namespace");
+
+  leaderboardns.on("connection", (socket) => {
+    leaderboard(leaderboardns, socket, redis, rooms);
   });
 
 	// Listen to messages sent from the master. Ignore everything else.
