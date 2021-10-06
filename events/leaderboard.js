@@ -1,4 +1,4 @@
-const { getLeaderboard, calculateTotalAmountSpent } = require("../helpers/game");
+const { getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner } = require("../helpers/game");
 var mod = require("../constants");
 let rooms = mod.rooms;
 
@@ -17,7 +17,19 @@ module.exports = (io, socket, client) => {
     io.to(player.hostCode).emit("leaderboard", { leaderboard, totalAmountByTeam});
   }
 
+  const displayGameWinner = async (player) => {
+    let room = await client.get(player.hostCode);
+    let parsedRoom;
+    if (room) {
+      parsedRoom = JSON.parse(room);
+    }
+    if (parsedRoom.winner) return parsedRoom.winner;
+    const winner = calculateBuyingPhaseWinner(parsedRoom);
+    io.to(player.hostCode).emit("displayGameWinner", { winner, leaderboard: parsedRoom.leaderBoard });
+  }
+
   socket.on("getLeaderBoard", getLeaderboardDisplay);
+  socket.on("getWinner", displayGameWinner);
 }
 
 const getFromRedis = async (hostCode) => {

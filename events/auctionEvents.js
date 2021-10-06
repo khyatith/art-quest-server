@@ -19,7 +19,7 @@ module.exports = (io, socket, client, rooms) => {
     const globalRoom = rooms[player.hostCode];
     const returnObj = getNextObjectForLiveAuction(parsedRoom, prevAuctionObj);
     //update redis
-    const udpatedParsedRoom = returnObj.parsedRoom;
+    const udpatedParsedRoom = returnObj.parsedRoom
     globalRoom.auctions.artifacts = udpatedParsedRoom.auctions.artifacts;
     //There is a bug right now where leaderboard is not persisting across the auctions
     //This is happening because somehow the redis object is not persisting the data.

@@ -250,12 +250,12 @@ function getNextObjectForLiveAuction(parsedRoom, prevAuction) {
 			if (item.id === currentAuctionObj.id) {
 				item.auctionState = 2;
       }
-      if (item.id === newAuction.id) {
+      if (newAuction && item.id === newAuction.id) {
         item.auctionState = 1;
       }
 		});
   }
-	if (!newAuction) return null;
+	if (!newAuction) return { newAuction: null, parsedRoom };
 	newAuction.auctionState = 1;
 	return { newAuction, parsedRoom };
 }
@@ -272,6 +272,37 @@ function getRemainingTime(deadline) {
 	};
 }
 
+function teamPaintingAverage(arr) {
+  let totalPaintingQuality = 0.0;
+  return arr.reduce((acc,v) => {
+    totalPaintingQuality += v.auctionObj.paintingQuality;
+    acc = totalPaintingQuality / arr.length;
+    return acc;
+  }, {});
+};
+
+function calculateBuyingPhaseWinner(room) {
+  const { leaderBoard } = room;
+  let result = [];
+  for(team in leaderBoard) {
+    const currentTeamData = leaderBoard[team];
+    const currentTeamAvg = teamPaintingAverage(currentTeamData);
+    const totalAmtByTeam = (parseInt(room.totalAmountSpentByTeam[team])/10000) * 100;
+    result.push({
+      team,
+      total: currentTeamAvg + totalAmtByTeam
+    })
+  }
+
+  if (result.length > 0) {
+    const winner = result.reduce(function (p, v) {
+      return ( p.total > v.total ? p : v );
+    });
+    return winner;
+  } else {
+    return null;
+  }
+}
 
 module.exports = {
 	gameLoop,
@@ -279,4 +310,5 @@ module.exports = {
 	getRemainingTime,
   getLeaderboard,
   calculateTotalAmountSpent,
+  calculateBuyingPhaseWinner,
 };
