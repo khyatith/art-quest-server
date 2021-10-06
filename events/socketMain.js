@@ -27,6 +27,7 @@ module.exports = (io, socket, client, rooms) => {
         allPayAuctions: {},
         hasLandingPageTimerStarted: false,
         landingPageTimerDeadline: 0,
+        winner: null,
       };
       rooms[player.hostCode] = parsedRoom;
       await client.set(player.hostCode, JSON.stringify(parsedRoom), 'ex', 1440);
