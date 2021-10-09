@@ -76,8 +76,8 @@ if (cluster.isMaster) {
   io.adapter(io_redis({ host: 'localhost', port: 6379 }));
 
   const onConnection = (socket) => {
-    socketMain(io, socket, redis, rooms);
-    auctionEvents(io,socket,redis, rooms);
+    socketMain(io, socket, rooms);
+    auctionEvents(io,socket, rooms);
   }
 
   io.on("connection", onConnection);
@@ -85,7 +85,7 @@ if (cluster.isMaster) {
   const leaderboardns = io.of("/leaderboard-namespace");
 
   leaderboardns.on("connection", (socket) => {
-    leaderboard(leaderboardns, socket, redis, rooms);
+    leaderboard(leaderboardns, socket, rooms);
   });
 
 	// Listen to messages sent from the master. Ignore everything else.

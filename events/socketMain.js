@@ -1,12 +1,20 @@
 const { getRemainingTime } = require("../helpers/game");
 var auctionsObj = require("../auctionData.json");
+const dbClient = require('../mongoClient');
 
-module.exports = (io, socket, client, rooms) => {
+module.exports = (io, socket, rooms) => {
+
+  var mongoClient = await dbClient.createConnection();
+  const db = mongoClient.db('art_quest');
+	const collection = db.collection('room');
 
   const createRoom = async (stringifiedPlayer) => {
     player = JSON.parse(stringifiedPlayer);
     socket.join(player.hostCode);
-    let room = await client.get(player.hostCode);
+    let room = await collection.findOne({'hostCode': player.hostCode});
+    console.log("room returned from mongo : ");
+    console.log(room);
+
     let parsedRoom = room && JSON.parse(room);
     if (!room) {
       let playerObj = {
@@ -16,6 +24,7 @@ module.exports = (io, socket, client, rooms) => {
         teamName: player.teamName,
       };
       parsedRoom = {
+        hostCode: player.hostCode,
         roomCode: player.playerId,
         players: [playerObj],
         auctions: auctionsObj,
@@ -30,16 +39,20 @@ module.exports = (io, socket, client, rooms) => {
         winner: null,
       };
       rooms[player.hostCode] = parsedRoom;
-      await client.set(player.hostCode, JSON.stringify(parsedRoom), 'ex', 1440);
+      await collection.insertOne(parsedRoom);
     }
   }
 
   const joinRoom = async(player) => {
     const parsedPlayer = JSON.parse(player);
     socket.join(parsedPlayer.hostCode);
-    const room = await client.get(parsedPlayer.hostCode);
+    const room = await collection.findOne({'hostCode': parsedPlayer.hostCode});
+    console.log("room returned from mongo : ");
+    console.log(room);
+    
+
     if (room) {
-      const parsedRoom = JSON.parse(room);
+      const parsedRoom = room;
       const { players } = parsedRoom;
       const isExistingPlayer = players.filter((item) => item.playerId === parsedPlayer.playerId);
       if (isExistingPlayer.length === 0) {
@@ -50,13 +63,14 @@ module.exports = (io, socket, client, rooms) => {
       } else {
         rooms[parsedPlayer.hostCode].players.push(parsedPlayer);
       }
-      await client.set(parsedPlayer.hostCode, JSON.stringify(parsedRoom), 'ex', 1440);
+      await collection.findOneAndUpdate({"hostCode":parsedPlayer.hostCode},{$set:parsedRoom})
+      
     }
   }
 
   const startGame = async (player) => {
     const parsedPlayer = JSON.parse(player);
-    client.get(parsedPlayer.hostCode, async (err, room) => {
+    collection.findOne({'hostCode': parsedPlayer.hostCode}, async (err, room) => {
       if (room) {
         io.to(parsedPlayer.hostCode).emit("gameState", room);
       }
@@ -64,21 +78,21 @@ module.exports = (io, socket, client, rooms) => {
   }
 
   const startLandingPageTimer = async ({ roomCode }) => {
-    const room = await client.get(roomCode);
-    const parsedRoom = JSON.parse(room);
+    const room = await collection.findOne({'hostCode': roomCode});
+    const parsedRoom = room;
     const hasLandingPageTimerStarted = parsedRoom.hasLandingPageTimerStarted;
     if (!hasLandingPageTimerStarted) {
       const currentTime = Date.parse(new Date());
       parsedRoom.landingPageTimerDeadline = new Date(currentTime + 0.3 * 60 * 1000);
       parsedRoom.hasLandingPageTimerStarted = true;
-      client.set(roomCode, JSON.stringify(parsedRoom), 'ex', 1440);
+      collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom})
     }
     setInterval(() => {
       const timerValue = getRemainingTime(parsedRoom.landingPageTimerDeadline);
       if (timerValue.total <= 0) {
         io.sockets.in(roomCode).emit("landingPageTimerEnded", { roomCode, timerValue });
         //parsedRoom.hasLandingPageTimerStarted = false;
-        client.set(roomCode, JSON.stringify(parsedRoom), 'ex', 1440);
+        collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom})
       } else if (timerValue.total > 0) {
         io.sockets.in(roomCode).emit("landingPageTimerValue", { roomCode, timerValue });
       }
