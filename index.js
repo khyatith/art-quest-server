@@ -71,7 +71,7 @@ if (cluster.isMaster) {
     },
   });
 
-  io.adapter(io_redis({ host: 'localhost', port: 6379 }));
+  //io.adapter(io_redis({ host: 'localhost', port: 6379 }));
 
   const onConnection = (socket) => {
     socketMain(io, socket, rooms);
