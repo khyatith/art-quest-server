@@ -1,4 +1,5 @@
 const { getNextObjectForLiveAuction, getRemainingTime } = require("../helpers/game");
+const dbClient = require('../mongoClient');
 
 let auctionsTimer;
 let isAuctionTimerStarted = false;
@@ -11,11 +12,17 @@ function updateAuctionClock() {
 }
 
 
-module.exports = (io, socket, client, rooms) => {
+module.exports = async (io, socket, rooms) => {
+
+  var mongoClient = await dbClient.createConnection();
+  const db = mongoClient.db('art_quest');
+	const collection = db.collection('room');
+
   const startLiveAuctions = async (prevAuctionObj) => {
     const { player } = prevAuctionObj;
-    const room = await client.get(player.hostCode);
-    const parsedRoom = JSON.parse(room);
+    const room = await collection.findOne({'hostCode': player.hostCode});
+
+    const parsedRoom = room;
     const globalRoom = rooms[player.hostCode];
     const returnObj = getNextObjectForLiveAuction(parsedRoom, prevAuctionObj);
     //update redis
@@ -26,7 +33,7 @@ module.exports = (io, socket, client, rooms) => {
     //This is a workaround that but eventually I have to find a solution for it
     udpatedParsedRoom.leaderBoard = globalRoom.leaderBoard;
     udpatedParsedRoom.totalAmountSpentByTeam = globalRoom.totalAmountSpentByTeam;
-    await client.set(player.hostCode, JSON.stringify(udpatedParsedRoom), 'ex', 1440);
+    await collection.findOneAndUpdate({"hostCode":player.hostCode},{$set:udpatedParsedRoom})
     socket.emit("startNextAuction", returnObj.newAuction);
   }
 
