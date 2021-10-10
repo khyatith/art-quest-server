@@ -3,7 +3,7 @@ var mod = require("../constants");
 const dbClient = require('../mongoClient');
 let rooms = mod.rooms;
 
-module.exports = (io, socket) => {
+module.exports = async (io, socket) => {
 
   var mongoClient = await dbClient.createConnection();
   const db = mongoClient.db('art_quest');
@@ -12,7 +12,7 @@ module.exports = (io, socket) => {
   const getLeaderboardDisplay = async (player) => {
     socket.join(player.hostCode);
     if (!rooms[player.hostCode]) {
-      return getFromRedis(player.hostCode);
+      return getFromDb(player.hostCode);
     }
     const leaderboard = await getLeaderboard(rooms, player.hostCode);
     rooms[player.hostCode].leaderBoard = leaderboard;
@@ -38,7 +38,7 @@ module.exports = (io, socket) => {
   socket.on("getWinner", displayGameWinner);
 }
 
-const getFromRedis = async (hostCode) => {
+const getFromDb = async (hostCode) => {
   const room = await collection.findOne({'hostCode': hostCode});
   const parsedRoom = room;
   io.to(hostCode).emit("leaderboard", { leaderboard: parsedRoom.leaderboard, totalAmountByTeam: parsedRoom.totalAmountByTeam })

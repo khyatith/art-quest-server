@@ -12,7 +12,7 @@ function updateAuctionClock() {
 }
 
 
-module.exports = (io, socket, rooms) => {
+module.exports = async (io, socket, rooms) => {
 
   var mongoClient = await dbClient.createConnection();
   const db = mongoClient.db('art_quest');
@@ -21,8 +21,6 @@ module.exports = (io, socket, rooms) => {
   const startLiveAuctions = async (prevAuctionObj) => {
     const { player } = prevAuctionObj;
     const room = await collection.findOne({'hostCode': player.hostCode});
-    console.log("room returned from mongo : ");
-    console.log(room);
 
     const parsedRoom = room;
     const globalRoom = rooms[player.hostCode];

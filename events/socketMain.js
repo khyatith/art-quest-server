@@ -2,7 +2,7 @@ const { getRemainingTime } = require("../helpers/game");
 var auctionsObj = require("../auctionData.json");
 const dbClient = require('../mongoClient');
 
-module.exports = (io, socket, rooms) => {
+module.exports = async (io, socket, rooms) => {
 
   var mongoClient = await dbClient.createConnection();
   const db = mongoClient.db('art_quest');
@@ -12,8 +12,6 @@ module.exports = (io, socket, rooms) => {
     player = JSON.parse(stringifiedPlayer);
     socket.join(player.hostCode);
     let room = await collection.findOne({'hostCode': player.hostCode});
-    console.log("room returned from mongo : ");
-    console.log(room);
 
     let parsedRoom = room && JSON.parse(room);
     if (!room) {
@@ -47,10 +45,6 @@ module.exports = (io, socket, rooms) => {
     const parsedPlayer = JSON.parse(player);
     socket.join(parsedPlayer.hostCode);
     const room = await collection.findOne({'hostCode': parsedPlayer.hostCode});
-    console.log("room returned from mongo : ");
-    console.log(room);
-    
-
     if (room) {
       const parsedRoom = room;
       const { players } = parsedRoom;
