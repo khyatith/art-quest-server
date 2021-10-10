@@ -19,7 +19,7 @@ const leaderboard = require('./events/leaderboard');
 var mod = require("./constants");
 let rooms = mod.rooms;
 
-const port = 3001;
+const port = process.env.PORT || 3001;
 const num_processes = require('os').cpus().length;
 // Brew breaks for me more than it solves a problem, so I 
 // installed redis from https://redis.io/topics/quickstart
@@ -70,8 +70,6 @@ if (cluster.isMaster) {
       credentials: true
     },
   });
-
-  //io.adapter(io_redis({ host: 'localhost', port: 6379 }));
 
   const onConnection = (socket) => {
     socketMain(io, socket, rooms);
