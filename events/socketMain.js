@@ -12,8 +12,8 @@ module.exports = async (io, socket, rooms) => {
     player = JSON.parse(stringifiedPlayer);
     socket.join(player.hostCode);
     let room = await collection.findOne({'hostCode': player.hostCode});
-
-    let parsedRoom = room && JSON.parse(room);
+    console.log('rooms in create room', room);
+    let parsedRoom = room;
     if (!room) {
       let playerObj = {
         socketId: socket.id,
