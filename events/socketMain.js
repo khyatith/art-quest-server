@@ -12,32 +12,9 @@ module.exports = async (io, socket, rooms) => {
     player = JSON.parse(stringifiedPlayer);
     socket.join(player.hostCode);
     let room = await collection.findOne({'hostCode': player.hostCode});
-
-    let parsedRoom = room && JSON.parse(room);
     if (!room) {
-      let playerObj = {
-        socketId: socket.id,
-        playerId: player.playerId,
-        playerName: player.playerName,
-        teamName: player.teamName,
-      };
-      parsedRoom = {
-        hostCode: player.hostCode,
-        roomCode: player.playerId,
-        players: [playerObj],
-        auctions: auctionsObj,
-        leaderBoard: {},
-        totalAmountSpentByTeam: {},
-        englishAuctionBids: {},
-        firstPricedSealedBids: {},
-        secondPricedSealedBids: {},
-        allPayAuctions: {},
-        hasLandingPageTimerStarted: false,
-        landingPageTimerDeadline: 0,
-        winner: null,
-      };
-      rooms[player.hostCode] = parsedRoom;
-      await collection.insertOne(parsedRoom);
+      rooms[player.hostCode] = room;
+      await collection.insertOne(room);
     }
   }
 

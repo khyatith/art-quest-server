@@ -1,10 +1,3 @@
-// Socket.io server that will service both node
-// and react clients
-// Req:
-// - socket.io
-// - socket.io-redis
-// - farmhash
-
 // entrypoint for our cluster which will make workers
 // and the workers will do the Socket.io handling
 //See https://github.com/elad/node-cluster-socket.io
@@ -13,8 +6,6 @@ const express = require('express');
 const cluster = require('cluster');
 const net = require('net');
 const socketio = require('socket.io');
-const Redis = require("ioredis");
-const redis = new Redis();
 const socketMain = require('./events/socketMain');
 const auctionEvents = require('./events/auctionEvents');
 const leaderboard = require('./events/leaderboard');
@@ -23,11 +14,7 @@ let rooms = mod.rooms;
 
 const port = 3001;
 const num_processes = require('os').cpus().length;
-// Brew breaks for me more than it solves a problem, so I 
-// installed redis from https://redis.io/topics/quickstart
-// have to actually run redis via: $ redis-server (go to location of the binary)
-// check to see if it's running -- redis-cli monitor
-const io_redis = require('socket.io-redis');
+
 const farmhash = require('farmhash');
 
 if (cluster.isMaster) {
@@ -72,8 +59,6 @@ if (cluster.isMaster) {
       credentials: true
     },
   });
-
-  io.adapter(io_redis({ host: 'localhost', port: 6379 }));
 
   const onConnection = (socket) => {
     socketMain(io, socket, rooms);
