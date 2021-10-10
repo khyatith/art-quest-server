@@ -5,6 +5,9 @@ var auctionsObj = require("../auctionData.json");
 var { FirstPricedSealedBidAuction } = require("../auctions/FirstPricedSealedBidAuction");
 var { EnglishAuction } = require("../auctions/EnglishAuction");
 
+const Redis = require("redis");
+// const redisClient = Redis.createClient();
+
 const expiration = 3600;
 var found = 0;
 
