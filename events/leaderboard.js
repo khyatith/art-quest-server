@@ -5,8 +5,7 @@ let rooms = mod.rooms;
 
 module.exports = async (io, socket) => {
 
-  var mongoClient = await dbClient.createConnection();
-  const db = mongoClient.db('art_quest');
+  const db = await dbClient.createConnection();
 	const collection = db.collection('room');
 
   const getLeaderboardDisplay = async (player) => {
