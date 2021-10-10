@@ -9,69 +9,100 @@
 // and the workers will do the Socket.io handling
 //See https://github.com/elad/node-cluster-socket.io
 
+const socketio = require("socket.io");
+const frameRate = 500;
 const express = require('express');
-const cluster = require('cluster');
-const net = require('net');
-const socketio = require('socket.io');
+const app = express();
+const server = require('http').createServer(app);
+
+const io = socketio(server, {
+	// handlePreflightRequest: (req, res) => {
+	// 		const headers = {
+	// 				"Access-Control-Allow-Headers": "Content-Type, Authorization",
+	// 				"Access-Control-Allow-Origin": req.headers.origin, //or the specific origin you want to give access to,
+	// 				"Access-Control-Allow-Credentials": true
+	// 		};
+	// 		res.writeHead(200, headers);
+	// 		res.end();
+	// },
+	cors: {
+		origin: '*'
+	}
+});
+
+// const io = socketio(server, {
+// 	cors: {
+// 		origin: 'https://art-quest-4f7d6.firebaseapp.com/',
+// 		credentials: true
+// 	},
+// });
+
+//require("dotenv").config();
+
+//const express = require('express');
+//const cluster = require('cluster');
+//const net = require('net');
+//const socketio = require('socket.io');
 const socketMain = require('./events/socketMain');
 const auctionEvents = require('./events/auctionEvents');
 const leaderboard = require('./events/leaderboard');
 var mod = require("./constants");
 let rooms = mod.rooms;
 
-const port = 3001;
-const num_processes = require('os').cpus().length;
+const port = process.env.PORT || 3001;
+//const num_processes = require('os').cpus().length;
 // Brew breaks for me more than it solves a problem, so I 
 // installed redis from https://redis.io/topics/quickstart
 // have to actually run redis via: $ redis-server (go to location of the binary)
 // check to see if it's running -- redis-cli monitor
-const io_redis = require('socket.io-redis');
-const farmhash = require('farmhash');
+//const io_redis = require('socket.io-redis');
+//const farmhash = require('farmhash');
 
-if (cluster.isMaster) {
+//if (cluster.isMaster) {
 	// This stores our workers. We need to keep them to be able to reference
 	// them based on source IP address. It's also useful for auto-restart,
 	// for example.
-	let workers = [];
+//	let workers = [];
 
 	// Helper function for spawning worker at index 'i'.
-	let spawn = function(i) {
-		workers[i] = cluster.fork();
+	// let spawn = function(i) {
+	// 	workers[i] = cluster.fork();
 
-		// Optional: Restart worker on exit
-		workers[i].on('exit', function(code, signal) {
-			spawn(i);
-		});
-    };
+	// 	// Optional: Restart worker on exit
+	// 	workers[i].on('exit', function(code, signal) {
+	// 		spawn(i);
+	// 	});
+  //   };
 
-    // Spawn workers.
-	for (var i = 0; i < num_processes; i++) {
-		spawn(i);
-	}
+  //   // Spawn workers.
+	// for (var i = 0; i < num_processes; i++) {
+	// 	spawn(i);
+	// }
 
-	const worker_index = function(ip, len) {
-		return farmhash.fingerprint32(ip) % len;
-	};
+	// const worker_index = function(ip, len) {
+	// 	return farmhash.fingerprint32(ip) % len;
+	// };
 
-	const server = net.createServer({ pauseOnConnect: true }, (connection) =>{
-		let worker = workers[worker_index(connection.remoteAddress, num_processes)];
-		  worker.send('sticky-session:connection', connection);
-    });
-    server.listen(port);
-    console.log(`Master listening on port ${port}`);
-} else {
-  let app = express();
+	// const server = net.createServer({ pauseOnConnect: true }, (connection) =>{
+	// 	let worker = workers[worker_index(connection.remoteAddress, num_processes)];
+	// 	  worker.send('sticky-session:connection', connection);
+  //   });
+  //   server.listen(port);
+  //   console.log(`Master listening on port ${port}`);
+//} else {
+  //let app = express();
     
 	// Don't expose our internal server to the outside world.
-  const server = app.listen(0, 'localhost'); 
-	const io = socketio(server, {
-    cors: {
-      origin: 'http://localhost:3000',
-      credentials: true
-    },
-  });
+  //const server = app.listen(0, 'localhost'); 
+	// const io = socketio(server, {
+  //   cors: {
+  //     origin: 'https://art-quest-4f7d6.firebaseapp.com/',
+  //     credentials: true
+  //   },
+  // });
 
-  io.adapter(io_redis({ host: 'localhost', port: 6379 }));
+	//io.adapter(io_redis({ host: 'localhost', port: 6379 }));
+
 
   const onConnection = (socket) => {
     socketMain(io, socket, rooms);
@@ -87,13 +118,14 @@ if (cluster.isMaster) {
   });
 
 	// Listen to messages sent from the master. Ignore everything else.
-	process.on('message', function(message, connection) {
-		if (message !== 'sticky-session:connection') {
-			return;
-		}
+	// process.on('message', function(message, connection) {
+	// 	if (message !== 'sticky-session:connection') {
+	// 		return;
+	// 	}
 
-		server.emit('connection', connection);
+		//server.emit('connection', connection);
 
-		connection.resume();
-	});
-}
+		server.listen(port);
+		//connection.resume();
+	//});
+//}
