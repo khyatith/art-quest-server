@@ -14,8 +14,7 @@ function updateAuctionClock() {
 
 module.exports = async (io, socket, rooms) => {
 
-  var mongoClient = await dbClient.createConnection();
-  const db = mongoClient.db('art_quest');
+  const db = await dbClient.createConnection();
 	const collection = db.collection('room');
 
   const startLiveAuctions = async (prevAuctionObj) => {

@@ -4,15 +4,13 @@ const dbClient = require('../mongoClient');
 
 module.exports = async (io, socket, rooms) => {
 
-  var mongoClient = await dbClient.createConnection();
-  const db = mongoClient.db('art_quest');
+  const db = await dbClient.createConnection();
 	const collection = db.collection('room');
 
   const createRoom = async (stringifiedPlayer) => {
     player = JSON.parse(stringifiedPlayer);
     socket.join(player.hostCode);
     let room = await collection.findOne({'hostCode': player.hostCode});
-    console.log('rooms in create room', room);
     let parsedRoom = room;
     if (!room) {
       let playerObj = {
