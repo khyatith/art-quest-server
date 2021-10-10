@@ -66,7 +66,7 @@ if (cluster.isMaster) {
   const server = app.listen(0, 'localhost'); 
 	const io = socketio(server, {
     cors: {
-      origin: 'http://localhost:3000',
+      origin: 'https://art-quest-4f7d6.firebaseapp.com/',
       credentials: true
     },
   });
