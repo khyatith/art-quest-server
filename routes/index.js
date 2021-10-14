@@ -12,7 +12,7 @@ router.get('/timer/:hostCode', function (req, res) {
   const { params } = req;
   const hostCode = params.hostCode;
   let room = rooms[hostCode];
-  console.log('room', room.landingPageTimerValue);
+
   if (Object.keys(room.landingPageTimerValue).length > 0) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
