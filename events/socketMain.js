@@ -32,6 +32,8 @@ module.exports = async (io, socket, rooms) => {
         allPayAuctions: {},
         hasLandingPageTimerStarted: false,
         landingPageTimerDeadline: 0,
+        landingPageTimerValue: {},
+        hasLandingPageTimerEnded: false,
         winner: null,
       };
       rooms[player.hostCode] = parsedRoom;
