@@ -1,5 +1,5 @@
 var { MongoClient } = require('mongodb');
-var connectionString = "mongodb+srv://admin:admin@cluster0.5av8m.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+var connectionString = process.env.MONGO_CLIENT_URL;
 var db = null;
 exports.createConnection = async () => {
    if(db == null){ 
