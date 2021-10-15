@@ -1,9 +1,12 @@
 const socketio = require("socket.io");
 const frameRate = 500;
+var cors = require('cors')
 const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
 const routes = require('./routes/index');
+
+app.use(cors());
 
 //HTTP connection
 app.use('/landing-page', routes);
