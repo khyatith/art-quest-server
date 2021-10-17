@@ -4,6 +4,10 @@ const dbClient = require('../mongoClient');
 const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, calculatePaintingQualityAndTotalPoints, getNextObjectForLiveAuction } = require("../helpers/game");
 var mod = require("../constants");
 let rooms = mod.rooms;
+const dbClient = require('../mongoClient');
+
+
+
 
 let db;
 
@@ -147,5 +151,24 @@ const startServerTimer = (room, deadline) => {
     room.landingPageTimerValue = timerValue;
   }
 }
+
+
+var mongoClient = dbClient.createConnection();
+  
+mongoClient.then(db => {
+
+  const collection = db.collection('city');
+
+  router.get('/getMap', (req,res) =>{
+      collection.find({}).toArray()
+      .then(results => {
+        if(!results) res.status(404).json({error: 'Cities not found'})
+        else res.status(200).json(results)
+      })
+      .catch(error => {console.error(error)})
+  });
+})
+.catch(error => console.error(error))
+
 
 module.exports = router;
