@@ -8,10 +8,6 @@ var { EnglishAuction } = require("../auctions/EnglishAuction");
 const expiration = 3600;
 var found = 0;
 
-const firebaseMod = require("../firebase/firebase");
-
-const db = firebaseMod.db;
-
 function findSecondHighestBid(arr, arrSize) {
   let i;
 
