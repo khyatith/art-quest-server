@@ -9,7 +9,7 @@ const routes = require('./routes/index');
 app.use(cors());
 
 //HTTP connection
-app.use('/landing-page', routes);
+app.use('/buying', routes);
 
 //Socket IO connection
 const io = socketio(server, {

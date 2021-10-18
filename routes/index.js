@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { getRemainingTime } = require("../helpers/game");
+const dbClient = require('../mongoClient');
+const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner } = require("../helpers/game");
 var mod = require("../constants");
 let rooms = mod.rooms;
 
@@ -25,6 +26,20 @@ router.get('/timer/:hostCode', function (req, res) {
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
   }
+})
+
+router.get('/getResults/:hostCode', async (req, res) => {
+  const db = await dbClient.createConnection();
+  const collection = db.collection('room');
+  const { params } = req;
+  const hostCode = params.hostCode;
+  const leaderboard = await getLeaderboard(rooms, hostCode);
+  rooms[hostCode].leaderBoard = leaderboard;
+  const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, hostCode, rooms);
+  rooms[hostCode].totalAmountSpentByTeam = totalAmountByTeam;
+  const result = JSON.stringify({ leaderboard, totalAmountByTeam });
+  await collection.findOneAndUpdate({"hostCode":hostCode},{$set:rooms[hostCode]});
+  res.send(result);
 })
 
 const startServerTimer = (room, deadline) => {
