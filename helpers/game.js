@@ -222,6 +222,27 @@ function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
   return currentRoom.totalAmountSpentByTeam;
 }
 
+const calculatePaintingQualityAndTotalPoints = (room) => {
+  if (!room || !room.leaderBoard) return null;
+  const { leaderBoard, totalAmountSpentByTeam } = room;
+  let paintingQualityResult = {};
+  let totalPointsResult = {};
+  for(team in leaderBoard) {
+    const currentTeamData = leaderBoard[team];
+    const currentTeamAvg = teamPaintingAverage(currentTeamData);
+    const totalAmtByTeam = parseInt(totalAmountSpentByTeam[team])/1000;
+    paintingQualityResult = {
+      ...paintingQualityResult,
+      [team]: currentTeamAvg,
+    }
+    totalPointsResult = {
+      ...totalPointsResult,
+      [team]: currentTeamAvg + totalAmtByTeam
+    }
+  }
+  return { paintingQualityResult, totalPointsResult }
+}
+
 function gameLoop(state) {
 	if (!state) {
 		return;
@@ -280,7 +301,7 @@ function calculateBuyingPhaseWinner(room) {
   for(team in leaderBoard) {
     const currentTeamData = leaderBoard[team];
     const currentTeamAvg = teamPaintingAverage(currentTeamData);
-    const totalAmtByTeam = (parseInt(room.totalAmountSpentByTeam[team])/10000) * 100;
+    const totalAmtByTeam = parseInt(room.totalAmountSpentByTeam[team])/1000;
     result.push({
       team,
       total: currentTeamAvg + totalAmtByTeam
@@ -304,4 +325,5 @@ module.exports = {
   getLeaderboard,
   calculateTotalAmountSpent,
   calculateBuyingPhaseWinner,
+  calculatePaintingQualityAndTotalPoints,
 };

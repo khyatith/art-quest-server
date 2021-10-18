@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const dbClient = require('../mongoClient');
-const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner } = require("../helpers/game");
+const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, calculatePaintingQualityAndTotalPoints } = require("../helpers/game");
 var mod = require("../constants");
 let rooms = mod.rooms;
 
@@ -33,11 +33,20 @@ router.get('/getResults/:hostCode', async (req, res) => {
   const collection = db.collection('room');
   const { params } = req;
   const hostCode = params.hostCode;
+  const room = rooms[hostCode];
+  //leaderboard
   const leaderboard = await getLeaderboard(rooms, hostCode);
-  rooms[hostCode].leaderBoard = leaderboard;
+  room.leaderBoard = leaderboard;
+
+  //total amt by teams
   const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, hostCode, rooms);
-  rooms[hostCode].totalAmountSpentByTeam = totalAmountByTeam;
-  const result = JSON.stringify({ leaderboard, totalAmountByTeam });
+  room.totalAmountSpentByTeam = totalAmountByTeam;
+
+  //painting quality avg & total points
+  const averagebyTeam = await calculatePaintingQualityAndTotalPoints(room);
+  room.paintingQualityAvg = averagebyTeam.paintingQualityResult;
+  room.totalPointsAvg = averagebyTeam.totalPointsResult;
+  const result = JSON.stringify({ leaderboard, totalAmountByTeam, paintingQualityAvg: averagebyTeam.paintingQualityResult, totalPointsAvg: averagebyTeam.totalPointsResult });
   await collection.findOneAndUpdate({"hostCode":hostCode},{$set:rooms[hostCode]});
   res.send(result);
 })
