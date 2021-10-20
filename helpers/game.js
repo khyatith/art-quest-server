@@ -203,7 +203,7 @@ function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
     (obj, item) => Object.assign(obj, { [item.key]: item.value }), {});
   }
 
-  if (allPayAuctionBidObj) {
+  if (Object.keys(allPayAuctionBidObj).length > 0){
     const allPayAuctionAmt = updateTotalAmountsForAllPayAuctions(allPayAuctionBidObj, currentRoom);
     if (result) {
       result = Object.entries(result).reduce((acc, [key, value]) => {
@@ -291,7 +291,7 @@ function teamPaintingAverage(arr) {
   return arr.reduce((acc,v) => {
     totalPaintingQuality += v.auctionObj.paintingQuality;
     acc = totalPaintingQuality / arr.length;
-    return acc;
+    return Math.round((acc + Number.EPSILON) * 100) / 100
   }, {});
 };
 
@@ -304,7 +304,7 @@ function calculateBuyingPhaseWinner(room) {
     const totalAmtByTeam = parseInt(room.totalAmountSpentByTeam[team])/1000;
     result.push({
       team,
-      total: currentTeamAvg + totalAmtByTeam
+      total: currentTeamAvg + (Math.round((totalAmtByTeam + Number.EPSILON) * 100) / 100)
     })
   }
 

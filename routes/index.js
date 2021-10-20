@@ -13,11 +13,11 @@ router.get('/timer/:hostCode', function (req, res) {
   const { params } = req;
   const hostCode = params.hostCode;
   let room = rooms[hostCode];
-  if (room.hasLandingPageTimerEnded) {
+  if (room && room.hasLandingPageTimerEnded) {
     res.send({ landingPageTimerValue: {} });
     return;
   }
-  if (Object.keys(room.landingPageTimerValue).length > 0) {
+  if (room && Object.keys(room.landingPageTimerValue).length > 0) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
@@ -53,10 +53,10 @@ router.get('/getResults/:hostCode', async (req, res) => {
 
 const startServerTimer = (room, deadline) => {
   let timerValue = getRemainingTime(deadline);
-  if (timerValue.total <= 0) {
+  if (room && timerValue.total <= 0) {
     room.hasLandingPageTimerEnded = true;
     room.landingPageTimerValue = {};
-  } else if (timerValue.total > 0) {
+  } else if (room && timerValue.total > 0) {
     room.landingPageTimerValue = timerValue;
   }
 }
