@@ -5,6 +5,8 @@ const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBu
 var mod = require("../constants");
 let rooms = mod.rooms;
 
+let db;
+
 router.get("/", (req, res) => {
   res.send({ response: "I am alive" }).status(200);
 });
@@ -29,7 +31,7 @@ router.get('/timer/:hostCode', function (req, res) {
 })
 
 router.get('/getResults/:hostCode', async (req, res) => {
-  const db = await dbClient.createConnection();
+  db = await dbClient.createConnection();
   const collection = db.collection('room');
   const { params } = req;
   const hostCode = params.hostCode;
@@ -49,6 +51,24 @@ router.get('/getResults/:hostCode', async (req, res) => {
   const result = JSON.stringify({ leaderboard, totalAmountByTeam, paintingQualityAvg: averagebyTeam.paintingQualityResult, totalPointsAvg: averagebyTeam.totalPointsResult });
   await collection.findOneAndUpdate({"hostCode":hostCode},{$set:rooms[hostCode]});
   res.send(result);
+})
+
+router.get('/getWinner/:hostCode', async (req, res) => {
+  //db = await dbClient.createConnection();
+  //const collection = db.collection('room');
+  const { params } = req;
+  const hostCode = params.hostCode;
+  const room = rooms[hostCode];
+  //TODO: update winner in mongodb
+  //let room = await collection.findOne({'hostCode': hostCode});
+  let parsedRoom;
+  if (room) {
+    parsedRoom = room;
+  }
+  if (parsedRoom.winner) return parsedRoom.winner;
+  const winner = calculateBuyingPhaseWinner(parsedRoom);
+  res.send({ winner, leaderboard: parsedRoom.leaderBoard });
+  //io.to(player.hostCode).emit("displayGameWinner", { winner, leaderboard: parsedRoom.leaderBoard });
 })
 
 const startServerTimer = (room, deadline) => {
