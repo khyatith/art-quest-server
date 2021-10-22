@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const dbClient = require('../mongoClient');
 const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, calculatePaintingQualityAndTotalPoints, getNextObjectForLiveAuction } = require("../helpers/game");
+router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
 const dbClient = require('../mongoClient');
@@ -158,6 +159,7 @@ var mongoClient = dbClient.createConnection();
 mongoClient.then(db => {
 
   const collection = db.collection('city');
+  const collection_visits = db.collection('visits');
 
   router.get('/getMap', (req,res) =>{
       collection.find({}).toArray()
@@ -167,6 +169,16 @@ mongoClient.then(db => {
       })
       .catch(error => {console.error(error)})
   });
+
+  router.post('/putCurrentLocation', (req,res) =>{
+    collection_visits.findOneAndUpdate({"playerId":req.body.playerId,"roomId":req.body.roomId},{$set:req.body, $push:{locations:req.body.locationId}}, {upsert:true})
+		.then(results => {
+			console.log('current location updated')
+			res.status(200).json({success: 'location updated'})
+		})
+		.catch(error => {console.error(error);res.status(500).json(error)})
+  });
+
 })
 .catch(error => console.error(error))
 
