@@ -249,19 +249,44 @@ function gameLoop(state) {
 	}
 }
 
-function getNextObjectForLiveAuction(parsedRoom, prevAuction) {
-	let newAuction;
-	const { currentAuctionObj } = prevAuction;
-	if (!currentAuctionObj) {
+// function getNextObjectForLiveAuction(parsedRoom, prevAuction) {
+// 	let newAuction;
+// 	const { currentAuctionObj } = prevAuction;
+// 	if (!currentAuctionObj) {
+//     newAuction = parsedRoom.auctions.artifacts[0];
+//     parsedRoom.auctions.artifacts[0].auctionState = 1;
+// 	} else {
+// 		const { id } = prevAuction.currentAuctionObj;
+// 		const nextId = id + 1;
+//     newAuction = parsedRoom.auctions.artifacts.filter(item => item.id === nextId)[0];
+//     //update parsed rooms
+// 		parsedRoom.auctions.artifacts.forEach(item => {
+// 			if (item.id === currentAuctionObj.id) {
+// 				item.auctionState = 2;
+//       }
+//       if (newAuction && item.id === newAuction.id) {
+//         item.auctionState = 1;
+//       }
+// 		});
+//   }
+// 	if (!newAuction) return { newAuction: null, parsedRoom };
+// 	newAuction.auctionState = 1;
+// 	return { newAuction, parsedRoom };
+// }
+
+function getNextObjectForLiveAuction(parsedRoom, prevAuctionId) {
+  let newAuction;
+	//const { currentAuctionObj } = prevAuction;
+	if (!parseInt(prevAuctionId)) {
     newAuction = parsedRoom.auctions.artifacts[0];
     parsedRoom.auctions.artifacts[0].auctionState = 1;
 	} else {
-		const { id } = prevAuction.currentAuctionObj;
+		const id = parseInt(prevAuctionId);
 		const nextId = id + 1;
     newAuction = parsedRoom.auctions.artifacts.filter(item => item.id === nextId)[0];
     //update parsed rooms
 		parsedRoom.auctions.artifacts.forEach(item => {
-			if (item.id === currentAuctionObj.id) {
+			if (item.id === id) {
 				item.auctionState = 2;
       }
       if (newAuction && item.id === newAuction.id) {

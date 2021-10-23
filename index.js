@@ -20,7 +20,6 @@ const io = socketio(server, {
 
 const socketMain = require('./events/socketMain');
 const auctionEvents = require('./events/auctionEvents');
-const leaderboard = require('./events/leaderboard');
 var mod = require("./constants");
 let rooms = mod.rooms;
 
@@ -32,11 +31,5 @@ const onConnection = (socket) => {
 }
 
 io.on("connection", onConnection);
-
-const leaderboardns = io.of("/leaderboard-namespace");
-
-leaderboardns.on("connection", (socket) => {
-	leaderboard(leaderboardns, socket, rooms);
-});
 
 server.listen(port);

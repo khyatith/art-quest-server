@@ -12,7 +12,7 @@
 				"type": "Point",
 				"coordinates": [23.7275, 45.9838]
 			},
-			"auctionType": "4",
+			"auctionType": "2",
 			"auctionDescription": "English Auction",
 			"originalValue": 10000,
 			"render": true,
@@ -23,6 +23,8 @@
 			"artistRank": "2.6",
 			"hasAuctionTimerStarted": false,
 			"auctionTimerDeadline": 1,
+			"hasAuctionTimerEnded": false,
+			"auctionTimerValue": {},
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -40,7 +42,7 @@
 				"type": "Point",
 				"coordinates": [27.4303, 54.0745]
 			},
-			"auctionType": "2",
+			"auctionType": "3",
 			"auctionDescription": "First priced sealed-bid auction",
 			"originalValue": 15000,
 			"render": true,
@@ -51,6 +53,8 @@
 			"artistRank": "3.0",
 			"hasAuctionTimerStarted": false,
 			"auctionTimerDeadline": 1,
+			"hasAuctionTimerEnded": false,
+			"auctionTimerValue": {},
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -68,7 +72,7 @@
 				"type": "Point",
 				"coordinates": [25.4303, 40.5745]
 			},
-			"auctionType": "1",
+			"auctionType": "4",
 			"auctionDescription": "First priced sealed-bid auction",
 			"originalValue": 20000,
 			"render": true,
@@ -78,6 +82,8 @@
 			"artistRank": "3.4",
 			"hasAuctionTimerStarted": false,
 			"auctionTimerDeadline": 1,
+			"hasAuctionTimerEnded": false,
+			"auctionTimerValue": {},
 			"auctionState": 0,
 			"bid": {
 				"bidAmount": 0,
@@ -96,7 +102,7 @@
 				"type": "Point",
 				"coordinates": [-3.7038, 40.4168]
 			},
-			"auctionType": "3",
+			"auctionType": "2",
 			"auctionDescription": "First priced sealed-bid auction",
 			"originalValue": 25000,
 			"render": true,
@@ -107,6 +113,8 @@
 			"auctionState": 0,
 			"hasAuctionTimerStarted": false,
 			"auctionTimerDeadline": 0.5,
+			"hasAuctionTimerEnded": false,
+			"auctionTimerValue": {},
 			"bid": {
 				"bidAmount": 0,
 				"bidTeam": ""
@@ -124,7 +132,7 @@
 				"type": "Point",
 				"coordinates": [2.1734, 43.3851]
 			},
-			"auctionType": "4",
+			"auctionType": "1",
 			"auctionDescription": "First priced sealed-bid auction",
 			"originalValue": 30000,
 			"render": true,
@@ -134,6 +142,8 @@
 			"artistRank": "4.5",
 			"hasAuctionTimerStarted": false,
 			"auctionTimerDeadline": 1,
+			"hasAuctionTimerEnded": false,
+			"auctionTimerValue": {},
 			"auctionState": 0,
 			"bid": {
 				"bidAmount": 0,

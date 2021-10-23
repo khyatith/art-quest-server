@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const dbClient = require('../mongoClient');
-const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, calculatePaintingQualityAndTotalPoints } = require("../helpers/game");
+const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, calculatePaintingQualityAndTotalPoints, getNextObjectForLiveAuction } = require("../helpers/game");
 var mod = require("../constants");
 let rooms = mod.rooms;
 
@@ -28,7 +28,7 @@ router.get('/timer/:hostCode', function (req, res) {
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
   }
-})
+});
 
 router.get('/getResults/:hostCode', async (req, res) => {
   db = await dbClient.createConnection();
@@ -51,7 +51,7 @@ router.get('/getResults/:hostCode', async (req, res) => {
   const result = JSON.stringify({ leaderboard, totalAmountByTeam, paintingQualityAvg: averagebyTeam.paintingQualityResult, totalPointsAvg: averagebyTeam.totalPointsResult });
   await collection.findOneAndUpdate({"hostCode":hostCode},{$set:rooms[hostCode]});
   res.send(result);
-})
+});
 
 router.get('/getWinner/:hostCode', async (req, res) => {
   //db = await dbClient.createConnection();
@@ -69,7 +69,70 @@ router.get('/getWinner/:hostCode', async (req, res) => {
   const winner = calculateBuyingPhaseWinner(parsedRoom);
   res.send({ winner, leaderboard: parsedRoom.leaderBoard });
   //io.to(player.hostCode).emit("displayGameWinner", { winner, leaderboard: parsedRoom.leaderBoard });
-})
+});
+
+router.get('/getNextAuction/:hostCode/:prevAuctionId', async(req, res) => {
+  let db = await dbClient.createConnection();
+  const collection = db.collection('room');
+  const { hostCode, prevAuctionId } = req.params;
+  const room = await collection.findOne({'hostCode': hostCode});
+
+  const parsedRoom = room;
+  const globalRoom = rooms[hostCode];
+  const returnObj = getNextObjectForLiveAuction(parsedRoom, prevAuctionId);
+
+  const udpatedParsedRoom = returnObj.parsedRoom;
+  if (globalRoom && globalRoom.auctions) {
+    globalRoom.auctions.artifacts = udpatedParsedRoom.auctions.artifacts;
+  }
+  //There is a bug right now where leaderboard is not persisting across the auctions
+  //This is happening because somehow the redis object is not persisting the data.
+  //This is a workaround that but eventually I have to find a solution for it
+  udpatedParsedRoom.leaderBoard = globalRoom.leaderBoard;
+  udpatedParsedRoom.totalAmountSpentByTeam = globalRoom.totalAmountSpentByTeam;
+  await collection.findOneAndUpdate({"hostCode":hostCode},{$set:udpatedParsedRoom});
+  res.send(returnObj.newAuction)
+});
+
+router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
+  const { params } = req;
+  const hostCode = params.hostCode;
+  let room = rooms[hostCode];
+  let auctionObj = room.auctions.artifacts.filter((item) => parseInt(item.id) === parseInt(params.auctionId));
+  if (!auctionObj) return;
+  console.log('after empty return');
+  const currentAuctionObj = auctionObj[0];
+  if (currentAuctionObj && currentAuctionObj.hasAuctionTimerEnded) {
+    console.log('currentuctionobj', currentAuctionObj);
+    res.send({ currentAuctionObjTimer: {} });
+    return;
+  }
+  if (currentAuctionObj && Object.keys(currentAuctionObj.auctionTimerValue).length > 0) {
+    res.send({ currentAuctionObjTimer: currentAuctionObj.auctionTimerValue });
+  } else {
+    const currentTime = Date.parse(new Date());
+    const deadline = new Date(currentTime + 0.5 * 60 * 1000);
+    const timerValue = getRemainingTime(deadline);
+    console.log('timervalue', timerValue);
+    setInterval(() => startAuctionServerTimer(room, currentAuctionObj, deadline), 1000);
+    res.send({ currentAuctionObjTimer: timerValue });
+  }
+});
+
+const startAuctionServerTimer = (room, currentAuctionObj, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    currentAuctionObj.hasAuctionTimerEnded = true;
+    currentAuctionObj.auctionTimerValue = {};
+  } else if (room && timerValue.total > 0) {
+    currentAuctionObj.auctionTimerValue = timerValue;
+  }
+  room.auctions.artifacts.forEach(item => {
+    if (item.id === currentAuctionObj.id) {
+      item = currentAuctionObj
+    }
+  });
+}
 
 const startServerTimer = (room, deadline) => {
   let timerValue = getRemainingTime(deadline);

@@ -4,9 +4,9 @@ const dbClient = require('../mongoClient');
 let auctionsTimer;
 let isAuctionTimerStarted = false;
 let auctionTimerInterval;
+let auctionTimerCompleted = [];
 
 function updateAuctionClock() {
-  isAuctionTimerStarted = true;
   const t = getRemainingTime(auctionsTimer);
   return t;
 }
@@ -36,18 +36,19 @@ module.exports = async (io, socket, rooms) => {
     socket.emit("startNextAuction", returnObj.newAuction);
   }
 
-  const startAuctionsTimer = async ({ player }) => {
-		if (!isAuctionTimerStarted) {
+  const startAuctionsTimer = async ({ player, auctionId }) => {
+		if (!auctionTimerCompleted.includes(auctionId)) {
 			const current = Date.parse(new Date());
 			auctionsTimer = new Date(current + 0.5 * 60 * 1000);
 		}
     auctionTimerInterval = setInterval(() => {
       const t = updateAuctionClock();
       if (t.total <= 0) {
-        isAuctionTimerStarted = false;
+        //isAuctionTimerStarted = false;
         clearInterval(auctionTimerInterval);
-        io.to(player.hostCode).emit("auctionPageTimerEnded", t);
-      }  else if (isAuctionTimerStarted && t.total > 0) {
+        auctionTimerCompleted.push(auctionId);
+        io.to(player.hostCode).emit("auctionPageTimerEnded", auctionId);
+      }  else if (t.total > 0) {
         io.to(player.hostCode).emit("auctionTimerValue", t);
       }
     }, 1000);
