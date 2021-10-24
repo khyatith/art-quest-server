@@ -6,6 +6,7 @@ router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
 const dbClient = require('../mongoClient');
+const { resolve } = require("q");
 
 
 
@@ -154,12 +155,15 @@ const startServerTimer = (room, deadline) => {
 }
 
 
+
+
 var mongoClient = dbClient.createConnection();
   
 mongoClient.then(db => {
 
   const collection = db.collection('city');
   const collection_visits = db.collection('visits');
+  const collection_room = db.collection('room');
 
   router.get('/getMap', (req,res) =>{
       collection.find({}).toArray()
@@ -178,6 +182,77 @@ mongoClient.then(db => {
 		})
 		.catch(error => {console.error(error);res.status(500).json(error)})
   });
+
+  router.get('/getSellingResults', (req,res) =>{
+
+    var selling_result = new Object();
+    collection_room.findOne({"roomCode":req.body.roomId})
+    .then(results => {
+      if(!results) res.status(404).json({error: 'Room not found'})
+      else {
+       
+        selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
+        var keys =Object.keys(selling_result.amountSpentByTeam);
+       
+        getVisitData(keys,req.body.roomId)
+        .then(visitObjects => {
+          selling_result.visits = visitObjects;
+          res.status(200).json(selling_result);
+        });
+
+      }
+    })
+    .catch(error => {console.error(error)})
+});
+
+
+function getVisitData(keys,roomCode){
+  return new Promise((resolve1, reject1) => {
+    var visitObjects = [];
+
+    var bar = new Promise((resolve, reject) => {
+      keys.forEach(function(key,index) {
+       
+        var bar2 = new Promise((resolve2, reject2) => {
+          console.log(roomCode + " - " + key)
+          collection_visits.find({"roomId":roomCode,"teamName":key}).toArray()
+          .then(teamVisits => {
+            if(!teamVisits)
+              console.log("visits not found")
+            else{
+              var teamVisit = new Object();
+              teamVisit.teamName = key;
+              teamVisit.visitCount = 0;
+              teamVisits.forEach(function(visit,index) {
+                teamVisit.visitCount += visit.locations.length;
+              });
+              console.log("teamvisits : "+teamVisits);
+            }
+            resolve2(teamVisit);
+
+          });
+        });
+
+        bar2.then(teamVisit => {
+          console.log(key);
+          visitObjects.push(teamVisit);
+          if(index == keys.length -1)
+            resolve();
+        });
+
+          
+      });
+    });
+    bar.then(() => {
+      console.log('All done!');
+     resolve1(visitObjects);
+    });
+  
+  });
+  
+
+}
+
 
 })
 .catch(error => console.error(error))
