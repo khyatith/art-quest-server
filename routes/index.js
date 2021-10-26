@@ -186,7 +186,7 @@ mongoClient.then(db => {
   router.get('/getSellingResults', (req,res) =>{
 
     var selling_result = new Object();
-    collection_room.findOne({"roomCode":req.body.roomId})
+    collection_room.findOne({"roomCode":req.query.roomId})
     .then(results => {
       if(!results) res.status(404).json({error: 'Room not found'})
       else {
@@ -194,7 +194,7 @@ mongoClient.then(db => {
         selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
         var keys =Object.keys(selling_result.amountSpentByTeam);
        
-        getVisitData(keys,req.body.roomId)
+        getVisitData(keys,req.query.roomId)
         .then(visitObjects => {
           selling_result.visits = visitObjects;
           res.status(200).json(selling_result);
