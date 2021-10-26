@@ -230,14 +230,14 @@ const calculatePaintingQualityAndTotalPoints = (room) => {
   for(team in leaderBoard) {
     const currentTeamData = leaderBoard[team];
     const currentTeamAvg = teamPaintingAverage(currentTeamData);
-    const totalAmtByTeam = parseInt(totalAmountSpentByTeam[team])/1000;
+    const totalAmtByTeam = parseFloat((parseFloat(totalAmountSpentByTeam[team])/parseFloat(currentTeamAvg))/1000.00);
     paintingQualityResult = {
       ...paintingQualityResult,
       [team]: currentTeamAvg,
     }
     totalPointsResult = {
       ...totalPointsResult,
-      [team]: currentTeamAvg + totalAmtByTeam
+      [team]: (parseFloat(totalAmtByTeam) * currentTeamData.length).toFixed(2)
     }
   }
   return { paintingQualityResult, totalPointsResult }
@@ -248,31 +248,6 @@ function gameLoop(state) {
 		return;
 	}
 }
-
-// function getNextObjectForLiveAuction(parsedRoom, prevAuction) {
-// 	let newAuction;
-// 	const { currentAuctionObj } = prevAuction;
-// 	if (!currentAuctionObj) {
-//     newAuction = parsedRoom.auctions.artifacts[0];
-//     parsedRoom.auctions.artifacts[0].auctionState = 1;
-// 	} else {
-// 		const { id } = prevAuction.currentAuctionObj;
-// 		const nextId = id + 1;
-//     newAuction = parsedRoom.auctions.artifacts.filter(item => item.id === nextId)[0];
-//     //update parsed rooms
-// 		parsedRoom.auctions.artifacts.forEach(item => {
-// 			if (item.id === currentAuctionObj.id) {
-// 				item.auctionState = 2;
-//       }
-//       if (newAuction && item.id === newAuction.id) {
-//         item.auctionState = 1;
-//       }
-// 		});
-//   }
-// 	if (!newAuction) return { newAuction: null, parsedRoom };
-// 	newAuction.auctionState = 1;
-// 	return { newAuction, parsedRoom };
-// }
 
 function getNextObjectForLiveAuction(parsedRoom, prevAuctionId) {
   let newAuction;
@@ -321,18 +296,18 @@ function teamPaintingAverage(arr) {
 };
 
 function calculateBuyingPhaseWinner(room) {
-  const { leaderBoard } = room;
+  const { leaderBoard, totalAmountSpentByTeam } = room;
   let result = [];
   for(team in leaderBoard) {
     const currentTeamData = leaderBoard[team];
     const currentTeamAvg = teamPaintingAverage(currentTeamData);
-    const totalAmtByTeam = parseInt(room.totalAmountSpentByTeam[team])/1000;
+    const totalAmtByTeam = parseFloat((parseInt(totalAmountSpentByTeam[team])/currentTeamAvg)/1000);
+
     result.push({
       team,
-      total: currentTeamAvg + (Math.round((totalAmtByTeam + Number.EPSILON) * 100) / 100)
+      total: (parseFloat(totalAmtByTeam) * currentTeamData.length).toFixed(2)
     })
   }
-
   if (result.length > 0) {
     const winner = result.reduce(function (p, v) {
       return ( p.total > v.total ? p : v );
