@@ -203,7 +203,41 @@ mongoClient.then(db => {
       }
     })
     .catch(error => {console.error(error)})
-});
+  });
+
+  router.get('/getSellingInfo', (req,res) =>{
+
+    var selling_info = new Object();
+    collection_room.findOne({"roomCode":req.query.roomId})
+    .then(results => {
+      if(!results) res.status(404).json({error: 'Room not found'})
+      else {
+        selling_info.artifacts = results.leaderBoard[req.query.teamName]
+
+        collection.findOne({"cityId":parseInt(req.query.locationId,10)})
+        .then(results_city => {
+          selling_info.city = results_city
+
+          collection_visits.find({"roomId":req.query.roomId,locations: {$in: [parseInt(req.query.locationId,10)]}}).toArray()
+          .then(results_visits => {
+            var otherTeams = [];
+            results_visits.forEach(function(visit,index) {
+              if (otherTeams.includes(visit.teamName) === false) otherTeams.push(visit.teamName);
+            });
+
+            selling_info.otherteams = otherTeams;
+            res.status(200).json(selling_info);
+          });
+
+
+          
+        });
+        
+
+      }
+    })
+    .catch(error => {console.error(error)})
+  });
 
 
 function getVisitData(keys,roomCode){
@@ -214,7 +248,7 @@ function getVisitData(keys,roomCode){
       keys.forEach(function(key,index) {
        
         var bar2 = new Promise((resolve2, reject2) => {
-          console.log(roomCode + " - " + key)
+          
           collection_visits.find({"roomId":roomCode,"teamName":key}).toArray()
           .then(teamVisits => {
             if(!teamVisits)
@@ -226,7 +260,7 @@ function getVisitData(keys,roomCode){
               teamVisits.forEach(function(visit,index) {
                 teamVisit.visitCount += visit.locations.length;
               });
-              console.log("teamvisits : "+teamVisits);
+              
             }
             resolve2(teamVisit);
 
@@ -234,7 +268,7 @@ function getVisitData(keys,roomCode){
         });
 
         bar2.then(teamVisit => {
-          console.log(key);
+          
           visitObjects.push(teamVisit);
           if(index == keys.length -1)
             resolve();
@@ -244,7 +278,6 @@ function getVisitData(keys,roomCode){
       });
     });
     bar.then(() => {
-      console.log('All done!');
      resolve1(visitObjects);
     });
   
