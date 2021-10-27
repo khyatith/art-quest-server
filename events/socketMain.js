@@ -36,6 +36,7 @@ module.exports = async (io, socket, rooms) => {
         hasLandingPageTimerEnded: false,
         winner: null,
       };
+      console.log('----creating room---', parsedRoom.auctions.artifacts[0]);
       rooms[player.hostCode] = parsedRoom;
       await collection.insertOne(parsedRoom);
     }
