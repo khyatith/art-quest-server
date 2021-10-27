@@ -124,16 +124,18 @@ router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
 const startAuctionServerTimer = (room, currentAuctionObj, deadline) => {
   let timerValue = getRemainingTime(deadline);
   if (room && timerValue.total <= 0) {
+    console.log('-----inside timer value <= 0----', timerValue )
     currentAuctionObj.hasAuctionTimerEnded = true;
     currentAuctionObj.auctionTimerValue = {};
   } else if (room && timerValue.total > 0) {
+    console.log('----inside timer value > 0-----', timerValue);
     currentAuctionObj.auctionTimerValue = timerValue;
   }
-  room.auctions.artifacts.forEach(item => {
-    if (item.id === currentAuctionObj.id) {
-      item = currentAuctionObj
-    }
-  });
+  // room.auctions.artifacts.forEach(item => {
+  //   if (item.id === currentAuctionObj.id) {
+  //     item = currentAuctionObj
+  //   }
+  // });
 }
 
 const startServerTimer = (room, deadline) => {
