@@ -99,28 +99,23 @@ router.get('/getNextAuction/:hostCode/:prevAuctionId', async(req, res) => {
 });
 
 router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
-  console.log('----------inside auction timer code------');
   const { params } = req;
   const hostCode = params.hostCode;
   let room = rooms[hostCode];
   let auctionObj = room.auctions.artifacts.filter((item) => parseInt(item.id) === parseInt(params.auctionId));
   if (!auctionObj) return;
   const currentAuctionObj = auctionObj[0];
-  console.log('----------currentAuctionObj------', currentAuctionObj);
   if (currentAuctionObj && currentAuctionObj.hasAuctionTimerEnded) {
-    console.log('inside has Auction timer ended condition');
     res.send({ currentAuctionObjTimer: {} });
     return;
   }
   if (currentAuctionObj && Object.keys(currentAuctionObj.auctionTimerValue).length > 0) {
-    console.log('-----timer value already generated, returning value to client-----', currentAuctionObj.auctionTimerValue);
     res.send({ currentAuctionObjTimer: currentAuctionObj.auctionTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
     const deadline = new Date(currentTime + 0.5 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startAuctionServerTimer(room, currentAuctionObj, deadline), 1000);
-    console.log('-----timer value generated-----', timerValue);
     res.send({ currentAuctionObjTimer: timerValue });
   }
 });
@@ -128,18 +123,11 @@ router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
 const startAuctionServerTimer = (room, currentAuctionObj, deadline) => {
   let timerValue = getRemainingTime(deadline);
   if (room && timerValue.total <= 0) {
-    console.log('-----inside timer value <= 0----', timerValue )
     currentAuctionObj.hasAuctionTimerEnded = true;
     currentAuctionObj.auctionTimerValue = {};
   } else if (room && timerValue.total > 0) {
-    console.log('----inside timer value > 0-----', timerValue);
     currentAuctionObj.auctionTimerValue = timerValue;
   }
-  // room.auctions.artifacts.forEach(item => {
-  //   if (item.id === currentAuctionObj.id) {
-  //     item = currentAuctionObj
-  //   }
-  // });
 }
 
 const startServerTimer = (room, deadline) => {

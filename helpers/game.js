@@ -230,14 +230,14 @@ const calculatePaintingQualityAndTotalPoints = (room) => {
   for(team in leaderBoard) {
     const currentTeamData = leaderBoard[team];
     const currentTeamAvg = teamPaintingAverage(currentTeamData);
-    const totalAmtByTeam = parseFloat(parseInt(totalAmountSpentByTeam[team]/parseFloat(currentTeamAvg)));
+    const totalAmtByTeam = parseFloat(parseInt(totalAmountSpentByTeam[team]/parseFloat(currentTeamData.length)));
     paintingQualityResult = {
       ...paintingQualityResult,
       [team]: currentTeamAvg,
     }
     totalPointsResult = {
       ...totalPointsResult,
-      [team]: (parseFloat(totalAmtByTeam)/currentTeamData.length).toFixed(2)
+      [team]: (parseFloat(totalAmtByTeam)/parseFloat(currentTeamAvg)).toFixed(2)
     }
   }
   return { paintingQualityResult, totalPointsResult }
@@ -301,11 +301,11 @@ function calculateBuyingPhaseWinner(room) {
   for(team in leaderBoard) {
     const currentTeamData = leaderBoard[team];
     const currentTeamAvg = teamPaintingAverage(currentTeamData);
-    const totalAmtByTeam = parseFloat(parseInt(totalAmountSpentByTeam[team]/parseFloat(currentTeamAvg)));
+    const totalAmtByTeam = parseFloat(parseInt(totalAmountSpentByTeam[team]/parseFloat(currentTeamData.length)));
 
     result.push({
       team,
-      total: (parseFloat(totalAmtByTeam)/currentTeamData.length).toFixed(2)
+      total: (parseFloat(totalAmtByTeam)/parseFloat(currentTeamAvg)).toFixed(2)
     })
   }
   if (result.length > 0) {
