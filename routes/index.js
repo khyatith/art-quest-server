@@ -2,8 +2,14 @@ const express = require("express");
 const router = express.Router();
 const dbClient = require('../mongoClient');
 const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, calculatePaintingQualityAndTotalPoints, getNextObjectForLiveAuction } = require("../helpers/game");
+router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
+const dbClient = require('../mongoClient');
+const { resolve } = require("q");
+
+
+
 
 let db;
 
@@ -147,5 +153,142 @@ const startServerTimer = (room, deadline) => {
     room.landingPageTimerValue = timerValue;
   }
 }
+
+
+
+
+var mongoClient = dbClient.createConnection();
+  
+mongoClient.then(db => {
+
+  const collection = db.collection('city');
+  const collection_visits = db.collection('visits');
+  const collection_room = db.collection('room');
+
+  router.get('/getMap', (req,res) =>{
+      collection.find({}).toArray()
+      .then(results => {
+        if(!results) res.status(404).json({error: 'Cities not found'})
+        else res.status(200).json(results)
+      })
+      .catch(error => {console.error(error)})
+  });
+
+  router.post('/putCurrentLocation', (req,res) =>{
+    collection_visits.findOneAndUpdate({"playerId":req.body.playerId,"roomId":req.body.roomId},{$set:req.body, $push:{locations:req.body.locationId}}, {upsert:true})
+		.then(results => {
+			console.log('current location updated')
+			res.status(200).json({success: 'location updated'})
+		})
+		.catch(error => {console.error(error);res.status(500).json(error)})
+  });
+
+  router.get('/getSellingResults', (req,res) =>{
+
+    var selling_result = new Object();
+    collection_room.findOne({"roomCode":req.query.roomId})
+    .then(results => {
+      if(!results) res.status(404).json({error: 'Room not found'})
+      else {
+       
+        selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
+        var keys =Object.keys(selling_result.amountSpentByTeam);
+       
+        getVisitData(keys,req.query.roomId)
+        .then(visitObjects => {
+          selling_result.visits = visitObjects;
+          res.status(200).json(selling_result);
+        });
+
+      }
+    })
+    .catch(error => {console.error(error)})
+  });
+
+  router.get('/getSellingInfo', (req,res) =>{
+
+    var selling_info = new Object();
+    collection_room.findOne({"roomCode":req.query.roomId})
+    .then(results => {
+      if(!results) res.status(404).json({error: 'Room not found'})
+      else {
+        selling_info.artifacts = results.leaderBoard[req.query.teamName]
+
+        collection.findOne({"cityId":parseInt(req.query.locationId,10)})
+        .then(results_city => {
+          selling_info.city = results_city
+
+          collection_visits.find({"roomId":req.query.roomId,locations: {$in: [parseInt(req.query.locationId,10)]}}).toArray()
+          .then(results_visits => {
+            var otherTeams = [];
+            results_visits.forEach(function(visit,index) {
+              if (otherTeams.includes(visit.teamName) === false) otherTeams.push(visit.teamName);
+            });
+
+            selling_info.otherteams = otherTeams;
+            res.status(200).json(selling_info);
+          });
+
+
+          
+        });
+        
+
+      }
+    })
+    .catch(error => {console.error(error)})
+  });
+
+
+function getVisitData(keys,roomCode){
+  return new Promise((resolve1, reject1) => {
+    var visitObjects = [];
+
+    var bar = new Promise((resolve, reject) => {
+      keys.forEach(function(key,index) {
+       
+        var bar2 = new Promise((resolve2, reject2) => {
+          
+          collection_visits.find({"roomId":roomCode,"teamName":key}).toArray()
+          .then(teamVisits => {
+            if(!teamVisits)
+              console.log("visits not found")
+            else{
+              var teamVisit = new Object();
+              teamVisit.teamName = key;
+              teamVisit.visitCount = 0;
+              teamVisits.forEach(function(visit,index) {
+                teamVisit.visitCount += visit.locations.length;
+              });
+              
+            }
+            resolve2(teamVisit);
+
+          });
+        });
+
+        bar2.then(teamVisit => {
+          
+          visitObjects.push(teamVisit);
+          if(index == keys.length -1)
+            resolve();
+        });
+
+          
+      });
+    });
+    bar.then(() => {
+     resolve1(visitObjects);
+    });
+  
+  });
+  
+
+}
+
+
+})
+.catch(error => console.error(error))
+
 
 module.exports = router;

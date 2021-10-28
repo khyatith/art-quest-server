@@ -23,8 +23,8 @@ require("dotenv").config();
 
 let currentAuction = {};
 
-const firebaseMod = require("./firebase/firebase");
-const db = firebaseMod.db;
+//const firebaseMod = require("./firebase/firebase");
+//const db = firebaseMod.db;
 
 // 10 mins landing page timer
 let landingPageTimerDeadline;
