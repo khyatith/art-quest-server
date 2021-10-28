@@ -5,9 +5,7 @@ const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBu
 router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
-const dbClient = require('../mongoClient');
 const { resolve } = require("q");
-
 
 
 
