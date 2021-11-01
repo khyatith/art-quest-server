@@ -71,7 +71,7 @@ router.get('/getWinner/:hostCode', async (req, res) => {
   }
   if (parsedRoom.winner) return parsedRoom.winner;
   const winner = calculateBuyingPhaseWinner(parsedRoom);
-  res.send({ winner, leaderboard: parsedRoom.leaderBoard });
+  res.send({ winner, leaderboard: parsedRoom.leaderBoard, totalAmountSpentByTeam: parsedRoom.totalAmountSpentByTeam, totalPointsAvg: parsedRoom.totalPointsAvg });
   //io.to(player.hostCode).emit("displayGameWinner", { winner, leaderboard: parsedRoom.leaderBoard });
 });
 
