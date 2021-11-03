@@ -2,8 +2,6 @@ var CONSTANTS = require("../constants");
 var rooms = CONSTANTS.rooms;
 var boardArray = CONSTANTS.boardArray;
 var auctionsObj = require("../auctionData.json");
-var { FirstPricedSealedBidAuction } = require("../auctions/FirstPricedSealedBidAuction");
-var { EnglishAuction } = require("../auctions/EnglishAuction");
 
 const expiration = 3600;
 var found = 0;
@@ -295,27 +293,69 @@ function teamPaintingAverage(arr) {
   }, {});
 };
 
-function calculateBuyingPhaseWinner(room) {
-  const { leaderBoard, totalAmountSpentByTeam } = room;
-  let result = [];
-  for(team in leaderBoard) {
-    const currentTeamData = leaderBoard[team];
-    const currentTeamAvg = teamPaintingAverage(currentTeamData);
-    const totalAmtByTeam = parseFloat(parseInt(totalAmountSpentByTeam[team]/parseFloat(currentTeamData.length)));
-
-    result.push({
-      team,
-      total: (parseFloat(totalAmtByTeam)/parseFloat(currentTeamAvg)).toFixed(2)
-    })
-  }
-  if (result.length > 0) {
-    const winner = result.reduce(function (p, v) {
-      return ( p.total > v.total ? p : v );
+function getTopTwoTeams(sortedObj) {
+  let index = 0;
+  let result = {};
+  const topTwo = Object.entries(sortedObj).map(([key, value]) => {         
+      if (index <= 1) {
+        result[key] = value;
+        index++;
+      }
+      return result;
     });
-    return winner;
-  } else {
-    return null;
+  return topTwo[0];
+}
+
+function getWinnerFromTopTwo(topTwo, teamEfficiency, leaderBoard) {
+  const result = Object.entries(topTwo).sort(([ka,a],[kb,b]) => {
+    if (parseFloat(teamEfficiency[ka]) === parseFloat(teamEfficiency[kb])) {
+      const kaTeamData = leaderBoard[ka];
+      const kaTeamPaintingAvg = teamPaintingAverage(kaTeamData);
+      const kbTeamData = leaderBoard[kb];
+      const kbTeamPaintingAvg = teamPaintingAverage(kbTeamData);
+      return kaTeamPaintingAvg > kbTeamPaintingAvg ? -1 : 1;
+    }
+    return parseFloat(teamEfficiency[ka]) > parseFloat(teamEfficiency[kb]) ? 1 : -1;
+  })
+  .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+  return Object.keys(result)[0]
+}
+
+function calculateBuyingPhaseWinner(room) {
+  const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam } = room;
+  const sortedObjByPaintingsWon = Object.entries(totalPaintingsWonByTeam)
+  .sort(([ka,a],[kb,b]) => {
+    if (b-a === 0) {
+      if (totalAmountSpentByTeam[ka] < totalAmountSpentByTeam[kb]) {
+        return -1;
+    } else {
+        return 1;
+      }
+    }
+    return b-a;
+  })
+  .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+  const topTwo = getTopTwoTeams(sortedObjByPaintingsWon);
+  const winner = getWinnerFromTopTwo(topTwo, teamEfficiency, leaderBoard);
+  return { leaderBoard, topTwo, winner, sortedObjByPaintingsWon, teamEfficiency, totalAmountSpentByTeam };
+}
+
+function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
+  let efficiencyByTeam = {};
+  let totalPaintingsWonByTeams = {};
+  for(team in leaderboard) {
+    const currentTeamData = leaderboard[team];
+    const teamEfficiency = currentTeamData.length > 0 ? parseFloat(parseInt(totalAmountByTeam[team]/parseFloat(currentTeamData.length))) : 0;
+    efficiencyByTeam = {
+      ...efficiencyByTeam,
+      [team]: parseFloat(teamEfficiency).toFixed(2)
+    }
+    totalPaintingsWonByTeams = {
+      ...totalPaintingsWonByTeams,
+      [team]: parseInt(currentTeamData.length)
+    }
   }
+  return { efficiencyByTeam, totalPaintingsWonByTeams };
 }
 
 module.exports = {
@@ -326,4 +366,5 @@ module.exports = {
   calculateTotalAmountSpent,
   calculateBuyingPhaseWinner,
   calculatePaintingQualityAndTotalPoints,
+  calculateTeamEfficiency,
 };
