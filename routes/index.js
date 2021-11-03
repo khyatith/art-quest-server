@@ -1,13 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const dbClient = require('../mongoClient');
-const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, calculatePaintingQualityAndTotalPoints, getNextObjectForLiveAuction } = require("../helpers/game");
+const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, getNextObjectForLiveAuction, calculateTeamEfficiency, calculateTotalPaintingsWonByTeams } = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
 const { resolve } = require("q");
-
-
 
 let db;
 
@@ -48,14 +46,38 @@ router.get('/getResults/:hostCode', async (req, res) => {
   const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, hostCode, rooms);
   room.totalAmountSpentByTeam = totalAmountByTeam;
 
-  //painting quality avg & total points
-  const averagebyTeam = await calculatePaintingQualityAndTotalPoints(room);
-  room.paintingQualityAvg = averagebyTeam.paintingQualityResult;
-  room.totalPointsAvg = averagebyTeam.totalPointsResult;
-  const result = JSON.stringify({ leaderboard, totalAmountByTeam, paintingQualityAvg: averagebyTeam.paintingQualityResult, totalPointsAvg: averagebyTeam.totalPointsResult });
+  const teamStats = await calculateTeamEfficiency(totalAmountByTeam, leaderboard);
+  room.teamEfficiency = teamStats.efficiencyByTeam;
+
+  room.totalPaintingsWonByTeam = teamStats.totalPaintingsWonByTeams;
+
+  const result = JSON.stringify({ leaderboard, totalAmountByTeam, teamEfficiency: teamStats.efficiencyByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams });
   await collection.findOneAndUpdate({"hostCode":hostCode},{$set:rooms[hostCode]});
   res.send(result);
 });
+
+// router.get('/getResults/:hostCode', async (req, res) => {
+//   db = await dbClient.createConnection();
+//   const collection = db.collection('room');
+//   const { params } = req;
+//   const hostCode = params.hostCode;
+//   const room = rooms[hostCode];
+//   //leaderboard
+//   const leaderboard = await getLeaderboard(rooms, hostCode);
+//   room.leaderBoard = leaderboard;
+
+//   //total amt by teams
+//   const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, hostCode, rooms);
+//   room.totalAmountSpentByTeam = totalAmountByTeam;
+
+//   //painting quality avg & total points
+//   const averagebyTeam = await calculatePaintingQualityAndTotalPoints(room);
+//   room.paintingQualityAvg = averagebyTeam.paintingQualityResult;
+//   room.totalPointsAvg = averagebyTeam.totalPointsResult;
+//   const result = JSON.stringify({ leaderboard, totalAmountByTeam, paintingQualityAvg: averagebyTeam.paintingQualityResult, totalPointsAvg: averagebyTeam.totalPointsResult });
+//   await collection.findOneAndUpdate({"hostCode":hostCode},{$set:rooms[hostCode]});
+//   res.send(result);
+// });
 
 router.get('/getWinner/:hostCode', async (req, res) => {
   //db = await dbClient.createConnection();
@@ -69,9 +91,9 @@ router.get('/getWinner/:hostCode', async (req, res) => {
   if (room) {
     parsedRoom = room;
   }
-  if (parsedRoom.winner) return parsedRoom.winner;
-  const winner = calculateBuyingPhaseWinner(parsedRoom);
-  res.send({ winner, leaderboard: parsedRoom.leaderBoard, totalAmountSpentByTeam: parsedRoom.totalAmountSpentByTeam, totalPointsAvg: parsedRoom.totalPointsAvg });
+  if (parsedRoom && parsedRoom.winner) return parsedRoom.winner;
+  const winnerData = calculateBuyingPhaseWinner(parsedRoom);
+  res.send(winnerData);
   //io.to(player.hostCode).emit("displayGameWinner", { winner, leaderboard: parsedRoom.leaderBoard });
 });
 
@@ -139,9 +161,6 @@ const startServerTimer = (room, deadline) => {
     room.landingPageTimerValue = timerValue;
   }
 }
-
-
-
 
 var mongoClient = dbClient.createConnection();
   
