@@ -27,10 +27,9 @@ function findSecondHighestBid(arr, arrSize) {
   return null;
 }
 
-function updateTotalAmountsForAllPayAuctions(allPayBids, currentRoom) {
+function updateTotalAmountsForAllPayAuctions(allPayBids) {
   if (allPayBids) {
     let finalResult;
-    const prevTotalAmt = currentRoom.totalAmountSpentByTeam;
     for (var allPayBidObj in allPayBids) {
       const allBidsArr = allPayBids[allPayBidObj];
       finalResult = allBidsArr.reduce((acc, currentObj) => {
@@ -179,19 +178,25 @@ function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
   let result;
   let totalAmt = Object.values(leaderboard).map(items => {
     let total = 0;
+    let newObj;
     return items.reduce((acc, item) => {
+      const currentTeam = item.bidTeam;
       if (item.auctionType !== '4') {
         const bidAmount = parseInt(item.bidAmount);
-        const currentTeam = item.bidTeam;
         total += bidAmount;
-        const newObj = {
+        newObj = {
           key: currentTeam,
           value: total
         };
-        acc = {
-          ...acc,
-          ...newObj
+      } else {
+        newObj = {
+          key: currentTeam,
+          value: 0
         }
+      }
+      acc = {
+        ...acc,
+        ...newObj
       }
       return acc;
     }, {});
@@ -202,10 +207,16 @@ function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
   }
 
   if (Object.keys(allPayAuctionBidObj).length > 0){
-    const allPayAuctionAmt = updateTotalAmountsForAllPayAuctions(allPayAuctionBidObj, currentRoom);
+    const allPayAuctionAmt = updateTotalAmountsForAllPayAuctions(allPayAuctionBidObj);
     if (result) {
       result = Object.entries(result).reduce((acc, [key, value]) => {
-        const total = value + allPayAuctionAmt[key];
+        let total = 0;
+        if (value) {
+          total = parseInt(value) + allPayAuctionAmt[key];
+        } else {
+          total = allPayAuctionAmt[key];
+        }
+        //const total = parseInt(value) + allPayAuctionAmt[key];
         acc = {
           ...acc,
           [key]: total
