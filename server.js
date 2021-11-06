@@ -99,7 +99,7 @@ io.on("connection", socket => {
 	socket.on("startLandingPageTimer", ({ roomCode, timerInMinutes }) => {
 		if (!landingPageTimerStarted) {
 			const currentTime = Date.parse(new Date());
-			landingPageTimerDeadline = new Date(currentTime + 0.3 * 60 * 1000);
+			landingPageTimerDeadline = new Date(currentTime + 3 * 60 * 1000);
 		}
 		landingPageTimeInterval = setInterval(() => updateLandingPageClock(roomCode, timerInMinutes), 1000);
 	});
