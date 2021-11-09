@@ -26,6 +26,7 @@ module.exports = async (io, socket, rooms) => {
         players: [playerObj],
         auctions: cloneDeep(auctionsObj),
         leaderBoard: {},
+        numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
         englishAuctionBids: {},
         firstPricedSealedBids: {},
@@ -58,8 +59,8 @@ module.exports = async (io, socket, rooms) => {
       } else {
         rooms[parsedPlayer.hostCode].players.push(parsedPlayer);
       }
-      await collection.findOneAndUpdate({"hostCode":parsedPlayer.hostCode},{$set:parsedRoom})
-      
+      await collection.findOneAndUpdate({"hostCode":parsedPlayer.hostCode},{$set:parsedRoom});
+      io.sockets.in(parsedPlayer.hostCode).emit("numberOfPlayersJoined", { numberOfPlayers: rooms[parsedPlayer.hostCode].numberOfPlayers , playersJoined: rooms[parsedPlayer.hostCode].players.length});
     }
   }
 
@@ -80,23 +81,32 @@ module.exports = async (io, socket, rooms) => {
       const currentTime = Date.parse(new Date());
       parsedRoom.landingPageTimerDeadline = new Date(currentTime + 3 * 60 * 1000);
       parsedRoom.hasLandingPageTimerStarted = true;
-      collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom})
+      collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
     }
     setInterval(() => {
       const timerValue = getRemainingTime(parsedRoom.landingPageTimerDeadline);
       if (timerValue.total <= 0) {
         io.sockets.in(roomCode).emit("landingPageTimerEnded", { roomCode, timerValue });
         //parsedRoom.hasLandingPageTimerStarted = false;
-        collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom})
+        collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
       } else if (timerValue.total > 0) {
         io.sockets.in(roomCode).emit("landingPageTimerValue", { roomCode, timerValue });
       }
     }, 1000);
   }
 
+  const setTotalNumberOfPlayers = async ({ roomCode, numberOfPlayers }) => {
+    const room = await collection.findOne({'hostCode': roomCode});
+    const parsedRoom = room;
+    parsedRoom.numberOfPlayers = parseInt(numberOfPlayers);
+    rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayers);
+    await collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
+  }
+
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("startLandingPageTimer", startLandingPageTimer);
   socket.on("startGame", startGame);
+  socket.on("setTeams", setTotalNumberOfPlayers);
 
 }
