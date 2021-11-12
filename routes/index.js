@@ -6,11 +6,16 @@ router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
 const { resolve } = require("q");
+const { nanoid } = require('nanoid');
 
 let db;
 
 router.get("/", (req, res) => {
   res.send({ response: "I am alive" }).status(200);
+});
+
+router.get('/getUID', (req, res) => {
+  res.send(nanoid(5));
 });
 
 router.get('/timer/:hostCode', function (req, res) {
