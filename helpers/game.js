@@ -1,11 +1,3 @@
-var CONSTANTS = require("../constants");
-var rooms = CONSTANTS.rooms;
-var boardArray = CONSTANTS.boardArray;
-var auctionsObj = require("../auctionData.json");
-
-const expiration = 3600;
-var found = 0;
-
 function findSecondHighestBid(arr, arrSize) {
   let i;
 
@@ -364,6 +356,15 @@ function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
   return { efficiencyByTeam, totalPaintingsWonByTeams };
 }
 
+function calculateSellingRevenue(data) {
+  const { interestInArt, population, paintingQuality, ticketPrice } = data;
+  const utilityFunc = (parseFloat(ticketPrice) * parseFloat(interestInArt)) + (parseFloat(ticketPrice) * parseFloat(paintingQuality));
+  const demandFunc =  (1 + Math.log10(utilityFunc)) / Math.log10(utilityFunc);
+  const revenue = parseFloat(population) * demandFunc;
+  let totalRev = revenue * 1000;
+  return Math.round(totalRev);
+}
+
 module.exports = {
 	gameLoop,
 	getNextObjectForLiveAuction,
@@ -372,4 +373,5 @@ module.exports = {
   calculateTotalAmountSpent,
   calculateBuyingPhaseWinner,
   calculateTeamEfficiency,
+  calculateSellingRevenue
 };

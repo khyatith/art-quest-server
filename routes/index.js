@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const dbClient = require('../mongoClient');
-const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, getNextObjectForLiveAuction, calculateTeamEfficiency, calculateTotalPaintingsWonByTeams } = require("../helpers/game");
+const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, getNextObjectForLiveAuction, calculateTeamEfficiency, calculateSellingRevenue } = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
@@ -238,15 +238,28 @@ mongoClient.then(db => {
             selling_info.otherteams = otherTeams;
             res.status(200).json(selling_info);
           });
-
-
-          
         });
-        
-
       }
     })
     .catch(error => {console.error(error)})
+  });
+
+  router.get('/calculateRevenue', (req, res) => {
+    const { teamName, cityId, roomCode } = req.query;
+    const calculatedRevenue = calculateSellingRevenue(req.query);
+    console.log('calculatedRevenue', calculatedRevenue);
+    res.status(200).json({ teamName, calculatedRevenue, cityId });
+    //update total revenue
+    // collection_room.findOne({"roomCode":roomCode})
+    //   .then(results => {
+    //     //console.log('results', results);
+    //     let totalAmountByCurrentTeam = results.totalAmountSpentByTeam[teamName];
+    //     if (totalAmountByCurrentTeam) {
+    //       totalAmountByCurrentTeam = parseInt(totalAmountByCurrentTeam) + calculatedRevenue;
+    //     }
+    //     results.totalAmountSpentByTeam = totalAmountByCurrentTeam;
+    //     collection_room.findOneAndUpdate({"hostCode":roomCode},{$set:results});
+    // });
   });
 
 
