@@ -37,6 +37,7 @@ router.get('/timer/:hostCode', function (req, res) {
   }
 });
 
+
 router.get('/getResults/:hostCode', async (req, res) => {
   db = await dbClient.createConnection();
   const collection = db.collection('room');
@@ -175,6 +176,19 @@ mongoClient.then(db => {
   const collection_visits = db.collection('visits');
   const collection_room = db.collection('room');
 
+  const startLocationPhaseServerTimer = async (hostCode, deadline) => {
+    let timerValue = getRemainingTime(deadline);
+    const room = await collection_room.findOne({'hostCode': hostCode});
+    if (timerValue.total <= 0) {
+      room.hadLocationPageTimerEnded = true;
+      room.locationPhaseTimerValue = {};
+      await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue: {}, hadLocationPageTimerEnded: true}});
+    } else if (timerValue.total > 0) {
+      room.locationPhaseTimerValue = timerValue;
+      await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue:timerValue}});
+    }
+  }
+
   router.get('/getMap', (req,res) =>{
       collection.find({}).toArray()
       .then(results => {
@@ -193,26 +207,40 @@ mongoClient.then(db => {
 		.catch(error => {console.error(error);res.status(500).json(error)})
   });
 
-  router.get('/getSellingResults', (req,res) =>{
+  router.get('/getSellingResults', async (req,res) =>{
 
     var selling_result = new Object();
-    collection_room.findOne({"roomCode":req.query.roomId})
-    .then(results => {
-      if(!results) res.status(404).json({error: 'Room not found'})
-      else {
-       
-        selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
-        var keys =Object.keys(selling_result.amountSpentByTeam);
-       
-        getVisitData(keys,req.query.roomId)
+    //const currentRoom = rooms[req.query.roomId]
+    const { roomId } = req.query;
+    const results = await collection_room.findOne({"roomCode":roomId});
+    if(!results) {
+      res.status(404).json({error: 'Room not found'});
+    } else {
+      selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
+      var keys =Object.keys(selling_result.amountSpentByTeam);
+
+      //location phase timer value
+      if (results && results.hadLocationPageTimerEnded) {
+        selling_result.locationPhaseTimerValue = {};
+      }
+      if (results && Object.keys(results.locationPhaseTimerValue).length > 0) {
+        selling_result.locationPhaseTimerValue = results.locationPhaseTimerValue;
+      } else {
+        const currentTime = Date.parse(new Date());
+        const deadline = new Date(currentTime + 0.3 * 60 * 1000);
+        const timerValue = getRemainingTime(deadline);
+        setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
+        selling_result.locationPhaseTimerValue = timerValue;
+      }
+
+      getVisitData(keys,req.query.roomId)
         .then(visitObjects => {
           selling_result.visits = visitObjects;
           res.status(200).json(selling_result);
-        });
+      });
 
-      }
-    })
-    .catch(error => {console.error(error)})
+      console.log('selling_result', selling_result);
+    }
   });
 
   router.get('/getSellingInfo', (req,res) =>{
@@ -247,7 +275,6 @@ mongoClient.then(db => {
   router.get('/calculateRevenue', (req, res) => {
     const { teamName, cityId, roomCode } = req.query;
     const calculatedRevenue = calculateSellingRevenue(req.query);
-    console.log('calculatedRevenue', calculatedRevenue);
     res.status(200).json({ teamName, calculatedRevenue, cityId });
     //update total revenue
     // collection_room.findOne({"roomCode":roomCode})
@@ -291,7 +318,6 @@ function getVisitData(keys,roomCode){
         });
 
         bar2.then(teamVisit => {
-          
           visitObjects.push(teamVisit);
           if(index == keys.length -1)
             resolve();

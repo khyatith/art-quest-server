@@ -37,6 +37,9 @@ module.exports = async (io, socket, rooms) => {
         landingPageTimerValue: {},
         hasLandingPageTimerEnded: false,
         winner: null,
+        sellingRoundNumber: 1,
+        hadLocationPageTimerEnded: false,
+        locationPhaseTimerValue: {},
       };
       rooms[player.hostCode] = parsedRoom;
       await collection.insertOne(parsedRoom);
