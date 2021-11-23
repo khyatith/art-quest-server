@@ -178,14 +178,35 @@ mongoClient.then(db => {
 
   const startLocationPhaseServerTimer = async (hostCode, deadline) => {
     let timerValue = getRemainingTime(deadline);
-    const room = await collection_room.findOne({'hostCode': hostCode});
+    //const room = await collection_room.findOne({'hostCode': hostCode});
+    const serverRoom = rooms[hostCode];
     if (timerValue.total <= 0) {
-      room.hadLocationPageTimerEnded = true;
-      room.locationPhaseTimerValue = {};
-      await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue: {}, hadLocationPageTimerEnded: true}});
+      //room.hadLocationPageTimerEnded = true;
+      //room.locationPhaseTimerValue = {};
+      serverRoom.hadLocationPageTimerEnded = true;
+      serverRoom.locationPhaseTimerValue = {};
+      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue: {}, hadLocationPageTimerEnded: true}});
     } else if (timerValue.total > 0) {
-      room.locationPhaseTimerValue = timerValue;
-      await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue:timerValue}});
+      //room.locationPhaseTimerValue = timerValue;
+      serverRoom.locationPhaseTimerValue = timerValue;
+      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue:timerValue}});
+    }
+  }
+
+  const startSellingServerTimer = async (hostCode, deadline) => {
+    let sellingPhaseTimerValue = getRemainingTime(deadline);
+    //const room = await collection_room.findOne({'hostCode': hostCode});
+    const serverRoom = rooms[hostCode];
+    if (sellingPhaseTimerValue.total <= 0) {
+      //room.hasSellPaintingTimerEnded = true;
+      //room.sellPaintingTimerValue = {};
+      serverRoom.hasSellPaintingTimerEnded = true;
+      serverRoom.sellPaintingTimerValue = {};
+      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{sellPaintingTimerValue: {}, hasSellPaintingTimerEnded: true}});
+    } else if (sellingPhaseTimerValue.total > 0) {
+      //room.sellPaintingTimerValue = sellingPhaseTimerValue;
+      serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
+      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{sellPaintingTimerValue:sellingPhaseTimerValue}});
     }
   }
 
@@ -198,14 +219,18 @@ mongoClient.then(db => {
       .catch(error => {console.error(error)})
   });
 
-  router.post('/putCurrentLocation', (req,res) =>{
-    collection_visits.findOneAndUpdate({"playerId":req.body.playerId,"roomId":req.body.roomId},{$set:req.body, $push:{locations:req.body.locationId}}, {upsert:true})
-		.then(results => {
-			console.log('current location updated')
-			res.status(200).json({success: 'location updated'})
-		})
-		.catch(error => {console.error(error);res.status(500).json(error)})
-  });
+  // router.post('/putCurrentLocation', (req,res) =>{
+  //   const isExists = collection_visits.find({"roomId":req.body.roomId, "roundNumber": req.body.roundId, "teamName": req.body.teamName});
+  //   if (isExists.length > 0) {
+  //     res.status(200).json({success: 'location updated'});
+  //   }
+  //   collection_visits.findOneAndUpdate({"roomId":req.body.roomId},{$set:req.body, $push:{locations:req.body.locationId, roundNumber:req.body.roundId}}, {upsert:true})
+	// 	.then(results => {
+	// 		console.log('current location updated')
+	// 		res.status(200).json({success: 'location updated'})
+	// 	})
+	// 	.catch(error => {console.error(error);res.status(500).json(error)})
+  // });
 
   router.get('/getSellingResults', async (req,res) =>{
 
@@ -213,6 +238,7 @@ mongoClient.then(db => {
     //const currentRoom = rooms[req.query.roomId]
     const { roomId } = req.query;
     const results = await collection_room.findOne({"roomCode":roomId});
+    const room = rooms[roomId];
     if(!results) {
       res.status(404).json({error: 'Room not found'});
     } else {
@@ -220,11 +246,11 @@ mongoClient.then(db => {
       var keys =Object.keys(selling_result.amountSpentByTeam);
 
       //location phase timer value
-      if (results && results.hadLocationPageTimerEnded) {
+      if (room && room.hadLocationPageTimerEnded) {
         selling_result.locationPhaseTimerValue = {};
       }
-      if (results && Object.keys(results.locationPhaseTimerValue).length > 0) {
-        selling_result.locationPhaseTimerValue = results.locationPhaseTimerValue;
+      if (room && Object.keys(room.locationPhaseTimerValue).length > 0) {
+        selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
         const deadline = new Date(currentTime + 0.3 * 60 * 1000);
@@ -233,19 +259,18 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = timerValue;
       }
 
-      getVisitData(keys,req.query.roomId)
+      getVisitData(keys,roomId)
         .then(visitObjects => {
           selling_result.visits = visitObjects;
           res.status(200).json(selling_result);
       });
-
-      console.log('selling_result', selling_result);
     }
   });
 
   router.get('/getSellingInfo', (req,res) =>{
 
     var selling_info = new Object();
+    const room = rooms[req.query.roomId];
     collection_room.findOne({"roomCode":req.query.roomId})
     .then(results => {
       if(!results) res.status(404).json({error: 'Room not found'})
@@ -254,7 +279,23 @@ mongoClient.then(db => {
 
         collection.findOne({"cityId":parseInt(req.query.locationId,10)})
         .then(results_city => {
-          selling_info.city = results_city
+          selling_info.city = results_city;
+
+          //selling phase timer value
+          if (room && room.hasSellPaintingTimerEnded) {
+            selling_info.sellPaintingTimerValue = {};
+          }
+          if (room && Object.keys(room.sellPaintingTimerValue).length > 0) {
+            console.log('inside selling paint', room.sellPaintingTimerValue);
+            selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
+          } else {
+            const currentTime = Date.parse(new Date());
+            const deadline = new Date(currentTime + 0.3 * 60 * 1000);
+            console.log('deadline', deadline);
+            const timerValue = getRemainingTime(deadline);
+            setInterval(() => startSellingServerTimer(req.query.roomId, deadline), 1000);
+            selling_info.sellPaintingTimerValue = timerValue;
+          }
 
           collection_visits.find({"roomId":req.query.roomId,locations: {$in: [parseInt(req.query.locationId,10)]}}).toArray()
           .then(results_visits => {
@@ -264,6 +305,7 @@ mongoClient.then(db => {
             });
 
             selling_info.otherteams = otherTeams;
+            console.log('selling_info', selling_info);
             res.status(200).json(selling_info);
           });
         });
@@ -308,7 +350,8 @@ function getVisitData(keys,roomCode){
               teamVisit.teamName = key;
               teamVisit.visitCount = 0;
               teamVisits.forEach(function(visit,index) {
-                teamVisit.visitCount += visit.locations.length;
+                const visitCounts = visit?.location?.length || 0;
+                teamVisit.visitCount += visitCounts || 0;
               });
               
             }

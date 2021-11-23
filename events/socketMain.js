@@ -6,7 +6,8 @@ var cloneDeep = require('lodash.clonedeep');
 module.exports = async (io, socket, rooms) => {
 
   const db = await dbClient.createConnection();
-	const collection = db.collection('room');
+  const collection = db.collection('room');
+  const collection_visits = db.collection('visits');
 
   const createRoom = async (stringifiedPlayer) => {
     player = JSON.parse(stringifiedPlayer);
@@ -40,6 +41,8 @@ module.exports = async (io, socket, rooms) => {
         sellingRoundNumber: 1,
         hadLocationPageTimerEnded: false,
         locationPhaseTimerValue: {},
+        sellPaintingTimerValue: {},
+        hasSellPaintingTimerEnded: false,
       };
       rooms[player.hostCode] = parsedRoom;
       await collection.insertOne(parsedRoom);
@@ -106,10 +109,24 @@ module.exports = async (io, socket, rooms) => {
     await collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
   }
 
+  const putCurrentLocation = async (data) => {
+    console.log('data', data);
+    const { roomId, locationId, teamName, roundId } = data;
+    const existingRecord = await collection_visits.findOne({"roomId":roomId, "roundNumber": roundId, "teamName": teamName});
+    console.log('isExisits', existingRecord);
+    if (existingRecord) {
+      io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId });
+    } else {
+      const result = await collection_visits.insertOne({"roomId":roomId, "roundNumber": roundId, "teamName": teamName, "locationId": locationId});
+      console.log('updatedLocation', result);
+      if (result) io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId });
+    }
+  }
+
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("startLandingPageTimer", startLandingPageTimer);
   socket.on("startGame", startGame);
   socket.on("setTeams", setTotalNumberOfPlayers);
-
+  socket.on("putCurrentLocation", putCurrentLocation);
 }
