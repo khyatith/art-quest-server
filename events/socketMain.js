@@ -112,12 +112,24 @@ module.exports = async (io, socket, rooms) => {
   const putCurrentLocation = async (data) => {
     console.log('data', data);
     const { roomId, locationId, teamName, roundId } = data;
-    const existingRecord = await collection_visits.findOne({"roomId":roomId, "roundNumber": roundId, "teamName": teamName});
+    const existingRecord = await collection_visits.findOne({"roomId":roomId, "teamName": teamName});
+    //const room = await collection.findOne({'hostCode': roomId});
+    //const roundIdInRoomCollection = room.sellingRoundNumber;
     console.log('isExisits', existingRecord);
     if (existingRecord) {
-      io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId });
+      //const { locations } = existingRecord;
+      //If record exists, and roundNumber is different, we can update the record
+      if (existingRecord.roundNumber === roundId) {
+        io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId });
+        return;
+      }
+      // if (!locations.includes(locationId)) {
+      //   locations.push(locationId);
+      // }
+      await collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{locations:locationId}}, {upsert:true});
+      io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: locationId, roundId });
     } else {
-      const result = await collection_visits.insertOne({"roomId":roomId, "roundNumber": roundId, "teamName": teamName, "locationId": locationId});
+      const result = await collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations": [locationId]});
       console.log('updatedLocation', result);
       if (result) io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId });
     }

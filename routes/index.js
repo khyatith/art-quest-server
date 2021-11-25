@@ -243,6 +243,7 @@ mongoClient.then(db => {
       res.status(404).json({error: 'Room not found'});
     } else {
       selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
+      selling_result.roundNumber = results.sellingRoundNumber;
       var keys =Object.keys(selling_result.amountSpentByTeam);
 
       //location phase timer value
@@ -261,11 +262,35 @@ mongoClient.then(db => {
 
       getVisitData(keys,roomId)
         .then(visitObjects => {
+          console.log('visitObjects', visitObjects);
           selling_result.visits = visitObjects;
           res.status(200).json(selling_result);
       });
     }
   });
+
+  router.post('/updateRoundId', async(req, res) => {
+    try {
+      const room = await collection_room.findOne({"roomCode":req.body.roomId});
+      if (room.sellingRoundNumber === req.body.roundId) {
+        room.sellingRoundNumber = parseInt(room.sellingRoundNumber, 10) + 1;
+        room.hadLocationPageTimerEnded = false;
+        room.locationPhaseTimerValue = {};
+        room.sellPaintingTimerValue = {};
+        room.hasSellPaintingTimerEnded = false;
+        const serverRoom = rooms[req.body.roomId];
+        serverRoom.sellingRoundNumber = room.sellingRoundNumber;
+        serverRoom.hadLocationPageTimerEnded = false;
+        serverRoom.locationPhaseTimerValue = {};
+        serverRoom.sellPaintingTimerValue = {};
+        serverRoom.hasSellPaintingTimerEnded = false;
+        await collection_room.findOneAndUpdate({"roomCode":req.body.roomId},{$set:room});
+        res.status(200).json({ message: "updated" });
+      }
+    } catch(e) {
+      res.status(500).json(e);
+    }
+  })
 
   router.get('/getSellingInfo', (req,res) =>{
 
@@ -286,7 +311,6 @@ mongoClient.then(db => {
             selling_info.sellPaintingTimerValue = {};
           }
           if (room && Object.keys(room.sellPaintingTimerValue).length > 0) {
-            console.log('inside selling paint', room.sellPaintingTimerValue);
             selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
@@ -305,7 +329,6 @@ mongoClient.then(db => {
             });
 
             selling_info.otherteams = otherTeams;
-            console.log('selling_info', selling_info);
             res.status(200).json(selling_info);
           });
         });
@@ -349,9 +372,11 @@ function getVisitData(keys,roomCode){
               var teamVisit = new Object();
               teamVisit.teamName = key;
               teamVisit.visitCount = 0;
+              teamVisit.currentLocation = 2;
               teamVisits.forEach(function(visit,index) {
                 const visitCounts = visit?.location?.length || 0;
                 teamVisit.visitCount += visitCounts || 0;
+                teamVisit.currentLocation = visit?.locationId || 2;
               });
               
             }
