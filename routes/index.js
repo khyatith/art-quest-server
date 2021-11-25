@@ -374,7 +374,7 @@ function getVisitData(keys,roomCode){
               teamVisit.visitCount = 0;
               teamVisit.currentLocation = 2;
               teamVisits.forEach(function(visit,index) {
-                const visitCounts = visit?.location?.length || 0;
+                const visitCounts = visit?.locations?.length || 0;
                 teamVisit.visitCount += visitCounts || 0;
                 teamVisit.currentLocation = visit?.locationId || 2;
               });
