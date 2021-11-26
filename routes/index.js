@@ -273,19 +273,21 @@ mongoClient.then(db => {
     try {
       const room = await collection_room.findOne({"roomCode":req.body.roomId});
       if (room.sellingRoundNumber === req.body.roundId) {
-        room.sellingRoundNumber = parseInt(room.sellingRoundNumber, 10) + 1;
-        room.hadLocationPageTimerEnded = false;
-        room.locationPhaseTimerValue = {};
-        room.sellPaintingTimerValue = {};
-        room.hasSellPaintingTimerEnded = false;
+        const sellingRoundNumber = parseInt(room.sellingRoundNumber, 10) + 1;
         const serverRoom = rooms[req.body.roomId];
+        await collection_room.findOneAndUpdate({"roomCode":req.body.roomId},{$set:{
+          "sellingRoundNumber": sellingRoundNumber,
+          "hadLocationPageTimerEnded": false,
+          "locationPhaseTimerValue": {},
+          "sellPaintingTimerValue": {},
+          "hasSellPaintingTimerEnded": false,
+        }});
+        res.status(200).json({ message: "updated" });
         serverRoom.sellingRoundNumber = room.sellingRoundNumber;
         serverRoom.hadLocationPageTimerEnded = false;
         serverRoom.locationPhaseTimerValue = {};
         serverRoom.sellPaintingTimerValue = {};
         serverRoom.hasSellPaintingTimerEnded = false;
-        await collection_room.findOneAndUpdate({"roomCode":req.body.roomId},{$set:room});
-        res.status(200).json({ message: "updated" });
       }
     } catch(e) {
       res.status(500).json(e);
@@ -337,22 +339,24 @@ mongoClient.then(db => {
     .catch(error => {console.error(error)})
   });
 
-  router.get('/calculateRevenue', (req, res) => {
-    const { teamName, cityId, roomCode } = req.query;
-    const calculatedRevenue = calculateSellingRevenue(req.query);
-    res.status(200).json({ teamName, calculatedRevenue, cityId });
-    //update total revenue
-    // collection_room.findOne({"roomCode":roomCode})
-    //   .then(results => {
-    //     //console.log('results', results);
-    //     let totalAmountByCurrentTeam = results.totalAmountSpentByTeam[teamName];
-    //     if (totalAmountByCurrentTeam) {
-    //       totalAmountByCurrentTeam = parseInt(totalAmountByCurrentTeam) + calculatedRevenue;
-    //     }
-    //     results.totalAmountSpentByTeam = totalAmountByCurrentTeam;
-    //     collection_room.findOneAndUpdate({"hostCode":roomCode},{$set:results});
-    // });
-  });
+  // router.get('/calculateRevenue', (req, res) => {
+  //   const { teamName, cityId, roomCode } = req.query;
+  //   const calculatedRevenue = calculateSellingRevenue(req.query);
+  //   //update total revenue
+  //   collection_room.findOne({"roomCode":roomCode})
+  //     .then(results => {
+  //       //console.log('results', results);
+  //       let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
+  //       if (totalAmountByCurrentTeam) {
+  //         totalAmountByCurrentTeam = parseInt(totalAmountByCurrentTeam) + calculatedRevenue;
+  //       } else {
+  //         totalAmountByCurrentTeam = calculatedRevenue;
+  //       }
+  //       //results.totalAmountSpentByTeam = totalAmountByCurrentTeam;
+  //       collection_room.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": totalAmountByCurrentTeam}});
+  //       res.status(200).json({ teamName, calculatedRevenue, cityId });
+  //   });
+  // });
 
 
 function getVisitData(keys,roomCode){
