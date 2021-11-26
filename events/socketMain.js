@@ -126,32 +126,31 @@ module.exports = async (io, socket, rooms) => {
   }
 
   const calculateRevenue = async (data) => {
-    const { teamName, cityId, roomCode, artifactId } = data;
+    const { teamName, roomCode } = data;
     const calculatedRevenue = calculateSellingRevenue(data);
     //update total revenue
-    collection.findOne({'hostCode':roomCode})
-      .then(results => {
-        //console.log('results', results);
-        let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
-        if (totalAmountByCurrentTeam) {
-          totalAmountByCurrentTeam = parseInt(totalAmountByCurrentTeam) + calculatedRevenue;
-        } else {
-          totalAmountByCurrentTeam = calculatedRevenue;
-        }
-        console.log('totalAmountByCurrentTeam', totalAmountByCurrentTeam);
-        results.totalAmountSpentByTeam[teamName] = totalAmountByCurrentTeam;
-        console.log('results', results);
-        //results.totalAmountSpentByTeam = totalAmountByCurrentTeam;
-        collection.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": results.totalAmountSpentByTeam}});
-        //io.sockets.in(roomCode).emit("calculatedRevenueForTeam", { roomCode, teamName, cityId, roundId: results.roundId, artifactId, calculatedRevenue });
-        //res.status(200).json({ teamName, calculatedRevenue, cityId });
-    });
+    const results = await collection.findOne({'hostCode':roomCode});
+    //console.log('results', results);
+    let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
+    if (totalAmountByCurrentTeam) {
+      totalAmountByCurrentTeam = parseInt(totalAmountByCurrentTeam) + calculatedRevenue;
+    } else {
+      totalAmountByCurrentTeam = calculatedRevenue;
+    }
+    console.log('totalAmountByCurrentTeam', totalAmountByCurrentTeam);
+    results.totalAmountSpentByTeam[teamName] = totalAmountByCurrentTeam;
+    console.log('results', results);
+    //results.totalAmountSpentByTeam = totalAmountByCurrentTeam;
+    collection.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": results.totalAmountSpentByTeam}});
+    //io.sockets.in(roomCode).emit("calculatedRevenueForTeam", { roomCode, teamName, cityId, roundId: results.roundId, artifactId, calculatedRevenue });
+    //res.status(200).json({ teamName, calculatedRevenue, cityId });
   }
 
   const emitNominatedPaintingId = (data) => {
     console.log('data in emit nominated painting id', data);
-    const { paintingId, roomId } = data;
-    io.sockets.in(roomId).emit("emitNominatedPainting", paintingId);
+    const { paintingId, roomCode } = data;
+    io.sockets.in(roomCode).emit("emitNominatedPainting", paintingId);
+    calculateRevenue(data);
   }
 
   socket.on("createRoom", createRoom);
