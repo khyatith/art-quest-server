@@ -195,20 +195,26 @@ mongoClient.then(db => {
 
   const startSellingServerTimer = async (hostCode, deadline) => {
     let sellingPhaseTimerValue = getRemainingTime(deadline);
-    //const room = await collection_room.findOne({'hostCode': hostCode});
     const serverRoom = rooms[hostCode];
     if (sellingPhaseTimerValue.total <= 0) {
-      //room.hasSellPaintingTimerEnded = true;
-      //room.sellPaintingTimerValue = {};
       serverRoom.hasSellPaintingTimerEnded = true;
       serverRoom.sellPaintingTimerValue = {};
-      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{sellPaintingTimerValue: {}, hasSellPaintingTimerEnded: true}});
     } else if (sellingPhaseTimerValue.total > 0) {
-      //room.sellPaintingTimerValue = sellingPhaseTimerValue;
       serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
-      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{sellPaintingTimerValue:sellingPhaseTimerValue}});
     }
   }
+
+  const startSellingResultsServerTimer = async (hostCode, deadline) => {
+    let sellingPhaseTimerValue = getRemainingTime(deadline);
+    const serverRoom = rooms[hostCode];
+    if (sellingPhaseTimerValue.total <= 0) {
+      serverRoom.hasSellingResultsTimerEnded = true;
+      serverRoom.sellingResultsTimerValue = {};
+    } else if (sellingPhaseTimerValue.total > 0) {
+      serverRoom.sellingResultsTimerValue = sellingPhaseTimerValue;
+    }
+  }
+
 
   router.get('/getMap', (req,res) =>{
       collection.find({}).toArray()
@@ -317,7 +323,6 @@ mongoClient.then(db => {
           } else {
             const currentTime = Date.parse(new Date());
             const deadline = new Date(currentTime + 0.3 * 60 * 1000);
-            console.log('deadline', deadline);
             const timerValue = getRemainingTime(deadline);
             setInterval(() => startSellingServerTimer(req.query.roomId, deadline), 1000);
             selling_info.sellPaintingTimerValue = timerValue;
@@ -339,25 +344,33 @@ mongoClient.then(db => {
     .catch(error => {console.error(error)})
   });
 
-  // router.get('/calculateRevenue', (req, res) => {
-  //   const { teamName, cityId, roomCode } = req.query;
-  //   const calculatedRevenue = calculateSellingRevenue(req.query);
-  //   //update total revenue
-  //   collection_room.findOne({"roomCode":roomCode})
-  //     .then(results => {
-  //       //console.log('results', results);
-  //       let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
-  //       if (totalAmountByCurrentTeam) {
-  //         totalAmountByCurrentTeam = parseInt(totalAmountByCurrentTeam) + calculatedRevenue;
-  //       } else {
-  //         totalAmountByCurrentTeam = calculatedRevenue;
-  //       }
-  //       //results.totalAmountSpentByTeam = totalAmountByCurrentTeam;
-  //       collection_room.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": totalAmountByCurrentTeam}});
-  //       res.status(200).json({ teamName, calculatedRevenue, cityId });
-  //   });
-  // });
-
+  router.get('/getSellingResultForRound', (req, res) => {
+    const { roundId, roomCode } = req.query;
+    const room = rooms[roomCode];
+    var selling_round_results = new Object();
+    collection_room.findOne({"roomCode": roomCode})
+    .then(results => {
+      if(!results) res.status(404).json({error: 'Room not found'})
+      else {
+          selling_round_results.calculatedRevenueForRound = room.calculatedRevenue[roundId];
+          //selling phase timer value
+          if (results && results.hasSellingResultsTimerEnded) {
+            selling_round_results.sellPaintingTimerValue = {};
+          }
+          if (results && Object.keys(results.sellingResultsTimerValue).length > 0) {
+            selling_round_results.sellingResultsTimerValue = room.sellingResultsTimerValue;
+          } else {
+            const currentTime = Date.parse(new Date());
+            const deadline = new Date(currentTime + 0.3 * 60 * 1000);
+            const timerValue = getRemainingTime(deadline);
+            setInterval(() => startSellingResultsServerTimer(roomCode, deadline), 1000);
+            selling_round_results.sellingResultsTimerValue = timerValue;
+          }
+          res.status(200).json(selling_round_results);
+        }
+    })
+    .catch(error => {console.error(error)})
+  });
 
 function getVisitData(keys,roomCode){
   return new Promise((resolve1, reject1) => {
@@ -382,29 +395,21 @@ function getVisitData(keys,roomCode){
                 teamVisit.visitCount += visitCounts || 0;
                 teamVisit.currentLocation = visit?.locationId || 2;
               });
-              
             }
             resolve2(teamVisit);
-
           });
         });
-
         bar2.then(teamVisit => {
           visitObjects.push(teamVisit);
           if(index == keys.length -1)
             resolve();
-        });
-
-          
+        }); 
       });
     });
     bar.then(() => {
      resolve1(visitObjects);
     });
-  
   });
-  
-
 }
 
 

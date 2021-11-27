@@ -43,6 +43,8 @@ module.exports = async (io, socket, rooms) => {
         locationPhaseTimerValue: {},
         sellPaintingTimerValue: {},
         hasSellPaintingTimerEnded: false,
+        sellingResultsTimerValue: {},
+        hasSellingResultsTimerEnded: false,
       };
       rooms[player.hostCode] = parsedRoom;
       await collection.insertOne(parsedRoom);
@@ -126,28 +128,29 @@ module.exports = async (io, socket, rooms) => {
   }
 
   const calculateRevenue = async (data) => {
-    const { teamName, roomCode } = data;
+    const { teamName, roomCode, roundId } = data;
     const calculatedRevenue = calculateSellingRevenue(data);
-    //update total revenue
     const results = await collection.findOne({'hostCode':roomCode});
-    //console.log('results', results);
     let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
     if (totalAmountByCurrentTeam) {
       totalAmountByCurrentTeam = parseInt(totalAmountByCurrentTeam) + calculatedRevenue;
     } else {
       totalAmountByCurrentTeam = calculatedRevenue;
     }
-    console.log('totalAmountByCurrentTeam', totalAmountByCurrentTeam);
     results.totalAmountSpentByTeam[teamName] = totalAmountByCurrentTeam;
-    console.log('results', results);
-    //results.totalAmountSpentByTeam = totalAmountByCurrentTeam;
-    collection.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": results.totalAmountSpentByTeam}});
-    //io.sockets.in(roomCode).emit("calculatedRevenueForTeam", { roomCode, teamName, cityId, roundId: results.roundId, artifactId, calculatedRevenue });
-    //res.status(200).json({ teamName, calculatedRevenue, cityId });
+    await collection.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": results.totalAmountSpentByTeam}});
+    // update room on the server
+    const serverRoom = rooms[roomCode];
+    const caculatedRevenueAfterRound = serverRoom?.calculatedRoundRevenue || {};
+    if (caculatedRevenueAfterRound[roundId]) {
+      serverRoom.calculatedRoundRevenue[roundId][teamName] = parseInt(caculatedRevenueAfterRound[teamName]) + calculatedRevenue;
+    } else {
+      serverRoom.calculatedRevenue = { [roundId]: { [teamName]: calculatedRevenue } };
+    }
+    return calculatedRevenue;
   }
 
   const emitNominatedPaintingId = (data) => {
-    console.log('data in emit nominated painting id', data);
     const { paintingId, roomCode } = data;
     io.sockets.in(roomCode).emit("emitNominatedPainting", paintingId);
     calculateRevenue(data);

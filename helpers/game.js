@@ -361,7 +361,7 @@ function calculateSellingRevenue(data) {
   const utilityFunc = (parseFloat(ticketPrice) * parseFloat(interestInArt)) + (parseFloat(ticketPrice) * parseFloat(paintingQuality));
   const demandFunc =  (1 + Math.log10(utilityFunc)) / Math.log10(utilityFunc);
   const revenue = parseFloat(population) * demandFunc;
-  let totalRev = revenue * 1000;
+  let totalRev = revenue * 100;
   return Math.round(totalRev);
 }
 
