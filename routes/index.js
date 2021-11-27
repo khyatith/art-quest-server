@@ -225,19 +225,6 @@ mongoClient.then(db => {
       .catch(error => {console.error(error)})
   });
 
-  // router.post('/putCurrentLocation', (req,res) =>{
-  //   const isExists = collection_visits.find({"roomId":req.body.roomId, "roundNumber": req.body.roundId, "teamName": req.body.teamName});
-  //   if (isExists.length > 0) {
-  //     res.status(200).json({success: 'location updated'});
-  //   }
-  //   collection_visits.findOneAndUpdate({"roomId":req.body.roomId},{$set:req.body, $push:{locations:req.body.locationId, roundNumber:req.body.roundId}}, {upsert:true})
-	// 	.then(results => {
-	// 		console.log('current location updated')
-	// 		res.status(200).json({success: 'location updated'})
-	// 	})
-	// 	.catch(error => {console.error(error);res.status(500).json(error)})
-  // });
-
   router.get('/getSellingResults', async (req,res) =>{
 
     var selling_result = new Object();
@@ -280,20 +267,29 @@ mongoClient.then(db => {
       const room = await collection_room.findOne({"roomCode":req.body.roomId});
       if (room.sellingRoundNumber === req.body.roundId) {
         const sellingRoundNumber = parseInt(room.sellingRoundNumber, 10) + 1;
-        const serverRoom = rooms[req.body.roomId];
+        let serverRoom = rooms[req.body.roomId];
         await collection_room.findOneAndUpdate({"roomCode":req.body.roomId},{$set:{
           "sellingRoundNumber": sellingRoundNumber,
           "hadLocationPageTimerEnded": false,
           "locationPhaseTimerValue": {},
           "sellPaintingTimerValue": {},
           "hasSellPaintingTimerEnded": false,
+          "sellingResultsTimerValue": {},
+          "hasSellingResultsTimerEnded": false,
         }});
         res.status(200).json({ message: "updated" });
-        serverRoom.sellingRoundNumber = room.sellingRoundNumber;
-        serverRoom.hadLocationPageTimerEnded = false;
-        serverRoom.locationPhaseTimerValue = {};
-        serverRoom.sellPaintingTimerValue = {};
-        serverRoom.hasSellPaintingTimerEnded = false;
+        serverRoom = {
+          ...serverRoom,
+          sellingRoundNumber: room.sellingRoundNumber,
+          hadLocationPageTimerEnded: false,
+          locationPhaseTimerValue: {},
+          sellPaintingTimerValue: {},
+          hasSellPaintingTimerEnded: false,
+          sellingResultsTimerValue: {},
+          hasSellingResultsTimerEnded: false,
+        }
+      } else {
+        res.status(200).json({ message: "updated" });
       }
     } catch(e) {
       res.status(500).json(e);
