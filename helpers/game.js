@@ -359,8 +359,9 @@ function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
 function calculateSellingRevenue(data) {
   const { interestInArt, population, paintingQuality, ticketPrice } = data;
   const utilityFunc = (parseFloat(ticketPrice) * parseFloat(interestInArt)) + (parseFloat(ticketPrice) * parseFloat(paintingQuality));
-  const demandFunc =  (1 + Math.log10(utilityFunc)) / Math.log10(utilityFunc);
+  const demandFunc =  (1 + Math.log(utilityFunc)) / Math.log(utilityFunc);
   const revenue = parseFloat(population) * demandFunc;
+  console.log('revenue', revenue);
   let totalRev = revenue * 100;
   return Math.round(totalRev);
 }

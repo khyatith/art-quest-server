@@ -348,7 +348,8 @@ mongoClient.then(db => {
     .then(results => {
       if(!results) res.status(404).json({error: 'Room not found'})
       else {
-          selling_round_results.calculatedRevenueForRound = room.calculatedRevenue[roundId];
+          console.log('results', results);
+          selling_round_results.calculatedRevenueForRound = results?.calculatedRoundRevenue[roundId] || {};
           //selling phase timer value
           if (results && results.hasSellingResultsTimerEnded) {
             selling_round_results.sellPaintingTimerValue = {};

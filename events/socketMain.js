@@ -45,6 +45,7 @@ module.exports = async (io, socket, rooms) => {
         hasSellPaintingTimerEnded: false,
         sellingResultsTimerValue: {},
         hasSellingResultsTimerEnded: false,
+        calculatedRoundRevenue: {},
       };
       rooms[player.hostCode] = parsedRoom;
       await collection.insertOne(parsedRoom);
@@ -138,15 +139,13 @@ module.exports = async (io, socket, rooms) => {
       totalAmountByCurrentTeam = calculatedRevenue;
     }
     results.totalAmountSpentByTeam[teamName] = totalAmountByCurrentTeam;
-    await collection.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": results.totalAmountSpentByTeam}});
-    // update room on the server
-    const serverRoom = rooms[roomCode];
-    const caculatedRevenueAfterRound = serverRoom?.calculatedRoundRevenue || {};
-    if (caculatedRevenueAfterRound[roundId]) {
-      serverRoom.calculatedRoundRevenue[roundId][teamName] = parseInt(caculatedRevenueAfterRound[teamName]) + calculatedRevenue;
+    const caculatedRevenueAfterRound = results.calculatedRoundRevenue[roundId] || {};
+    if (Object.keys(caculatedRevenueAfterRound).length > 0) {
+      results.calculatedRoundRevenue[roundId][teamName] = parseFloat(caculatedRevenueAfterRound[teamName]) + parseFloat(calculatedRevenue);
     } else {
-      serverRoom.calculatedRevenue = { [roundId]: { [teamName]: calculatedRevenue } };
+      results.calculatedRoundRevenue = { [roundId]: { [teamName]: parseFloat(calculatedRevenue) } };
     }
+    await collection.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": results.totalAmountSpentByTeam, "calculatedRoundRevenue": results.calculatedRoundRevenue}});
     return calculatedRevenue;
   }
 
