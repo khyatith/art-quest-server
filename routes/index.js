@@ -348,7 +348,13 @@ mongoClient.then(db => {
     .then(results => {
       if(!results) res.status(404).json({error: 'Room not found'})
       else {
-          console.log('results', results);
+          const leaderboard = results.leaderBoard;
+          const paintingsResults = Object.entries(leaderboard).reduce((acc, [key, value]) => {
+            const result = value.map(val => val.auctionObj);
+            acc[key] = result;
+            return acc;
+          }, []);
+          selling_round_results.allTeamPaintings = paintingsResults;
           selling_round_results.calculatedRevenueForRound = results?.calculatedRoundRevenue[roundId] || {};
           //selling phase timer value
           if (results && results.hasSellingResultsTimerEnded) {
