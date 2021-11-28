@@ -382,7 +382,12 @@ mongoClient.then(db => {
       else {
           const leaderboard = results.leaderBoard;
           const paintingsResults = Object.entries(leaderboard).reduce((acc, [key, value]) => {
-            const result = value.map(val => val.auctionObj);
+            const result = value.map(val => {
+              return {
+                auctionId: val.auctionId,
+                paintingURL: val.auctionObj.imageURL,
+              }
+            });
             acc = {
               ...acc,
               [key]: result
