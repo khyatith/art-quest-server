@@ -266,6 +266,12 @@ mongoClient.then(db => {
     try {
       const room = await collection_room.findOne({"roomCode":req.body.roomId});
       if (room.sellingRoundNumber === req.body.roundId) {
+        const { sellingArtifacts } = room.sellingAuctions;
+        sellingArtifacts.forEach((obj) => {
+          if (obj.auctionState === 1) {
+            obj.auctionState = 2;
+          }
+        });
         const sellingRoundNumber = parseInt(room.sellingRoundNumber, 10) + 1;
         let serverRoom = rooms[req.body.roomId];
         await collection_room.findOneAndUpdate({"roomCode":req.body.roomId},{$set:{
@@ -276,6 +282,7 @@ mongoClient.then(db => {
           "hasSellPaintingTimerEnded": false,
           "sellingResultsTimerValue": {},
           "hasSellingResultsTimerEnded": false,
+          "sellingAuctions": {"sellingArtifacts": sellingArtifacts}
         }});
         res.status(200).json({ message: "updated" });
         serverRoom = {
@@ -296,7 +303,7 @@ mongoClient.then(db => {
     }
   })
 
-  router.get('/getSellingInfo', (req,res) =>{
+  router.get('/getSellingInfo', (req,res) => {
 
     var selling_info = new Object();
     const room = rooms[req.query.roomId];
@@ -340,6 +347,31 @@ mongoClient.then(db => {
     .catch(error => {console.error(error)})
   });
 
+  router.get('/getEnglishAuctionForSelling', (req, res) => {
+    const { roomCode } = req.query;
+    var sellingAuctionObj = new Object();
+    collection_room.findOne({"roomCode": roomCode})
+      .then(async (results) => {
+        const { sellingArtifacts } = results.sellingAuctions;
+        const currentAuction = sellingArtifacts.filter((obj) => obj.auctionState === 1);
+        if (currentAuction.length > 0) {
+          sellingAuctionObj = currentAuction[0];
+        } else {
+          const sellingAuctionObj = sellingArtifacts.find((obj) => obj.auctionState === 0);
+          sellingAuctionObj.auctionState = 1;
+          sellingArtifacts.forEach((obj) => {
+            if (obj.id === sellingAuctionObj.id) {
+              obj.auctionState = 1;
+            }
+          });
+          await collection_room.findOneAndUpdate({"hostCode":roomCode},{$set:{
+            "sellingAuctions": {"sellingArtifacts": sellingArtifacts}
+          }});
+        }
+        res.status(200).json({ auctionObj: sellingAuctionObj });
+      })
+  })
+
   router.get('/getSellingResultForRound', (req, res) => {
     const { roundId, roomCode } = req.query;
     const room = rooms[roomCode];
@@ -355,7 +387,6 @@ mongoClient.then(db => {
               ...acc,
               [key]: result
             }
-            console.log('acc', acc);
             return acc;
           }, {});
           selling_round_results.allTeamPaintings = paintingsResults;

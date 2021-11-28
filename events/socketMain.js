@@ -1,5 +1,6 @@
 const { getRemainingTime, calculateSellingRevenue } = require("../helpers/game");
 var auctionsObj = require("../auctionData.json");
+var sellingAuctionObj = require("../sellingAuctionData.json");
 const dbClient = require('../mongoClient');
 var cloneDeep = require('lodash.clonedeep');
 
@@ -26,6 +27,7 @@ module.exports = async (io, socket, rooms) => {
         roomCode: player.playerId,
         players: [playerObj],
         auctions: cloneDeep(auctionsObj),
+        sellingAuctions: cloneDeep(sellingAuctionObj),
         leaderBoard: {},
         numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
