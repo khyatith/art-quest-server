@@ -350,8 +350,6 @@ mongoClient.then(db => {
       else {
           const leaderboard = results.leaderBoard;
           const paintingsResults = Object.entries(leaderboard).reduce((acc, [key, value]) => {
-            console.log('key', key);
-            console.log('value >>>>>', value);
             const result = value.map(val => val.auctionObj);
             acc = {
               ...acc,
@@ -360,7 +358,6 @@ mongoClient.then(db => {
             console.log('acc', acc);
             return acc;
           }, {});
-          console.log('paintingsResults', paintingsResults);
           selling_round_results.allTeamPaintings = paintingsResults;
           selling_round_results.calculatedRevenueForRound = results?.calculatedRoundRevenue[roundId] || {};
           //selling phase timer value
@@ -376,7 +373,6 @@ mongoClient.then(db => {
             setInterval(() => startSellingResultsServerTimer(roomCode, deadline), 1000);
             selling_round_results.sellingResultsTimerValue = timerValue;
           }
-          console.log('selling_round_results', selling_round_results.allTeamPaintings);
           res.status(200).json(selling_round_results);
         }
     })
