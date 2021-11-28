@@ -356,10 +356,13 @@ function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
   return { efficiencyByTeam, totalPaintingsWonByTeams };
 }
 
+function isInt(n) {
+  return n % 1 === 0;
+}
+
 function calculateSellingRevenue(data) {
   const { interestInArt, population, paintingQuality, ticketPrice } = data;
   let demandFunc;
-  console.log('ticketPrice', ticketPrice);
   if (ticketPrice > 100) {
     const utilityFunc =  parseFloat(ticketPrice) + parseFloat(interestInArt) + parseFloat(paintingQuality);
     demandFunc =  (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
@@ -372,8 +375,11 @@ function calculateSellingRevenue(data) {
   }
   const revenue = parseFloat(population) * demandFunc;
   console.log('revenue', revenue);
-  let totalRev = revenue * 100;
-  return Math.round(totalRev);
+  if (isInt(revenue)) {
+    return revenue
+  } else {
+    return revenue.toFixed(1);
+  }
 }
 
 module.exports = {

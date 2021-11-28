@@ -134,11 +134,15 @@ module.exports = async (io, socket, rooms) => {
     const results = await collection.findOne({'hostCode':roomCode});
     let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
     if (totalAmountByCurrentTeam) {
-      totalAmountByCurrentTeam = parseInt(totalAmountByCurrentTeam) + calculatedRevenue;
+      console.log('totalAmountByCurrentTeam before', typeof totalAmountByCurrentTeam);
+      console.log('calculatedRevenue', typeof calculatedRevenue);
+      totalAmountByCurrentTeam = parseFloat(totalAmountByCurrentTeam) + parseFloat(calculatedRevenue);
+      console.log('totalAmountByCurrentTeam after', totalAmountByCurrentTeam);
     } else {
-      totalAmountByCurrentTeam = calculatedRevenue;
+      totalAmountByCurrentTeam = parseFloat(calculatedRevenue);
     }
-    results.totalAmountSpentByTeam[teamName] = totalAmountByCurrentTeam;
+    results.totalAmountSpentByTeam[teamName] = parseFloat(totalAmountByCurrentTeam).toFixed(1);
+    console.log('results.totalAmountSpentByTeam', results.totalAmountSpentByTeam);
     const caculatedRevenueAfterRound = results.calculatedRoundRevenue[roundId] || {};
     if (Object.keys(caculatedRevenueAfterRound).length > 0) {
       results.calculatedRoundRevenue[roundId][teamName] = parseFloat(caculatedRevenueAfterRound[teamName]) + parseFloat(calculatedRevenue);
