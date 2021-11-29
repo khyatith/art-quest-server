@@ -266,12 +266,12 @@ mongoClient.then(db => {
     try {
       const room = await collection_room.findOne({"roomCode":req.body.roomId});
       if (room.sellingRoundNumber === req.body.roundId) {
-        const { sellingArtifacts } = room.sellingAuctions;
-        sellingArtifacts.forEach((obj) => {
-          if (obj.auctionState === 1) {
-            obj.auctionState = 2;
-          }
-        });
+        // const { sellingArtifacts } = room.sellingAuctions;
+        // sellingArtifacts.forEach((obj) => {
+        //   if (obj.auctionState === 1) {
+        //     obj.auctionState = 2;
+        //   }
+        // });
         const sellingRoundNumber = parseInt(room.sellingRoundNumber, 10) + 1;
         let serverRoom = rooms[req.body.roomId];
         await collection_room.findOneAndUpdate({"roomCode":req.body.roomId},{$set:{
