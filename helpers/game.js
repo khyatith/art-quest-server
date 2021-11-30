@@ -1,11 +1,3 @@
-var CONSTANTS = require("../constants");
-var rooms = CONSTANTS.rooms;
-var boardArray = CONSTANTS.boardArray;
-var auctionsObj = require("../auctionData.json");
-
-const expiration = 3600;
-var found = 0;
-
 function findSecondHighestBid(arr, arrSize) {
   let i;
 
@@ -203,7 +195,7 @@ function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
   });
   if (totalAmt.length !== 0 && Object.keys(totalAmt[0]).length !== 0) {
   result = totalAmt && totalAmt.reduce(
-    (obj, item) => Object.assign(obj, { [item.key]: item.value }), {});
+    (obj, item) => Object.assign(obj, { [item.key]: -item.value }), {});
   }
 
   if (Object.keys(allPayAuctionBidObj).length > 0){
@@ -364,6 +356,29 @@ function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
   return { efficiencyByTeam, totalPaintingsWonByTeams };
 }
 
+function isInt(n) {
+  return n % 1 === 0;
+}
+
+function calculateSellingRevenue(data) {
+  const { interestInArt, population, paintingQuality, ticketPrice } = data;
+  let demandFunc;
+  if (ticketPrice > 50) {
+    const utilityFunc =  parseFloat(ticketPrice) + parseFloat(interestInArt) + parseFloat(paintingQuality);
+    demandFunc =  (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
+  } else if (ticketPrice <= 50) {
+    const utilityFunc =  parseFloat(ticketPrice) * (parseFloat(interestInArt) + parseFloat(paintingQuality));
+    demandFunc = (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
+  }
+  const revenue = parseFloat(population) * demandFunc;
+  console.log('revenue', revenue);
+  if (isInt(revenue)) {
+    return revenue
+  } else {
+    return revenue.toFixed(1);
+  }
+}
+
 module.exports = {
 	gameLoop,
 	getNextObjectForLiveAuction,
@@ -372,4 +387,5 @@ module.exports = {
   calculateTotalAmountSpent,
   calculateBuyingPhaseWinner,
   calculateTeamEfficiency,
+  calculateSellingRevenue
 };

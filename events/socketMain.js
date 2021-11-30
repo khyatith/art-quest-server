@@ -1,12 +1,14 @@
-const { getRemainingTime } = require("../helpers/game");
+const { getRemainingTime, calculateSellingRevenue } = require("../helpers/game");
 var auctionsObj = require("../auctionData.json");
+var sellingAuctionObj = require("../sellingAuctionData.json");
 const dbClient = require('../mongoClient');
 var cloneDeep = require('lodash.clonedeep');
 
 module.exports = async (io, socket, rooms) => {
 
   const db = await dbClient.createConnection();
-	const collection = db.collection('room');
+  const collection = db.collection('room');
+  const collection_visits = db.collection('visits');
 
   const createRoom = async (stringifiedPlayer) => {
     player = JSON.parse(stringifiedPlayer);
@@ -25,6 +27,7 @@ module.exports = async (io, socket, rooms) => {
         roomCode: player.playerId,
         players: [playerObj],
         auctions: cloneDeep(auctionsObj),
+        sellingAuctions: cloneDeep(sellingAuctionObj),
         leaderBoard: {},
         numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
@@ -37,6 +40,14 @@ module.exports = async (io, socket, rooms) => {
         landingPageTimerValue: {},
         hasLandingPageTimerEnded: false,
         winner: null,
+        sellingRoundNumber: 1,
+        hadLocationPageTimerEnded: false,
+        locationPhaseTimerValue: {},
+        sellPaintingTimerValue: {},
+        hasSellPaintingTimerEnded: false,
+        sellingResultsTimerValue: {},
+        hasSellingResultsTimerEnded: false,
+        calculatedRoundRevenue: {},
       };
       rooms[player.hostCode] = parsedRoom;
       await collection.insertOne(parsedRoom);
@@ -103,10 +114,59 @@ module.exports = async (io, socket, rooms) => {
     await collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
   }
 
+  const putCurrentLocation = async (data) => {
+    const { roomId, locationId, teamName, roundId } = data;
+    const existingRecord = await collection_visits.findOne({"roomId":roomId, "teamName": teamName});
+    if (existingRecord) {
+      if (existingRecord.roundNumber === roundId) {
+        io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId });
+        return;
+      }
+      await collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{locations:locationId}}, {upsert:true});
+      io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: locationId, roundId });
+    } else {
+      const result = await collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations": [locationId]});
+      if (result) io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId });
+    }
+  }
+
+  const calculateRevenue = async (data) => {
+    const { teamName, roomCode, roundId } = data;
+    const calculatedRevenue = calculateSellingRevenue(data);
+    const results = await collection.findOne({'hostCode':roomCode});
+    let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
+    if (totalAmountByCurrentTeam) {
+      console.log('totalAmountByCurrentTeam before', typeof totalAmountByCurrentTeam);
+      console.log('calculatedRevenue', typeof calculatedRevenue);
+      totalAmountByCurrentTeam = parseFloat(totalAmountByCurrentTeam) + parseFloat(calculatedRevenue);
+      console.log('totalAmountByCurrentTeam after', totalAmountByCurrentTeam);
+    } else {
+      totalAmountByCurrentTeam = parseFloat(calculatedRevenue);
+    }
+    results.totalAmountSpentByTeam[teamName] = parseFloat(totalAmountByCurrentTeam).toFixed(1);
+    console.log('results.totalAmountSpentByTeam', results.totalAmountSpentByTeam);
+    const caculatedRevenueAfterRound = results.calculatedRoundRevenue[roundId] || {};
+    if (Object.keys(caculatedRevenueAfterRound).length > 0) {
+      results.calculatedRoundRevenue[roundId][teamName] = parseFloat(caculatedRevenueAfterRound[teamName]) + parseFloat(calculatedRevenue);
+    } else {
+      results.calculatedRoundRevenue = { [roundId]: { [teamName]: parseFloat(calculatedRevenue) } };
+    }
+    await collection.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": results.totalAmountSpentByTeam, "calculatedRoundRevenue": results.calculatedRoundRevenue}});
+    return calculatedRevenue;
+  }
+
+  const emitNominatedPaintingId = (data) => {
+    const { paintingId, roomCode } = data;
+    io.sockets.in(roomCode).emit("emitNominatedPainting", paintingId);
+    calculateRevenue(data);
+  }
+
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("startLandingPageTimer", startLandingPageTimer);
   socket.on("startGame", startGame);
   socket.on("setTeams", setTotalNumberOfPlayers);
-
+  socket.on("putCurrentLocation", putCurrentLocation);
+  socket.on("calculateTeamRevenue", calculateRevenue);
+  socket.on("paintingNominated", emitNominatedPaintingId);
 }

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const dbClient = require('../mongoClient');
-const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, getNextObjectForLiveAuction, calculateTeamEfficiency, calculateTotalPaintingsWonByTeams } = require("../helpers/game");
+const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, getNextObjectForLiveAuction, calculateTeamEfficiency, calculateSellingRevenue } = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
@@ -36,6 +36,7 @@ router.get('/timer/:hostCode', function (req, res) {
     res.send({ landingPageTimerValue: timerValue });
   }
 });
+
 
 router.get('/getResults/:hostCode', async (req, res) => {
   db = await dbClient.createConnection();
@@ -175,6 +176,46 @@ mongoClient.then(db => {
   const collection_visits = db.collection('visits');
   const collection_room = db.collection('room');
 
+  const startLocationPhaseServerTimer = async (hostCode, deadline) => {
+    let timerValue = getRemainingTime(deadline);
+    //const room = await collection_room.findOne({'hostCode': hostCode});
+    const serverRoom = rooms[hostCode];
+    if (timerValue.total <= 0) {
+      //room.hadLocationPageTimerEnded = true;
+      //room.locationPhaseTimerValue = {};
+      serverRoom.hadLocationPageTimerEnded = true;
+      serverRoom.locationPhaseTimerValue = {};
+      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue: {}, hadLocationPageTimerEnded: true}});
+    } else if (timerValue.total > 0) {
+      //room.locationPhaseTimerValue = timerValue;
+      serverRoom.locationPhaseTimerValue = timerValue;
+      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue:timerValue}});
+    }
+  }
+
+  const startSellingServerTimer = async (hostCode, deadline) => {
+    let sellingPhaseTimerValue = getRemainingTime(deadline);
+    const serverRoom = rooms[hostCode];
+    if (sellingPhaseTimerValue.total <= 0) {
+      serverRoom.hasSellPaintingTimerEnded = true;
+      serverRoom.sellPaintingTimerValue = {};
+    } else if (sellingPhaseTimerValue.total > 0) {
+      serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
+    }
+  }
+
+  const startSellingResultsServerTimer = async (hostCode, deadline) => {
+    let sellingPhaseTimerValue = getRemainingTime(deadline);
+    const serverRoom = rooms[hostCode];
+    if (sellingPhaseTimerValue.total <= 0) {
+      serverRoom.hasSellingResultsTimerEnded = true;
+      serverRoom.sellingResultsTimerValue = {};
+    } else if (sellingPhaseTimerValue.total > 0) {
+      serverRoom.sellingResultsTimerValue = sellingPhaseTimerValue;
+    }
+  }
+
+
   router.get('/getMap', (req,res) =>{
       collection.find({}).toArray()
       .then(results => {
@@ -184,40 +225,88 @@ mongoClient.then(db => {
       .catch(error => {console.error(error)})
   });
 
-  router.post('/putCurrentLocation', (req,res) =>{
-    collection_visits.findOneAndUpdate({"playerId":req.body.playerId,"roomId":req.body.roomId},{$set:req.body, $push:{locations:req.body.locationId}}, {upsert:true})
-		.then(results => {
-			console.log('current location updated')
-			res.status(200).json({success: 'location updated'})
-		})
-		.catch(error => {console.error(error);res.status(500).json(error)})
-  });
-
-  router.get('/getSellingResults', (req,res) =>{
+  router.get('/getSellingResults', async (req,res) =>{
 
     var selling_result = new Object();
-    collection_room.findOne({"roomCode":req.query.roomId})
-    .then(results => {
-      if(!results) res.status(404).json({error: 'Room not found'})
-      else {
-       
-        selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
-        var keys =Object.keys(selling_result.amountSpentByTeam);
-       
-        getVisitData(keys,req.query.roomId)
+    //const currentRoom = rooms[req.query.roomId]
+    const { roomId } = req.query;
+    const results = await collection_room.findOne({"roomCode":roomId});
+    const room = rooms[roomId];
+    if(!results) {
+      res.status(404).json({error: 'Room not found'});
+    } else {
+      selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
+      selling_result.roundNumber = results.sellingRoundNumber;
+      var keys =Object.keys(selling_result.amountSpentByTeam);
+
+      //location phase timer value
+      if (room && room.hadLocationPageTimerEnded) {
+        selling_result.locationPhaseTimerValue = {};
+      }
+      if (room && Object.keys(room.locationPhaseTimerValue).length > 0) {
+        selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
+      } else {
+        const currentTime = Date.parse(new Date());
+        const deadline = new Date(currentTime + 0.3 * 60 * 1000);
+        const timerValue = getRemainingTime(deadline);
+        setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
+        selling_result.locationPhaseTimerValue = timerValue;
+      }
+
+      getVisitData(keys,roomId)
         .then(visitObjects => {
+          console.log('visitObjects', visitObjects);
           selling_result.visits = visitObjects;
           res.status(200).json(selling_result);
-        });
-
-      }
-    })
-    .catch(error => {console.error(error)})
+      });
+    }
   });
 
-  router.get('/getSellingInfo', (req,res) =>{
+  router.post('/updateRoundId', async(req, res) => {
+    try {
+      const room = await collection_room.findOne({"roomCode":req.body.roomId});
+      if (room.sellingRoundNumber === req.body.roundId) {
+        const { sellingArtifacts } = room.sellingAuctions;
+        sellingArtifacts.forEach((obj) => {
+          if (obj.auctionState === 1) {
+            obj.auctionState = 2;
+          }
+        });
+        const sellingRoundNumber = parseInt(room.sellingRoundNumber, 10) + 1;
+        let serverRoom = rooms[req.body.roomId];
+        await collection_room.findOneAndUpdate({"roomCode":req.body.roomId},{$set:{
+          "sellingRoundNumber": sellingRoundNumber,
+          "hadLocationPageTimerEnded": false,
+          "locationPhaseTimerValue": {},
+          "sellPaintingTimerValue": {},
+          "hasSellPaintingTimerEnded": false,
+          "sellingResultsTimerValue": {},
+          "hasSellingResultsTimerEnded": false,
+          "sellingAuctions": {"sellingArtifacts": sellingArtifacts}
+        }});
+        res.status(200).json({ message: "updated" });
+        serverRoom = {
+          ...serverRoom,
+          sellingRoundNumber: room.sellingRoundNumber,
+          hadLocationPageTimerEnded: false,
+          locationPhaseTimerValue: {},
+          sellPaintingTimerValue: {},
+          hasSellPaintingTimerEnded: false,
+          sellingResultsTimerValue: {},
+          hasSellingResultsTimerEnded: false,
+        }
+      } else {
+        res.status(200).json({ message: "updated" });
+      }
+    } catch(e) {
+      res.status(500).json(e);
+    }
+  })
+
+  router.get('/getSellingInfo', (req,res) => {
 
     var selling_info = new Object();
+    const room = rooms[req.query.roomId];
     collection_room.findOne({"roomCode":req.query.roomId})
     .then(results => {
       if(!results) res.status(404).json({error: 'Room not found'})
@@ -226,7 +315,21 @@ mongoClient.then(db => {
 
         collection.findOne({"cityId":parseInt(req.query.locationId,10)})
         .then(results_city => {
-          selling_info.city = results_city
+          selling_info.city = results_city;
+
+          //selling phase timer value
+          if (room && room.hasSellPaintingTimerEnded) {
+            selling_info.sellPaintingTimerValue = {};
+          }
+          if (room && Object.keys(room.sellPaintingTimerValue).length > 0) {
+            selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
+          } else {
+            const currentTime = Date.parse(new Date());
+            const deadline = new Date(currentTime + 0.3 * 60 * 1000);
+            const timerValue = getRemainingTime(deadline);
+            setInterval(() => startSellingServerTimer(req.query.roomId, deadline), 1000);
+            selling_info.sellPaintingTimerValue = timerValue;
+          }
 
           collection_visits.find({"roomId":req.query.roomId,locations: {$in: [parseInt(req.query.locationId,10)]}}).toArray()
           .then(results_visits => {
@@ -238,17 +341,79 @@ mongoClient.then(db => {
             selling_info.otherteams = otherTeams;
             res.status(200).json(selling_info);
           });
-
-
-          
         });
-        
-
       }
     })
     .catch(error => {console.error(error)})
   });
 
+  router.get('/getEnglishAuctionForSelling', (req, res) => {
+    const { roomCode } = req.query;
+    var sellingAuctionObj = new Object();
+    collection_room.findOne({"roomCode": roomCode})
+      .then(async (results) => {
+        const { sellingArtifacts } = results.sellingAuctions;
+        const currentAuction = sellingArtifacts.filter((obj) => obj.auctionState === 1);
+        if (currentAuction.length > 0) {
+          sellingAuctionObj = currentAuction[0];
+        } else {
+          const sellingAuctionObj = sellingArtifacts.find((obj) => obj.auctionState === 0);
+          sellingAuctionObj.auctionState = 1;
+          sellingArtifacts.forEach((obj) => {
+            if (obj.id === sellingAuctionObj.id) {
+              obj.auctionState = 1;
+            }
+          });
+          await collection_room.findOneAndUpdate({"hostCode":roomCode},{$set:{
+            "sellingAuctions": {"sellingArtifacts": sellingArtifacts}
+          }});
+        }
+        res.status(200).json({ auctionObj: sellingAuctionObj });
+      })
+  })
+
+  router.get('/getSellingResultForRound', (req, res) => {
+    const { roundId, roomCode } = req.query;
+    const room = rooms[roomCode];
+    var selling_round_results = new Object();
+    collection_room.findOne({"roomCode": roomCode})
+    .then(results => {
+      if(!results) res.status(404).json({error: 'Room not found'})
+      else {
+          const leaderboard = results.leaderBoard;
+          const paintingsResults = Object.entries(leaderboard).reduce((acc, [key, value]) => {
+            const result = value.map(val => {
+              return {
+                auctionId: val.auctionId,
+                paintingURL: val.auctionObj.imageURL,
+              }
+            });
+            acc = {
+              ...acc,
+              [key]: result
+            }
+            return acc;
+          }, {});
+          selling_round_results.allTeamPaintings = paintingsResults;
+          selling_round_results.calculatedRevenueForRound = results?.calculatedRoundRevenue[roundId] || {};
+          //selling phase timer value
+          if (results && results.hasSellingResultsTimerEnded) {
+            selling_round_results.sellPaintingTimerValue = {};
+          }
+          if (results && Object.keys(results.sellingResultsTimerValue).length > 0) {
+            selling_round_results.sellingResultsTimerValue = room.sellingResultsTimerValue;
+          } else {
+            const currentTime = Date.parse(new Date());
+            const deadline = new Date(currentTime + 0.3 * 60 * 1000);
+            const timerValue = getRemainingTime(deadline);
+            setInterval(() => startSellingResultsServerTimer(roomCode, deadline), 1000);
+            selling_round_results.sellingResultsTimerValue = timerValue;
+          }
+          res.status(200).json(selling_round_results);
+        }
+    })
+    .catch(error => {console.error(error)})
+  });
 
 function getVisitData(keys,roomCode){
   return new Promise((resolve1, reject1) => {
@@ -267,33 +432,27 @@ function getVisitData(keys,roomCode){
               var teamVisit = new Object();
               teamVisit.teamName = key;
               teamVisit.visitCount = 0;
+              teamVisit.currentLocation = 2;
               teamVisits.forEach(function(visit,index) {
-                teamVisit.visitCount += visit.locations.length;
+                const visitCounts = visit?.locations?.length || 0;
+                teamVisit.visitCount += visitCounts || 0;
+                teamVisit.currentLocation = visit?.locationId || 2;
               });
-              
             }
             resolve2(teamVisit);
-
           });
         });
-
         bar2.then(teamVisit => {
-          
           visitObjects.push(teamVisit);
           if(index == keys.length -1)
             resolve();
-        });
-
-          
+        }); 
       });
     });
     bar.then(() => {
      resolve1(visitObjects);
     });
-  
   });
-  
-
 }
 
 
