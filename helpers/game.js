@@ -363,15 +363,12 @@ function isInt(n) {
 function calculateSellingRevenue(data) {
   const { interestInArt, population, paintingQuality, ticketPrice } = data;
   let demandFunc;
-  if (ticketPrice > 100) {
+  if (ticketPrice > 50) {
     const utilityFunc =  parseFloat(ticketPrice) + parseFloat(interestInArt) + parseFloat(paintingQuality);
     demandFunc =  (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
-  } else if (ticketPrice > 50 && ticketPrice <= 100) {
-    const utilityFunc =  parseFloat(ticketPrice) + parseFloat(interestInArt) + parseFloat(paintingQuality);
-    demandFunc = 1 + Math.log(utilityFunc);
   } else if (ticketPrice <= 50) {
     const utilityFunc =  parseFloat(ticketPrice) * (parseFloat(interestInArt) + parseFloat(paintingQuality));
-    demandFunc = 1 + Math.log(utilityFunc);
+    demandFunc = (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
   }
   const revenue = parseFloat(population) * demandFunc;
   console.log('revenue', revenue);
