@@ -71,7 +71,15 @@ module.exports = async (io, socket, rooms) => {
         rooms[parsedPlayer.hostCode].players.push(parsedPlayer);
       }
       await collection.findOneAndUpdate({"hostCode":parsedPlayer.hostCode},{$set:parsedRoom});
-      io.sockets.in(parsedPlayer.hostCode).emit("numberOfPlayersJoined", { numberOfPlayers: rooms[parsedPlayer.hostCode].numberOfPlayers , playersJoined: rooms[parsedPlayer.hostCode].players.length});
+      //io.sockets.in(parsedPlayer.hostCode).emit("numberOfPlayersJoined", { numberOfPlayers: rooms[parsedPlayer.hostCode].numberOfPlayers , playersJoined: rooms[parsedPlayer.hostCode].players.length});
+    }
+  }
+
+  const getPlayersJoinedInfo = async(data) => {
+    const { roomCode } = data;
+    const room = await collection.findOne({'hostCode': roomCode});
+    if (room) {
+      io.sockets.in(roomCode).emit("numberOfPlayersJoined", { numberOfPlayers: room.numberOfPlayers, playersJoined: room.players.length });
     }
   }
 
@@ -136,15 +144,11 @@ module.exports = async (io, socket, rooms) => {
     const results = await collection.findOne({'hostCode':roomCode});
     let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
     if (totalAmountByCurrentTeam) {
-      console.log('totalAmountByCurrentTeam before', typeof totalAmountByCurrentTeam);
-      console.log('calculatedRevenue', typeof calculatedRevenue);
       totalAmountByCurrentTeam = parseFloat(totalAmountByCurrentTeam) + parseFloat(calculatedRevenue);
-      console.log('totalAmountByCurrentTeam after', totalAmountByCurrentTeam);
     } else {
       totalAmountByCurrentTeam = parseFloat(calculatedRevenue);
     }
     results.totalAmountSpentByTeam[teamName] = parseFloat(totalAmountByCurrentTeam).toFixed(1);
-    console.log('results.totalAmountSpentByTeam', results.totalAmountSpentByTeam);
     const caculatedRevenueAfterRound = results.calculatedRoundRevenue[roundId] || {};
     if (Object.keys(caculatedRevenueAfterRound).length > 0) {
       results.calculatedRoundRevenue[roundId][teamName] = parseFloat(caculatedRevenueAfterRound[teamName]) + parseFloat(calculatedRevenue);
@@ -163,6 +167,7 @@ module.exports = async (io, socket, rooms) => {
 
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
+  socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
   socket.on("startLandingPageTimer", startLandingPageTimer);
   socket.on("startGame", startGame);
   socket.on("setTeams", setTotalNumberOfPlayers);
