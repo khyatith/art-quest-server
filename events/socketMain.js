@@ -71,7 +71,6 @@ module.exports = async (io, socket, rooms) => {
         rooms[parsedPlayer.hostCode].players.push(parsedPlayer);
       }
       await collection.findOneAndUpdate({"hostCode":parsedPlayer.hostCode},{$set:parsedRoom});
-      //io.sockets.in(parsedPlayer.hostCode).emit("numberOfPlayersJoined", { numberOfPlayers: rooms[parsedPlayer.hostCode].numberOfPlayers , playersJoined: rooms[parsedPlayer.hostCode].players.length});
     }
   }
 
