@@ -302,9 +302,9 @@ function getTopTwoTeams(sortedObj) {
   return topTwo[0];
 }
 
-function getWinnerFromTopTwo(topTwo, teamEfficiency, leaderBoard) {
+function getWinnerFromTopTwo(sortedByPaintingsWon, teamEfficiency, leaderBoard) {
   let avgPaintingQualityByTeam = {};
-  const result = Object.entries(topTwo).sort(([ka,a],[kb,b]) => {
+  const result = Object.entries(sortedByPaintingsWon).sort(([ka,a],[kb,b]) => {
     if (parseFloat(teamEfficiency[ka]) === parseFloat(teamEfficiency[kb])) {
       avgPaintingQualityByTeam = calculatePaintingQuality(leaderBoard);
       const kaTeamData = leaderBoard[ka];
@@ -333,9 +333,9 @@ function calculateBuyingPhaseWinner(room) {
     return b-a;
   })
   .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
-  const topTwo = getTopTwoTeams(sortedObjByPaintingsWon);
-  const { winnerName, avgPaintingQualityByTeam } = getWinnerFromTopTwo(topTwo, teamEfficiency, leaderBoard);
-  return { leaderBoard, topTwo, winner: winnerName, sortedObjByPaintingsWon, teamEfficiency, totalAmountSpentByTeam, avgPaintingQualityByTeam };
+  //const topTwo = getTopTwoTeams(sortedObjByPaintingsWon);
+  const { winnerName, avgPaintingQualityByTeam } = getWinnerFromTopTwo(sortedObjByPaintingsWon, teamEfficiency, leaderBoard);
+  return { leaderBoard, winner: winnerName, sortedObjByPaintingsWon, teamEfficiency, totalAmountSpentByTeam, avgPaintingQualityByTeam };
 }
 
 function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
