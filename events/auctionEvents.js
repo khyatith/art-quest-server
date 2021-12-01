@@ -65,7 +65,7 @@ module.exports = async (io, socket, rooms) => {
         } else {
           rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`] = [bidInfo];
         }
-				socket.emit("setLiveStyles", player.teamName);
+        io.sockets.in(player.hostCode).emit("setLiveStyles", player.teamName);
 				break;
 			case "2":
         rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = bidInfo;
@@ -79,7 +79,7 @@ module.exports = async (io, socket, rooms) => {
         } else {
           rooms[player.hostCode].secondPricedSealedBids[`${auctionId}`] = [bidInfo];
         }
-				socket.emit("setLiveStyles", player.teamName);
+				io.sockets.in(player.hostCode).emit("setLiveStyles", player.teamName);
         break;
       case "4":
         const allPayAuctionBids = rooms[player.hostCode].allPayAuctions;
@@ -89,7 +89,7 @@ module.exports = async (io, socket, rooms) => {
         } else {
           rooms[player.hostCode].allPayAuctions[`${auctionId}`] = [bidInfo];
         }
-        socket.emit("setLiveStyles", player.teamName);
+        io.sockets.in(player.hostCode).emit("setLiveStyles", player.teamName);
       break;
 			default:
         return;
