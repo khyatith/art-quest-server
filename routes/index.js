@@ -30,7 +30,7 @@ router.get('/timer/:hostCode', function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 3 * 60 * 1000);
+    const deadline = new Date(currentTime + 2 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
@@ -154,6 +154,25 @@ mongoClient.then(db => {
   const collection = db.collection('city');
   const collection_visits = db.collection('visits');
   const collection_room = db.collection('room');
+
+  router.get('/validatePlayerId/:hostCode', async (req, res) => {
+    const { params } = req;
+    const { hostCode } = params;
+    const room = await collection_room.findOne({'hostCode': hostCode});
+    if (room) {
+      const parsedRoom = room;
+      const { hasLandingPageTimerEnded } = parsedRoom;
+      // This means the game has already started and player cant join
+      if (hasLandingPageTimerEnded) {
+        res.send({ type: "error",  message: "This game is already in progress. Please ask the admin to give you a new code." });
+        return;
+      }
+      res.send({ type: "success" });
+    } else {
+      // This means the client has entered a wrong room code
+      res.send({ type: "error", message: "Invalid code. Enter the code again!" })
+    }
+  });
 
   const startLocationPhaseServerTimer = async (hostCode, deadline) => {
     let timerValue = getRemainingTime(deadline);
@@ -412,7 +431,6 @@ mongoClient.then(db => {
         totalAmountSpentByTeam[EAwinningTeam] = 0 - auctionItem.bidAmount;
       }
       roomInServer.totalAmountSpentByTeam = totalAmountSpentByTeam;
-      console.log('totalAmountSpentByTeam[EAwinningTeam]', totalAmountSpentByTeam[EAwinningTeam]);
       if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam)) {
         const isExistingAuctionForTeam = leaderboard[EAwinningTeam].filter(item => item.auctionObj.id === auctionId);
         if (isExistingAuctionForTeam.length === 0) {
@@ -424,7 +442,6 @@ mongoClient.then(db => {
       } else {
         leaderboard[`${EAwinningTeam}`] = [auctionItem];
       }
-      console.log('roomInServer.totalAmountSpentByTeam', roomInServer.totalAmountSpentByTeam);
       await collection_room.findOneAndUpdate({"hostCode":roomId},{$set:roomInServer});
     }
     res.status(200).json({ message: "updated" });
@@ -469,8 +486,6 @@ function getVisitData(keys,roomCode){
     });
   });
 }
-
-
 })
 .catch(error => console.error(error))
 

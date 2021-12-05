@@ -56,7 +56,6 @@ module.exports = async (io, socket, rooms) => {
 
   const joinRoom = async(player) => {
     const parsedPlayer = JSON.parse(player);
-    socket.join(parsedPlayer.hostCode);
     const room = await collection.findOne({'hostCode': parsedPlayer.hostCode});
     if (room) {
       const parsedRoom = room;
@@ -70,6 +69,7 @@ module.exports = async (io, socket, rooms) => {
       } else {
         rooms[parsedPlayer.hostCode].players.push(parsedPlayer);
       }
+      socket.join(parsedPlayer.hostCode);
       await collection.findOneAndUpdate({"hostCode":parsedPlayer.hostCode},{$set:parsedRoom});
     }
   }
@@ -97,7 +97,7 @@ module.exports = async (io, socket, rooms) => {
     const hasLandingPageTimerStarted = parsedRoom.hasLandingPageTimerStarted;
     if (!hasLandingPageTimerStarted) {
       const currentTime = Date.parse(new Date());
-      parsedRoom.landingPageTimerDeadline = new Date(currentTime + 3 * 60 * 1000);
+      parsedRoom.landingPageTimerDeadline = new Date(currentTime + 2 * 60 * 1000);
       parsedRoom.hasLandingPageTimerStarted = true;
       collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
     }
