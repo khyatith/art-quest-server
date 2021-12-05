@@ -50,7 +50,7 @@ function updateTotalAmountsForAllPayAuctions(allPayBids) {
 function getLeaderboard(rooms, roomCode) {
   const leaderboard = rooms[roomCode].leaderBoard;
 	const currentRoom = rooms[roomCode];
-  const englishAuctionsObj = currentRoom.englishAuctionBids;;
+  const englishAuctionsObj = currentRoom.englishAuctionBids;
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
   const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
   const allPayAuctionBidObj = currentRoom.allPayAuctions;

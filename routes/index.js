@@ -337,15 +337,17 @@ mongoClient.then(db => {
           sellingAuctionObj = currentAuction[0];
         } else {
           const sellingAuctionObj = sellingArtifacts.find((obj) => obj.auctionState === 0);
-          sellingAuctionObj.auctionState = 1;
-          sellingArtifacts.forEach((obj) => {
-            if (obj.id === sellingAuctionObj.id) {
-              obj.auctionState = 1;
-            }
-          });
-          await collection_room.findOneAndUpdate({"hostCode":roomCode},{$set:{
-            "sellingAuctions": {"sellingArtifacts": sellingArtifacts}
-          }});
+            if (sellingAuctionObj) {
+            sellingAuctionObj.auctionState = 1;
+            sellingArtifacts.forEach((obj) => {
+              if (obj.id === sellingAuctionObj.id) {
+                obj.auctionState = 1;
+              }
+            });
+            await collection_room.findOneAndUpdate({"hostCode":roomCode},{$set:{
+              "sellingAuctions": {"sellingArtifacts": sellingArtifacts}
+            }});
+          }
         }
         res.status(200).json({ auctionObj: sellingAuctionObj });
       })
@@ -392,6 +394,40 @@ mongoClient.then(db => {
         }
     })
     .catch(error => {console.error(error)})
+  });
+
+  router.post('/updateEnglishAuctionResults', async (req, res) => {
+    const { roomId, auctionId } = req.body;
+    const currentRoom = rooms[roomId];
+    const auctionItem = currentRoom.englishAuctionBids[auctionId];
+    if (auctionItem) {
+      const roomInServer = await collection_room.findOne({"roomCode": roomId});
+      const leaderboard = roomInServer.leaderBoard;
+      let totalAmountSpentByTeam = roomInServer.totalAmountSpentByTeam;
+      const leaderBoardKeys = Object.keys(leaderboard);
+      const EAwinningTeam = auctionItem.bidTeam;
+      if (totalAmountSpentByTeam[EAwinningTeam]) {
+        totalAmountSpentByTeam[EAwinningTeam] = totalAmountSpentByTeam[EAwinningTeam] - auctionItem.bidAmount;
+      } else {
+        totalAmountSpentByTeam[EAwinningTeam] = 0 - auctionItem.bidAmount;
+      }
+      roomInServer.totalAmountSpentByTeam = totalAmountSpentByTeam;
+      console.log('totalAmountSpentByTeam[EAwinningTeam]', totalAmountSpentByTeam[EAwinningTeam]);
+      if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam)) {
+        const isExistingAuctionForTeam = leaderboard[EAwinningTeam].filter(item => item.auctionObj.id === auctionId);
+        if (isExistingAuctionForTeam.length === 0) {
+          leaderboard[`${EAwinningTeam}`].push(auctionItem);
+        } else {
+          res.status(200).json({ message: "already updated" });
+          return;
+        }
+      } else {
+        leaderboard[`${EAwinningTeam}`] = [auctionItem];
+      }
+      console.log('roomInServer.totalAmountSpentByTeam', roomInServer.totalAmountSpentByTeam);
+      await collection_room.findOneAndUpdate({"hostCode":roomId},{$set:roomInServer});
+    }
+    res.status(200).json({ message: "updated" });
   });
 
 function getVisitData(keys,roomCode){
