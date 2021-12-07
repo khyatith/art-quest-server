@@ -91,6 +91,15 @@ module.exports = async (io, socket, rooms) => {
     });
   }
 
+  const landingPageTimerEnded = async (player) => {
+    const parsedPlayer = JSON.parse(player);
+    collection.findOne({'hostCode': parsedPlayer.hostCode}, async (err, room) => {
+      if (room) {
+        io.to(parsedPlayer.hostCode).emit("redirectToNextPage", room);
+      }
+    });
+  }
+
   const startLandingPageTimer = async ({ roomCode }) => {
     const room = await collection.findOne({'hostCode': roomCode});
     const parsedRoom = room;
@@ -169,6 +178,7 @@ module.exports = async (io, socket, rooms) => {
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
   socket.on("startLandingPageTimer", startLandingPageTimer);
   socket.on("startGame", startGame);
+  socket.on("landingPageTimerEnded", landingPageTimerEnded);
   socket.on("setTeams", setTotalNumberOfPlayers);
   socket.on("putCurrentLocation", putCurrentLocation);
   socket.on("calculateTeamRevenue", calculateRevenue);

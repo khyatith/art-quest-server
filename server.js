@@ -91,6 +91,12 @@ io.on("connection", socket => {
         io.to(client.hostCode).emit("gameState", JSON.stringify(rooms[client.hostCode]));
     });
 
+    socket.on("landingPageTimerEnded",client => {
+      console.log('yes');
+      client = JSON.parse(client);
+      io.to(client.hostCode).emit("redirectToNextPage");
+    });
+
     socket.on("startLiveAuctions", prevAuctionObj => {
     currentAuction = getNextObjectForLiveAuction(prevAuctionObj);
     socket.emit("startNextAuction", currentAuction);
