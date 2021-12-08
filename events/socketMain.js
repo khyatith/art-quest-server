@@ -106,7 +106,7 @@ module.exports = async (io, socket, rooms) => {
     const hasLandingPageTimerStarted = parsedRoom.hasLandingPageTimerStarted;
     if (!hasLandingPageTimerStarted) {
       const currentTime = Date.parse(new Date());
-      parsedRoom.landingPageTimerDeadline = new Date(currentTime + 2 * 60 * 1000);
+      parsedRoom.landingPageTimerDeadline = new Date(currentTime + 0.2 * 60 * 1000);
       parsedRoom.hasLandingPageTimerStarted = true;
       collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
     }
