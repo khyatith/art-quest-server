@@ -251,12 +251,15 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = timerValue;
       }
 
-      getVisitData(keys,roomId)
-        .then(visitObjects => {
-          console.log('visitObjects', visitObjects);
-          selling_result.visits = visitObjects;
-          res.status(200).json(selling_result);
-      });
+      const visitObjects = await getVisitData(keys,roomId);
+      console.log('visitObjects', visitObjects);
+      selling_result.visits = visitObjects;
+      res.status(200).json(selling_result);
+      //   .then(visitObjects => {
+      //     console.log('visitObjects', visitObjects);
+      //     selling_result.visits = visitObjects;
+      //     res.status(200).json(selling_result);
+      // });
     }
   });
 
@@ -447,44 +450,41 @@ mongoClient.then(db => {
     res.status(200).json({ message: "updated" });
   });
 
-function getVisitData(keys,roomCode){
-  return new Promise((resolve1, reject1) => {
-    var visitObjects = [];
+const getVisitData = async(keys,roomCode) => {
+  let teamVisit = [];
+  const getDataByTeamName = async (key) => {
+    const result = await collection_visits.find({"roomId": roomCode, "teamName": key}).toArray();
+    return result;
+  }
 
-    var bar = new Promise((resolve, reject) => {
-      keys.forEach(function(key,index) {
-       
-        var bar2 = new Promise((resolve2, reject2) => {
-          
-          collection_visits.find({"roomId":roomCode,"teamName":key}).toArray()
-          .then(teamVisits => {
-            if(!teamVisits)
-              console.log("visits not found")
-            else{
-              var teamVisit = new Object();
-              teamVisit.teamName = key;
-              teamVisit.visitCount = 0;
-              teamVisit.currentLocation = 2;
-              teamVisits.forEach(function(visit,index) {
-                const visitCounts = visit?.locations?.length || 0;
-                teamVisit.visitCount += visitCounts || 0;
-                teamVisit.currentLocation = visit?.locationId || 2;
-              });
-            }
-            resolve2(teamVisit);
-          });
-        });
-        bar2.then(teamVisit => {
-          visitObjects.push(teamVisit);
-          if(index == keys.length -1)
-            resolve();
-        }); 
+  const unresolvedPromises = keys.map(key => getDataByTeamName(key));
+  const allVisitsByTeams = await Promise.all(unresolvedPromises);
+  
+  if (allVisitsByTeams.length === 0) {
+    console.log('visits not found');
+    teamVisit = keys.reduce((acc, key) => {
+      acc.push({
+        teamName: key,
+        visitCount: 0,
+        currentLocation: 2
       });
-    });
-    bar.then(() => {
-     resolve1(visitObjects);
-    });
-  });
+      return acc;
+    }, []);
+  } else {
+    teamVisit = allVisitsByTeams.reduce((acc, visit) => {
+      const v = visit[0];
+      if (v) {
+        acc.push({
+          teamName: v.teamName,
+          visitCount: v.locations.length || 0,
+          currentLocation: v.locationId || 2
+        });
+      }
+      return acc;
+    }, []);
+  }
+  
+  return teamVisit;
 }
 })
 .catch(error => console.error(error))
