@@ -159,7 +159,7 @@ module.exports = async (io, socket, rooms) => {
     results.totalAmountSpentByTeam[teamName] = parseFloat(totalAmountByCurrentTeam).toFixed(1);
     const caculatedRevenueAfterRound = results.calculatedRoundRevenue[roundId] || {};
     if (Object.keys(caculatedRevenueAfterRound).length > 0) {
-      results.calculatedRoundRevenue[roundId][teamName] = parseFloat(caculatedRevenueAfterRound[teamName]) + parseFloat(calculatedRevenue);
+      results.calculatedRoundRevenue[roundId][teamName] = caculatedRevenueAfterRound[teamName] ? parseFloat(caculatedRevenueAfterRound[teamName]) + parseFloat(calculatedRevenue) : parseFloat(calculatedRevenue);
     } else {
       results.calculatedRoundRevenue = { [roundId]: { [teamName]: parseFloat(calculatedRevenue) } };
     }

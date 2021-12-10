@@ -371,7 +371,6 @@ function calculateSellingRevenue(data) {
     demandFunc = (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
   }
   const revenue = parseFloat(population) * demandFunc;
-  console.log('revenue', revenue);
   if (isInt(revenue)) {
     return revenue
   } else {
