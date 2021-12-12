@@ -183,9 +183,8 @@ mongoClient.then(db => {
     }
   }
 
-  const startSellingServerTimer = async (hostCode, deadline) => {
+  const startSellingServerTimer = async (serverRoom, deadline) => {
     let sellingPhaseTimerValue = getRemainingTime(deadline);
-    const serverRoom = rooms[hostCode];
     if (sellingPhaseTimerValue.total <= 0) {
       serverRoom.hasSellPaintingTimerEnded = true;
       serverRoom.sellPaintingTimerValue = {};
@@ -315,7 +314,7 @@ mongoClient.then(db => {
             const currentTime = Date.parse(new Date());
             const deadline = new Date(currentTime + 0.3 * 60 * 1000);
             const timerValue = getRemainingTime(deadline);
-            setInterval(() => startSellingServerTimer(req.query.roomId, deadline), 1000);
+            setInterval(() => startSellingServerTimer(room, deadline), 1000);
             selling_info.sellPaintingTimerValue = timerValue;
           }
 
