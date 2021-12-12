@@ -5,7 +5,6 @@ const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBu
 router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
-const { resolve } = require("q");
 const { nanoid } = require('nanoid');
 
 let db;
@@ -79,7 +78,6 @@ router.get('/getWinner/:hostCode', async (req, res) => {
   if (parsedRoom && parsedRoom.winner) return parsedRoom.winner;
   const winnerData = calculateBuyingPhaseWinner(parsedRoom);
   res.send(winnerData);
-  //io.to(player.hostCode).emit("displayGameWinner", { winner, leaderboard: parsedRoom.leaderBoard });
 });
 
 router.get('/getNextAuction/:hostCode/:prevAuctionId', async(req, res) => {
@@ -176,18 +174,12 @@ mongoClient.then(db => {
 
   const startLocationPhaseServerTimer = async (hostCode, deadline) => {
     let timerValue = getRemainingTime(deadline);
-    //const room = await collection_room.findOne({'hostCode': hostCode});
     const serverRoom = rooms[hostCode];
     if (timerValue.total <= 0) {
-      //room.hadLocationPageTimerEnded = true;
-      //room.locationPhaseTimerValue = {};
       serverRoom.hadLocationPageTimerEnded = true;
       serverRoom.locationPhaseTimerValue = {};
-      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue: {}, hadLocationPageTimerEnded: true}});
     } else if (timerValue.total > 0) {
-      //room.locationPhaseTimerValue = timerValue;
       serverRoom.locationPhaseTimerValue = timerValue;
-      //await collection_room.findOneAndUpdate({"hostCode":hostCode},{$set:{locationPhaseTimerValue:timerValue}});
     }
   }
 
@@ -255,11 +247,6 @@ mongoClient.then(db => {
       console.log('visitObjects', visitObjects);
       selling_result.visits = visitObjects;
       res.status(200).json(selling_result);
-      //   .then(visitObjects => {
-      //     console.log('visitObjects', visitObjects);
-      //     selling_result.visits = visitObjects;
-      //     res.status(200).json(selling_result);
-      // });
     }
   });
 
@@ -461,7 +448,6 @@ const getVisitData = async(keys,roomCode) => {
   const allVisitsByTeams = await Promise.all(unresolvedPromises);
   
   if (allVisitsByTeams.length === 0) {
-    console.log('visits not found');
     teamVisit = keys.reduce((acc, key) => {
       acc.push({
         teamName: key,
