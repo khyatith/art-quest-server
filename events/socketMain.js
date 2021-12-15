@@ -35,6 +35,7 @@ module.exports = async (io, socket, rooms) => {
         firstPricedSealedBids: {},
         secondPricedSealedBids: {},
         allPayAuctions: {},
+        version: 1,
         hasLandingPageTimerStarted: false,
         landingPageTimerDeadline: 0,
         landingPageTimerValue: {},
@@ -127,11 +128,13 @@ module.exports = async (io, socket, rooms) => {
     }, 1000);
   }
 
-  const setTotalNumberOfPlayers = async ({ roomCode, numberOfPlayers }) => {
+  const setTotalNumberOfPlayers = async ({ roomCode, numberOfPlayers, version }) => {
     const room = await collection.findOne({'hostCode': roomCode});
     const parsedRoom = room;
     parsedRoom.numberOfPlayers = parseInt(numberOfPlayers);
+    parsedRoom.version = parseInt(version);
     rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayers);
+    rooms[roomCode].version = parseInt(version);
     await collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
   }
 
