@@ -102,6 +102,14 @@ router.get('/getNextAuction/:hostCode/:prevAuctionId', async(req, res) => {
   res.send(returnObj.newAuction)
 });
 
+router.get('/getDutchAuctionData/:hostCode', async(req, res) => {
+  let db = await dbClient.createConnection();
+  const collection = db.collection('room');
+  const { hostCode } = req.params;
+  const room = await collection.findOne({'hostCode': hostCode});
+  res.send({ dutchAuctions: room.dutchAuctions });
+});
+
 router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
   const { params } = req;
   const hostCode = params.hostCode;
