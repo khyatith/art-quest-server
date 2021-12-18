@@ -30,6 +30,7 @@ module.exports = async (io, socket, rooms) => {
         auctions: cloneDeep(auctionsObj),
         sellingAuctions: cloneDeep(sellingAuctionObj),
         dutchAuctions: cloneDeep(dutchAuctionObj),
+        dutchAuctionsOrder: [],
         leaderBoard: {},
         numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
