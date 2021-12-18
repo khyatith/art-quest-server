@@ -109,6 +109,7 @@ router.get('/getDutchAuctionData/:hostCode', async (req, res) => {
   const room = await collection.findOne({ 'hostCode': hostCode });
   const order = [];
   if (room.dutchAuctionsOrder.length === 0) {
+    console.log(room.dutchAuctionsOrder);
     for (var i = 0; i < 5; ++i) {
       let array = [0, 1, 2, 3];
       let currentIndex = array.length, randomIndex;
@@ -121,10 +122,10 @@ router.get('/getDutchAuctionData/:hostCode', async (req, res) => {
     }
   }
   else {
-    order = room.dutchAuctionsOrder;
+    order.push.apply(order, room.dutchAuctionsOrder);
   }
-  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: { "dutchAuctiosOrder": order } });
-  res.send({ dutchAuctions: room.dutchAuctions, dutchAuctionsOrder: order });
+  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: { "dutchAuctionsOrder": order } });
+  res.send({ dutchAuctions: room.dutchAuctions, dutchAuctionsOrder: room.dutchAuctionsOrder });
 });
 
 router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
