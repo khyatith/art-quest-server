@@ -100,6 +100,11 @@ module.exports = async (io, socket, rooms) => {
     });
   }
 
+  const hasAuctionTimerEnded = async ({ player, auctionId }) => {
+    const hostCode = player.hostCode;
+    io.to(hostCode).emit("redirectToNextAuction", auctionId);
+  }
+
   const startLandingPageTimer = async ({ roomCode }) => {
     const room = await collection.findOne({'hostCode': roomCode});
     const parsedRoom = room;
@@ -179,6 +184,7 @@ module.exports = async (io, socket, rooms) => {
   socket.on("startLandingPageTimer", startLandingPageTimer);
   socket.on("startGame", startGame);
   socket.on("landingPageTimerEnded", landingPageTimerEnded);
+  socket.on("auctionTimerEnded", hasAuctionTimerEnded);
   socket.on("setTeams", setTotalNumberOfPlayers);
   socket.on("putCurrentLocation", putCurrentLocation);
   socket.on("calculateTeamRevenue", calculateRevenue);
