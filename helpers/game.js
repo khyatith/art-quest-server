@@ -13,6 +13,8 @@ function findSecondHighestBid(arr, arrSize) {
       // equal to largest element
       if (arr[i] != arr[arrSize - 1]) {
         return arr[i];
+      } else {
+        return arr[i];
       }
   }
 
@@ -109,7 +111,7 @@ function getLeaderboard(rooms, roomCode) {
       //Find the second highest bid amount
       const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
       const secondHighestBid = allBidsArr.length === 1 ? allBidsArr[0]: findSecondHighestBid(allBidsArr, allBidsArr.length);
-      let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) > parseInt(secondHighestBid));
+      let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) >= parseInt(secondHighestBid));
       if (SPSBwinner.length > 1) {
         SPSBwinner = SPSBwinner.reduce((acc, winner) => {
           return winner.bidAt < acc.bidAt ? winner : acc;
