@@ -38,17 +38,20 @@ router.get('/timer/:hostCode', function (req, res) {
 
 
 router.get('/getResults/:hostCode', async (req, res) => {
+  console.log('req.params', req.params);
   db = await dbClient.createConnection();
   const collection = db.collection('room');
   const { params } = req;
   const hostCode = params.hostCode;
+  console.log('hostCode', hostCode);
   const room = rooms[hostCode];
+  console.log('room', room);
   //leaderboard
-  const leaderboard = await getLeaderboard(rooms, hostCode);
+  const leaderboard = await getLeaderboard(room);
   room.leaderBoard = leaderboard;
 
   //total amt by teams
-  const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, hostCode, rooms);
+  const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, room);
   room.totalAmountSpentByTeam = totalAmountByTeam;
 
   const teamStats = await calculateTeamEfficiency(totalAmountByTeam, leaderboard);

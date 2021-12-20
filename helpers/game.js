@@ -49,9 +49,9 @@ function updateTotalAmountsForAllPayAuctions(allPayBids) {
   }
 }
 
-function getLeaderboard(rooms, roomCode) {
-  const leaderboard = rooms[roomCode].leaderBoard;
-	const currentRoom = rooms[roomCode];
+function getLeaderboard(room) {
+  const leaderboard = room.leaderBoard;
+	const currentRoom = room;
   const englishAuctionsObj = currentRoom.englishAuctionBids;
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
   const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
@@ -165,9 +165,9 @@ function getLeaderboard(rooms, roomCode) {
   return leaderboard;
 }
 
-function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
-  if (!leaderboard || !roomCode) return null;
-  const currentRoom = rooms[roomCode];
+function calculateTotalAmountSpent(leaderboard, room) {
+  if (!leaderboard) return null;
+  const currentRoom = room;
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
   let result;
   let totalAmt = Object.values(leaderboard).map(items => {
