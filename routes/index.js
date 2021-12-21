@@ -84,7 +84,6 @@ router.get('/getNextAuction/:hostCode/:prevAuctionId', async (req, res) => {
   const collection = db.collection('room');
   const { hostCode, prevAuctionId } = req.params;
   const room = await collection.findOne({ 'hostCode': hostCode });
-
   const parsedRoom = room;
   const globalRoom = rooms[hostCode];
   const returnObj = getNextObjectForLiveAuction(parsedRoom, prevAuctionId);
@@ -109,7 +108,6 @@ router.get('/getDutchAuctionData/:hostCode', async (req, res) => {
   const room = await collection.findOne({ 'hostCode': hostCode });
   const order = [];
   if (room.dutchAuctionsOrder.length === 0) {
-    console.log(room.dutchAuctionsOrder);
     for (var i = 0; i < 5; ++i) {
       let array = [0, 1, 2, 3];
       let currentIndex = array.length, randomIndex;
@@ -124,8 +122,26 @@ router.get('/getDutchAuctionData/:hostCode', async (req, res) => {
   else {
     order.push.apply(order, room.dutchAuctionsOrder);
   }
-  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: { "dutchAuctionsOrder": order } });
-  res.send({ dutchAuctions: room.dutchAuctions, dutchAuctionsOrder: room.dutchAuctionsOrder });
+  const updateRoom = rooms[hostCode];
+  updateRoom.dutchAuctionsOrder = order;
+  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: updateRoom });
+  let val = {};
+  if (updateRoom && updateRoom.hasDutchAuctionTimerEnded) {
+    val = {};
+    console.log('1');
+  }
+  else if (updateRoom && Object.keys(updateRoom.dutchAuctionTimerValue).length > 0) {
+    val = updateRoom.dutchAuctionTimerValue;
+    console.log('2');
+  } else {
+    const currentTime = Date.parse(new Date());
+    const deadline = new Date(currentTime + 1 * 60 * 1000);
+    const timerValue = getRemainingTime(deadline);
+    setInterval(() => startDutchAuctionTimer(updateRoom, deadline), 1000);
+    val = timerValue;
+    console.log('3');
+  }
+  res.send({ dutchAuctions: room.dutchAuctions, dutchAuctionsOrder: order, dutchAuctionTimerValue: val });
 });
 
 router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
@@ -157,6 +173,16 @@ const startAuctionServerTimer = (room, currentAuctionObj, deadline) => {
     currentAuctionObj.auctionTimerValue = {};
   } else if (room && timerValue.total > 0) {
     currentAuctionObj.auctionTimerValue = timerValue;
+  }
+}
+
+const startDutchAuctionTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasDutchAuctionTimerEnded = true;
+    room.dutchAuctionTimerValue = {};
+  } else if (room && timerValue.total > 0) {
+    room.dutchAuctionTimerValue = timerValue;
   }
 }
 
