@@ -335,8 +335,8 @@ function calculateBuyingPhaseWinner(room) {
     return b-a;
   })
   .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
-  //const topTwo = getTopTwoTeams(sortedObjByPaintingsWon);
-  const { winnerName, avgPaintingQualityByTeam } = getWinnerFromTopTwo(sortedObjByPaintingsWon, teamEfficiency, leaderBoard);
+  const topTwo = getTopTwoTeams(sortedObjByPaintingsWon);
+  const { winnerName, avgPaintingQualityByTeam } = getWinnerFromTopTwo(topTwo, teamEfficiency, leaderBoard);
   return { leaderBoard, winner: winnerName, sortedObjByPaintingsWon, teamEfficiency, totalAmountSpentByTeam, avgPaintingQualityByTeam };
 }
 
