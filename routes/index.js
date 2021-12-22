@@ -36,7 +36,6 @@ router.get('/timer/:hostCode', function (req, res) {
   }
 });
 
-
 router.get('/getResults/:hostCode', async (req, res) => {
   db = await dbClient.createConnection();
   const collection = db.collection('room');
@@ -56,7 +55,7 @@ router.get('/getResults/:hostCode', async (req, res) => {
 
   room.totalPaintingsWonByTeam = teamStats.totalPaintingsWonByTeams;
 
-  const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, totalAmountByTeam, teamStats.efficiencyByTeam);
+  const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, room.auctions.artifacts.length);
 
   const result = JSON.stringify({ leaderboard, totalAmountByTeam, teamEfficiency: teamStats.efficiencyByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks });
   await collection.findOneAndUpdate({"hostCode":hostCode},{$set:rooms[hostCode]});
