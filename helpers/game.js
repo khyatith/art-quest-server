@@ -322,23 +322,9 @@ function teamPaintingAverage(arr) {
 
 function calculateBuyingPhaseWinner(room) {
   const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam, auctions } = room;
-  const teamRanks = createTeamRankForBuyingPhase(totalPaintingsWonByTeam,teamEfficiency, 9);
-  const sortedObjByPaintingsWon = Object.entries(totalPaintingsWonByTeam)
-  .sort(([ka,a],[kb,b]) => {
-    if (b-a === 0) {
-      if (totalAmountSpentByTeam[ka] < totalAmountSpentByTeam[kb]) {
-        return -1;
-    } else {
-        return 1;
-      }
-    }
-    return b-a;
-  })
-  .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
-  // const topTwo = getTopTwoTeams(sortedObjByPaintingsWon);
-  // const { winnerName, avgPaintingQualityByTeam } = getWinnerFromTopTwo(topTwo, teamEfficiency, leaderBoard);
-  const winnerName = Object.keys(teamRanks);
-  return { leaderBoard, winner: winnerName[0], sortedObjByPaintingsWon, teamEfficiency, totalAmountSpentByTeam };
+  const teamRanks = createTeamRankForBuyingPhase(totalPaintingsWonByTeam,teamEfficiency, auctions.artifacts.length);
+  const winnerArr = Object.keys(teamRanks);
+  return { leaderBoard, winner: winnerArr[0], totalPaintingsWonByTeam: totalPaintingsWonByTeam, teamsByRank: winnerArr, teamEfficiency, totalAmountSpentByTeam };
 }
 
 function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
