@@ -26,6 +26,13 @@ router.get('/getUID', (req, res) => {
   res.send(nanoid(5));
 });
 
+router.get('/getVersionID/:hostCode', (req, res) => {
+  const { params } = req;
+  const hostCode = params.hostCode;
+  let room = rooms[hostCode];
+  res.send({ version: room.version });
+});
+
 router.get('/timer/:hostCode', function (req, res) {
   const { params } = req;
   const hostCode = params.hostCode;
