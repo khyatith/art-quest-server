@@ -128,18 +128,15 @@ router.get('/getDutchAuctionData/:hostCode', async (req, res) => {
   let val = {};
   if (updateRoom && updateRoom.hasDutchAuctionTimerEnded) {
     val = {};
-    console.log('1');
   }
   else if (updateRoom && Object.keys(updateRoom.dutchAuctionTimerValue).length > 0) {
     val = updateRoom.dutchAuctionTimerValue;
-    console.log('2');
   } else {
     const currentTime = Date.parse(new Date());
     const deadline = new Date(currentTime + 1 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startDutchAuctionTimer(updateRoom, deadline), 1000);
     val = timerValue;
-    console.log('3');
   }
   res.send({ dutchAuctions: room.dutchAuctions, dutchAuctionsOrder: order, dutchAuctionTimerValue: val });
 });
