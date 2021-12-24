@@ -227,15 +227,14 @@ function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
 
 function updateDutchAuctionLeaderboard(room) {
   const { leaderBoard, dutchAuctionBids } = room;
-  console.log('dutchAuctionBid', dutchAuctionBids);
-    //ducthAuctions
+  //ducthAuctions
 	if (Object.keys(dutchAuctionBids).length > 0) {
 		for (var dutchAuction in dutchAuctionBids) {
 			const leaderBoardKeys = Object.keys(leaderBoard);
       const auctionItem = dutchAuctionBids[dutchAuction];
       const DAwinningTeam = auctionItem.bidTeam;
 			if (leaderBoardKeys && leaderBoardKeys.includes(DAwinningTeam)) {
-        const isExistingDAAuction = leaderBoard[DAwinningTeam].filter(item => item.auctionObj.id === auctionItem.auctionId)[0];
+        const isExistingDAAuction = leaderBoard[DAwinningTeam].filter(item => item.auctionId === auctionItem.auctionId)[0];
         if (!isExistingDAAuction) {
           leaderBoard[`${DAwinningTeam}`].push(auctionItem);
         }
@@ -244,7 +243,6 @@ function updateDutchAuctionLeaderboard(room) {
       }
 		}
   }
-  console.log('leaderBoard', leaderBoard);
   return leaderBoard;
 }
 
