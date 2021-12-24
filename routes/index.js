@@ -45,7 +45,7 @@ router.get('/timer/:hostCode', function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 1 * 60 * 1000);
+    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
@@ -167,7 +167,7 @@ router.get('/getDutchAuctionData/:hostCode', async (req, res) => {
     val = updateRoom.dutchAuctionTimerValue;
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 1 * 60 * 1000);
+    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startDutchAuctionTimer(updateRoom, deadline), 1000);
     val = timerValue;
@@ -190,7 +190,7 @@ router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
     res.send({ currentAuctionObjTimer: currentAuctionObj.auctionTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 1.5 * 60 * 1000);
+    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startAuctionServerTimer(room, currentAuctionObj, deadline), 1000);
     res.send({ currentAuctionObjTimer: timerValue });
