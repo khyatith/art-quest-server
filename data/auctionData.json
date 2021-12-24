@@ -1,136 +1,202 @@
 {
-	"artifacts": [
-		{
-			"id": 1,
-			"name": "A view from the heights",
-			"region": "Europe",
-			"country": "Germany",
-			"artist": "Walter-Spies",
-			"dateCreated": "1934",
-			"imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2FBlick-Von-Der-hohe.jpeg?alt=media&token=5be3aa27-ec4b-480c-8001-43d35503f5d4",
-			"auctionType": "2",
-			"auctionDescription": "English Auction",
-			"originalValue": 10,
-			"auctionState": 0,
-			"paintingQuality": 3.5,
-			"hasAuctionTimerStarted": false,
-			"auctionTimerDeadline": 1,
-			"hasAuctionTimerEnded": false,
-			"auctionTimerValue": {},
-			"bid": {
-				"bidAmount": 0,
-				"bidTeam": ""
-			}
-		},
-		{
-			"id": 2,
-			"name": "A Thousand Li of Rivers and Mountains",
-			"region": "Asia",
-			"country": "China",
-			"dateCreated": "1113",
-			"artist": "Wang Ximeng",
-			"imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fa-thousand-lie.jpeg?alt=media&token=407dd25f-49cd-4304-980c-715c59bc85be",
-			"auctionType": "3",
-			"auctionDescription": "Second priced sealed bid",
-			"originalValue": 15,
-			"auctionState": 0,
-			"paintingQuality": 3.0,
-			"hasAuctionTimerStarted": false,
-			"auctionTimerDeadline": 1,
-			"hasAuctionTimerEnded": false,
-			"auctionTimerValue": {},
-			"bid": {
-				"bidAmount": 0,
-				"bidTeam": ""
-			}
-		},
-		{
-			"id": 3,
-			"name": "Guernica",
-			"region": "Europe",
-			"country": "Paris",
-			"dateCreated": "1937",
-			"artist": "Pablo Picasso",
-			"imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fguernica.png?alt=media&token=20c6e7a8-3403-491a-86ed-52b48ad59bcc",
-			"auctionType": "2",
-			"auctionDescription": "English Auction",
-			"originalValue": 25,
-			"auctionState": 0,
-			"paintingQuality": 3.8,
-			"hasAuctionTimerStarted": false,
-			"auctionTimerDeadline": 1,
-			"hasAuctionTimerEnded": false,
-			"auctionTimerValue": {},
-			"bid": {
-				"bidAmount": 0,
-				"bidTeam": ""
-			}
-		},
-		{
-			"id": 4,
-			"name": "Nefertiti",
-			"region": "Africa",
-			"country": "Egypt",
-			"dateCreated": "1350",
-			"artist": "Thutmose",
-			"imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fbust-of-nefertiti.png?alt=media&token=8668eed5-67dc-49f9-a877-54d9e8eb1cea",
-			"auctionType": "1",
-			"auctionDescription": "First priced sealed bid",
-			"originalValue": 35,
-			"auctionState": 0,
-			"paintingQuality": 4.5,
-			"hasAuctionTimerStarted": false,
-			"auctionTimerDeadline": 1,
-			"hasAuctionTimerEnded": false,
-			"auctionTimerValue": {},
-			"bid": {
-				"bidAmount": 0,
-				"bidTeam": ""
-			}
-		},
-		{
-			"id": 5,
-			"name": "I and the Village",
-			"region": "Europe",
-			"country": "Belarus",
-			"dateCreated": "1911",
-			"artist": "Marc Chagall",
-			"imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fi-and-the-village.png?alt=media&token=bdf31192-dabf-482c-8446-f3ba09be05a1",
-			"auctionType": "2",
-			"auctionDescription": "English Auction",
-			"originalValue": 28,
-			"paintingQuality": 4.8,
-			"hasAuctionTimerStarted": false,
-			"auctionTimerDeadline": 1,
-			"hasAuctionTimerEnded": false,
-			"auctionTimerValue": {},
-			"auctionState": 0,
-			"bid": {
-				"bidAmount": 0,
-				"bidTeam": ""
-			}
-		},
-		{
-			"id": 6,
-			"name": "San Giorgio Maggiore at Dusk",
-			"region": "Europe",
-			"country": "England",
-			"dateCreated": "1908",
-			"artist": "Claude Monet",
-			"imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fsan-giorgio-maggiore-at-dusk.jpeg?alt=media&token=d065f268-b534-40ab-b862-b1a9a262b035",
-			"auctionType": "3",
-			"auctionDescription": "second priced sealed bid",
-			"originalValue": 32,
-			"paintingQuality": 3.2,
-			"hasAuctionTimerStarted": false,
-			"auctionTimerDeadline": 1,
-			"hasAuctionTimerEnded": false,
-			"auctionTimerValue": {},
-			"auctionState": 0,
-			"bid": {
-				"bidAmount": 0,
-				"bidTeam": ""
-			}
-		}
-	]
+    "artifacts": [
+    {
+      "id": 1,
+      "name": "A view from the heights",
+      "region": "Europe",
+      "country": "Germany",
+      "artist": "Walter-Spies",
+      "dateCreated": "1934",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2FBlick-Von-Der-hohe.jpeg?alt=media&token=5be3aa27-ec4b-480c-8001-43d35503f5d4",
+      "auctionType": "2",
+      "auctionDescription": "English Auction",
+      "originalValue": 10,
+      "auctionState": 0,
+      "paintingQuality": 3.5,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 2,
+      "name": "A Thousand Li of Rivers and Mountains",
+      "region": "Asia",
+      "country": "China",
+      "dateCreated": "1113",
+      "artist": "Wang Ximeng",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fa-thousand-lie.jpeg?alt=media&token=407dd25f-49cd-4304-980c-715c59bc85be",
+      "auctionType": "3",
+      "auctionDescription": "Second priced sealed bid",
+      "originalValue": 15,
+      "auctionState": 0,
+      "paintingQuality": 3.0,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 3,
+      "name": "The Lady with a Fan",
+      "region": "Asia",
+      "country": "Japan",
+      "dateCreated": "1917",
+      "artist": "Gustav Klimt",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/Art%2Flady-with-a-fan.jpg?alt=media&token=040c2b89-227c-479f-9bd2-5d849f2d019c",
+      "auctionType": "2",
+      "auctionDescription": "English Auction",
+      "originalValue": 25,
+      "auctionState": 0,
+      "paintingQuality": 3.8,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 4,
+      "name": "Nefertiti",
+      "region": "Africa",
+      "country": "Egypt",
+      "dateCreated": "1350",
+      "artist": "Thutmose",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fbust-of-nefertiti.png?alt=media&token=8668eed5-67dc-49f9-a877-54d9e8eb1cea",
+      "auctionType": "1",
+      "auctionDescription": "First priced sealed bid",
+      "originalValue": 35,
+      "auctionState": 0,
+      "paintingQuality": 4.5,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 5,
+      "name": "I and the Village",
+      "region": "Europe",
+      "country": "Belarus",
+      "dateCreated": "1911",
+      "artist": "Marc Chagall",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fi-and-the-village.png?alt=media&token=bdf31192-dabf-482c-8446-f3ba09be05a1",
+      "auctionType": "2",
+      "auctionDescription": "English Auction",
+      "originalValue": 28,
+      "paintingQuality": 4.8,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "auctionState": 0,
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+    "id": 6,
+    "name": "Sierra Falls",
+    "region": "Americas",
+    "country": "USA",
+    "dateCreated": "2016",
+    "artist": "Jon Rattenbury",
+    "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/Art%2Fseirra-falls.jpeg?alt=media&token=a7502746-9de2-44fe-8d05-9afe39a7e785",
+    "auctionType": "3",
+    "auctionDescription": "second priced sealed bid",
+    "originalValue": 32,
+    "paintingQuality": 3.2,
+    "hasAuctionTimerStarted": false,
+    "auctionTimerDeadline": 1,
+    "hasAuctionTimerEnded": false,
+    "auctionTimerValue": {},
+    "auctionState": 0,
+    "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 7,
+      "name": "La Scapigliata",
+      "region": "Europe",
+      "country": "Italy",
+      "dateCreated": "1506",
+      "artist": "Leonardo da Vinci",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/Art%2FHead-Woman-oil.jpeg?alt=media&token=64e530f7-8463-46f4-8cb6-c923a8e54332",
+      "auctionType": "2",
+      "auctionDescription": "English Auction",
+      "originalValue": 17,
+      "paintingQuality": 4.6,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "auctionState": 0,
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    }, 
+    {
+      "id": 8,
+      "name": "Beeple",
+      "region": "Americas",
+      "country": "USA",
+      "dateCreated": "2020",
+      "artist": "Mike Winkelmann",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/Art%2Fbeeple.jpeg?alt=media&token=64b8d763-e683-45d8-8a60-e2bff6553dfa",
+      "auctionType": "1",
+      "auctionDescription": "First Priced Sealed Bid",
+      "originalValue": 9,
+      "paintingQuality": 3.9,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "auctionState": 0,
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 9,
+      "name": "Pieces of a Dream",
+      "region": "Americas",
+      "country": "USA",
+      "dateCreated": "2021",
+      "artist": "Black Sneakers",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/Art%2Fblacksneakers.jpeg?alt=media&token=96be92c7-acdc-4ad6-b083-de3bf3998601",
+      "auctionType": "2",
+      "auctionDescription": "English Auction",
+      "originalValue": 9,
+      "paintingQuality": 3.9,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "auctionState": 0,
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    }
+  ]
 }
