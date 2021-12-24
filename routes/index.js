@@ -1,7 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const dbClient = require('../mongoClient');
-const { getRemainingTime, getLeaderboard, calculateTotalAmountSpent, calculateBuyingPhaseWinner, getNextObjectForLiveAuction, calculateTeamEfficiency, createTeamRankForBuyingPhase } = require("../helpers/game");
+const {
+  getRemainingTime,
+  getLeaderboard,
+  calculateTotalAmountSpent,
+  calculateBuyingPhaseWinner,
+  getNextObjectForLiveAuction,
+  calculateTeamEfficiency,
+  createTeamRankForBuyingPhase,
+  updateDutchAuctionLeaderboard,
+} = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
 let rooms = mod.rooms;
@@ -60,6 +69,24 @@ router.get('/getResults/:hostCode', async (req, res) => {
   const result = JSON.stringify({ leaderboard, totalAmountByTeam, teamEfficiency: teamStats.efficiencyByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks });
   await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: rooms[hostCode] });
   res.send(result);
+});
+
+router.put('/updateDutchAuctionResults/:hostCode', async(req, res) => {
+  db = await dbClient.createConnection();
+  const collection = db.collection('room');
+  const { params } = req;
+  const hostCode = params.hostCode;
+  const room = rooms[hostCode];
+
+  //update leaderboard with dutch auctions
+  const dutchAuctionLeaderboard = await updateDutchAuctionLeaderboard(room);
+  room.leaderBoard = dutchAuctionLeaderboard;
+
+  //update total amount by team with dutch auctions
+  const totalAmountByTeam = await calculateTotalAmountSpent(dutchAuctionLeaderboard, hostCode, rooms);
+  room.totalAmountSpentByTeam = totalAmountByTeam;
+  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: { "leaderBoard": room.leaderBoard, "totalAmountSpentByTeam": room.totalAmountSpentByTeam } });
+  res.send({ message: "updated" });
 });
 
 router.get('/getWinner/:hostCode', async (req, res) => {

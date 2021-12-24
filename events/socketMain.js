@@ -37,6 +37,7 @@ module.exports = async (io, socket, rooms) => {
         englishAuctionBids: {},
         firstPricedSealedBids: {},
         secondPricedSealedBids: {},
+        dutchAuctionBids: {},
         allPayAuctions: {},
         version: 1,
         hasLandingPageTimerStarted: false,
@@ -187,12 +188,6 @@ module.exports = async (io, socket, rooms) => {
     calculateRevenue(data);
   }
 
-  const emitBidPainting = (data) => {
-    const { paintingId, roomCode, teamName } = data;
-    console.log(teamName);
-    io.sockets.in(roomCode).emit("emitBidForPainting", { paintingId, teamName });
-  }
-
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
@@ -204,5 +199,4 @@ module.exports = async (io, socket, rooms) => {
   socket.on("putCurrentLocation", putCurrentLocation);
   socket.on("calculateTeamRevenue", calculateRevenue);
   socket.on("paintingNominated", emitNominatedPaintingId);
-  socket.on("bidDutchAuction", emitBidPainting);
 }

@@ -120,8 +120,8 @@ io.on("connection", socket => {
 
     socket.on("addNewBid", (bidInfo) => {
     const { auctionType, player, auctionId } = bidInfo;
-        switch (auctionType) {
-            case "1":
+    switch (auctionType) {
+      case "1":
         const allFirstPricedSealedBids = rooms[player.hostCode].firstPricedSealedBids;
         const fpsbObj = Object.keys(allFirstPricedSealedBids);
         if (fpsbObj.includes(`${auctionId}`)) {
@@ -129,12 +129,12 @@ io.on("connection", socket => {
         } else {
           rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`] = [bidInfo];
         }
-                socket.emit("setLiveStyles", player.teamName);
-                break;
-            case "2":
+        socket.emit("setLiveStyles", player.teamName);
+      break;
+      case "2":
         rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = bidInfo;
-                io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
-        break;
+        io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
+      break;
       case "3":
         const allSecondPricedSealedBids = rooms[player.hostCode].secondPricedSealedBids;
         const spsbObj = Object.keys(allSecondPricedSealedBids);
@@ -143,8 +143,8 @@ io.on("connection", socket => {
         } else {
           rooms[player.hostCode].secondPricedSealedBids[`${auctionId}`] = [bidInfo];
         }
-                socket.emit("setLiveStyles", player.teamName);
-        break;
+        socket.emit("setLiveStyles", player.teamName);
+      break;
       case "4":
         const allPayAuctionBids = rooms[player.hostCode].allPayAuctions;
         const allPayObj = Object.keys(allPayAuctionBids);
@@ -155,9 +155,9 @@ io.on("connection", socket => {
         }
         socket.emit("setLiveStyles", player.teamName);
       break;
-            default:
-                return;
-        }
+      default:
+        return;
+    }
   });
 });
 
