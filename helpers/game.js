@@ -225,19 +225,40 @@ function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
   return currentRoom.totalAmountSpentByTeam;
 }
 
-// const calculatePaintingQuality = (leaderBoard) => {
-//   if (!leaderBoard) return null;
-//   let paintingQualityResult = {};
-//   for(team in leaderBoard) {
-//     const currentTeamData = leaderBoard[team];
-//     const currentTeamAvg = teamPaintingAverage(currentTeamData);
-//     paintingQualityResult = {
-//       ...paintingQualityResult,
-//       [team]: currentTeamAvg,
-//     }
-//   }
-//   return paintingQualityResult
-// }
+function updateDutchAuctionLeaderboard(room) {
+  const { leaderBoard, dutchAuctionBids } = room;
+  //ducthAuctions
+	if (Object.keys(dutchAuctionBids).length > 0) {
+		for (var dutchAuction in dutchAuctionBids) {
+			const leaderBoardKeys = Object.keys(leaderBoard);
+      const auctionItem = dutchAuctionBids[dutchAuction];
+      const DAwinningTeam = auctionItem.bidTeam;
+			if (leaderBoardKeys && leaderBoardKeys.includes(DAwinningTeam)) {
+        const isExistingDAAuction = leaderBoard[DAwinningTeam].filter(item => item.auctionId === auctionItem.auctionId)[0];
+        if (!isExistingDAAuction) {
+          leaderBoard[`${DAwinningTeam}`].push(auctionItem);
+        }
+      } else {
+        leaderBoard[`${DAwinningTeam}`] = [auctionItem];
+      }
+		}
+  }
+  return leaderBoard;
+}
+
+const calculatePaintingQuality = (leaderBoard) => {
+  if (!leaderBoard) return null;
+  let paintingQualityResult = {};
+  for(team in leaderBoard) {
+    const currentTeamData = leaderBoard[team];
+    const currentTeamAvg = teamPaintingAverage(currentTeamData);
+    paintingQualityResult = {
+      ...paintingQualityResult,
+      [team]: currentTeamAvg,
+    }
+  }
+  return paintingQualityResult
+}
 
 function gameLoop(state) {
 	if (!state) {
@@ -438,4 +459,5 @@ module.exports = {
   calculateTeamEfficiency,
   calculateSellingRevenue,
   createTeamRankForBuyingPhase,
+  updateDutchAuctionLeaderboard,
 };

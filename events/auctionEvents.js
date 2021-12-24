@@ -91,6 +91,10 @@ module.exports = async (io, socket, rooms) => {
         }
         io.sockets.in(player.hostCode).emit("setLiveStyles", player.teamName);
       break;
+      case "5":
+        rooms[player.hostCode].dutchAuctionBids[`${auctionId}`] = bidInfo;
+        io.sockets.in(player.hostCode).emit("emitBidForPainting", { paintingId: auctionId, teamName: player.teamName });
+      break;
 			default:
         return;
     }

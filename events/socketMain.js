@@ -1,6 +1,7 @@
 const { getRemainingTime, calculateSellingRevenue } = require("../helpers/game");
-var auctionsObj = require("../auctionData.json");
-var sellingAuctionObj = require("../sellingAuctionData.json");
+var auctionsObj = require("../data/auctionData.json");
+var sellingAuctionObj = require("../data/sellingAuctionData.json");
+var dutchAuctionObj = require("../data/dutchAuctionData.json");
 const dbClient = require('../mongoClient');
 var cloneDeep = require('lodash.clonedeep');
 
@@ -28,17 +29,24 @@ module.exports = async (io, socket, rooms) => {
         players: [playerObj],
         auctions: cloneDeep(auctionsObj),
         sellingAuctions: cloneDeep(sellingAuctionObj),
+        dutchAuctions: cloneDeep(dutchAuctionObj),
+        dutchAuctionsOrder: [],
         leaderBoard: {},
         numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
         englishAuctionBids: {},
         firstPricedSealedBids: {},
         secondPricedSealedBids: {},
+        dutchAuctionBids: {},
         allPayAuctions: {},
+        version: 1,
         hasLandingPageTimerStarted: false,
+        hasDutchAuctionTimerStarted: false,
         landingPageTimerDeadline: 0,
         landingPageTimerValue: {},
+        dutchAuctionTimerValue: {},
         hasLandingPageTimerEnded: false,
+        hasDutchAuctionTimerEnded: false,
         winner: null,
         sellingRoundNumber: 1,
         hadLocationPageTimerEnded: false,
@@ -127,11 +135,13 @@ module.exports = async (io, socket, rooms) => {
     }, 1000);
   }
 
-  const setTotalNumberOfPlayers = async ({ roomCode, numberOfPlayers }) => {
+  const setTotalNumberOfPlayers = async ({ roomCode, numberOfPlayers, version }) => {
     const room = await collection.findOne({'hostCode': roomCode});
     const parsedRoom = room;
     parsedRoom.numberOfPlayers = parseInt(numberOfPlayers);
+    parsedRoom.version = parseInt(version);
     rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayers);
+    rooms[roomCode].version = parseInt(version);
     await collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
   }
 
