@@ -113,6 +113,11 @@ module.exports = async (io, socket, rooms) => {
     io.to(hostCode).emit("redirectToNextAuction", auctionId);
   }
 
+  const hasLocationPhaseTimerEnded = ({ player }) => {
+    const hostCode = player.hostCode;
+    io.to(hostCode).emit("goToExpo");
+  }
+
   const startLandingPageTimer = async ({ roomCode }) => {
     const room = await collection.findOne({'hostCode': roomCode});
     const parsedRoom = room;
@@ -199,4 +204,5 @@ module.exports = async (io, socket, rooms) => {
   socket.on("putCurrentLocation", putCurrentLocation);
   socket.on("calculateTeamRevenue", calculateRevenue);
   socket.on("paintingNominated", emitNominatedPaintingId);
+  socket.on("locationPhaseTimerEnded", hasLocationPhaseTimerEnded);
 }
