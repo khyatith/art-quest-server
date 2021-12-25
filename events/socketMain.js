@@ -118,6 +118,10 @@ module.exports = async (io, socket, rooms) => {
     io.to(hostCode).emit("goToExpo");
   }
 
+  const hasExpoBeginningTimerEnded = ({ hostCode }) => {
+    io.to(hostCode).emit('goToSellingResults');
+  }
+
   const startLandingPageTimer = async ({ roomCode }) => {
     const room = await collection.findOne({'hostCode': roomCode});
     const parsedRoom = room;
@@ -205,4 +209,5 @@ module.exports = async (io, socket, rooms) => {
   socket.on("calculateTeamRevenue", calculateRevenue);
   socket.on("paintingNominated", emitNominatedPaintingId);
   socket.on("locationPhaseTimerEnded", hasLocationPhaseTimerEnded);
+  socket.on("expoBeginningTimerEnded", hasExpoBeginningTimerEnded);
 }

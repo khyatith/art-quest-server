@@ -427,6 +427,8 @@ mongoClient.then(db => {
         const currentAuction = sellingArtifacts.filter((obj) => obj.auctionState === 1);
         if (currentAuction.length > 0) {
           sellingAuctionObj = currentAuction[0];
+          res.status(200).json({ auctionObj: sellingAuctionObj });
+          return;
         } else {
           const sellingAuctionObj = sellingArtifacts.find((obj) => obj.auctionState === 0);
           if (sellingAuctionObj) {
@@ -436,14 +438,15 @@ mongoClient.then(db => {
                 obj.auctionState = 1;
               }
             });
+            res.status(200).json({ auctionObj: sellingAuctionObj });
             await collection_room.findOneAndUpdate({ "hostCode": roomCode }, {
               $set: {
                 "sellingAuctions": { "sellingArtifacts": sellingArtifacts }
               }
             });
           }
+          return;
         }
-        res.status(200).json({ auctionObj: sellingAuctionObj });
       })
   })
 
