@@ -192,8 +192,8 @@ module.exports = async (io, socket, rooms) => {
   }
 
   const emitNominatedPaintingId = (data) => {
-    const { paintingId, roomCode } = data;
-    io.sockets.in(roomCode).emit("emitNominatedPainting", paintingId);
+    const { paintingId, roomCode, teamName } = data;
+    io.sockets.in(roomCode).emit("emitNominatedPainting", {paintingId, teamName});
     calculateRevenue(data);
   }
 
