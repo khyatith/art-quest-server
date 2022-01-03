@@ -308,6 +308,7 @@ mongoClient.then(db => {
     } else {
       selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
       selling_result.roundNumber = results.sellingRoundNumber;
+      selling_result.players = results.players;
       var keys = Object.keys(selling_result.amountSpentByTeam);
 
       //location phase timer value
