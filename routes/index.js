@@ -326,7 +326,6 @@ mongoClient.then(db => {
       }
 
       const visitObjects = await getVisitData(keys, roomId);
-      console.log('visitObjects', visitObjects);
       selling_result.visits = visitObjects;
       res.status(200).json(selling_result);
     }
@@ -403,13 +402,12 @@ mongoClient.then(db => {
                 selling_info.sellPaintingTimerValue = timerValue;
               }
 
-              collection_visits.find({ "roomId": req.query.roomId, locations: { $in: [parseInt(req.query.locationId, 10)] } }).toArray()
+              collection_visits.find({ "roomId": req.query.roomId, locationId: parseInt(req.query.locationId, 10) }).toArray()
                 .then(results_visits => {
                   var otherTeams = [];
                   results_visits.forEach(function (visit, index) {
                     if (otherTeams.includes(visit.teamName) === false) otherTeams.push(visit.teamName);
                   });
-
                   selling_info.otherteams = otherTeams;
                   res.status(200).json(selling_info);
                 });
