@@ -371,7 +371,7 @@ function isInt(n) {
 }
 
 function calculateSellingRevenue(data) {
-  const { interestInArt, population, paintingQuality, ticketPrice } = data;
+  const { interestInArt, population, paintingQuality, ticketPrice, allTeamsInCity } = data;
   let demandFunc;
   if (ticketPrice > 50) {
     const utilityFunc =  parseFloat(ticketPrice) + parseFloat(interestInArt) + parseFloat(paintingQuality);
@@ -380,7 +380,7 @@ function calculateSellingRevenue(data) {
     const utilityFunc =  parseFloat(ticketPrice) * (parseFloat(interestInArt) + parseFloat(paintingQuality));
     demandFunc = (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
   }
-  const revenue = parseFloat(population) * demandFunc;
+  const revenue = parseFloat(population/allTeamsInCity) * demandFunc;
   if (isInt(revenue)) {
     return revenue
   } else {
