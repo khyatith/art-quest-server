@@ -118,6 +118,11 @@ module.exports = async (io, socket, rooms) => {
     io.to(hostCode).emit("goToExpo");
   }
 
+  const hasSellingResultsTimerEnded = ({ player }) => {
+    const hostCode = player.hostCode;
+    io.to(hostCode).emit("startNextRound");
+  }
+
   const hasExpoBeginningTimerEnded = ({ hostCode }) => {
     io.to(hostCode).emit('goToSellingResults');
   }
@@ -210,4 +215,5 @@ module.exports = async (io, socket, rooms) => {
   socket.on("paintingNominated", emitNominatedPaintingId);
   socket.on("locationPhaseTimerEnded", hasLocationPhaseTimerEnded);
   socket.on("expoBeginningTimerEnded", hasExpoBeginningTimerEnded);
+  socket.on("sellingResultsTimerEnded", hasSellingResultsTimerEnded);
 }
