@@ -47,6 +47,10 @@ module.exports = async (io, socket, rooms) => {
         dutchAuctionTimerValue: {},
         hasLandingPageTimerEnded: false,
         hasDutchAuctionTimerEnded: false,
+        hasAuctionResultStarted: false,
+        auctionResultTimerDeadline: 0,
+        auctionResultTimerValue: {},
+        hasAuctionResultTimerEnded: false,
         winner: null,
         sellingRoundNumber: 1,
         hadLocationPageTimerEnded: false,
@@ -110,7 +114,12 @@ module.exports = async (io, socket, rooms) => {
 
   const hasAuctionTimerEnded = async ({ player, auctionId }) => {
     const hostCode = player.hostCode;
-    io.to(hostCode).emit("redirectToNextAuction", auctionId);
+    io.to(hostCode).emit("redirectToResults", auctionId);
+  }
+
+  const hasAuctionResultTimerEnded = async ({ player, auctionId }) => {
+    const hostCode = player.hostCode;
+    io.to(hostCode).emit("goToNextAuction", auctionId);
   }
 
   const hasLocationPhaseTimerEnded = ({ player }) => {
@@ -209,6 +218,7 @@ module.exports = async (io, socket, rooms) => {
   socket.on("startGame", startGame);
   socket.on("landingPageTimerEnded", landingPageTimerEnded);
   socket.on("auctionTimerEnded", hasAuctionTimerEnded);
+  socket.on("auctionResultTimerEnded", hasAuctionResultTimerEnded);
   socket.on("setTeams", setTotalNumberOfPlayers);
   socket.on("putCurrentLocation", putCurrentLocation);
   socket.on("calculateTeamRevenue", calculateRevenue);

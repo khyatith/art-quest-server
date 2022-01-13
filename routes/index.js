@@ -10,6 +10,7 @@ const {
   calculateTeamEfficiency,
   createTeamRankForBuyingPhase,
   updateDutchAuctionLeaderboard,
+  getSecondPricedSealedBidWinner,
 } = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
@@ -17,6 +18,79 @@ let rooms = mod.rooms;
 const { nanoid } = require('nanoid');
 
 let db;
+
+const startAuctionServerTimer = (room, currentAuctionObj, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    currentAuctionObj.hasAuctionTimerEnded = true;
+    currentAuctionObj.auctionTimerValue = {};
+  } else if (room && timerValue.total > 0) {
+    currentAuctionObj.auctionTimerValue = timerValue;
+  }
+}
+
+const startDutchAuctionTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasDutchAuctionTimerEnded = true;
+    room.dutchAuctionTimerValue = {};
+  } else if (room && timerValue.total > 0) {
+    room.dutchAuctionTimerValue = timerValue;
+  }
+}
+
+const startServerTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasLandingPageTimerEnded = true;
+    room.landingPageTimerValue = {};
+  } else if (room && timerValue.total > 0) {
+    room.landingPageTimerValue = timerValue;
+  }
+}
+
+
+const startLocationPhaseServerTimer = async (hostCode, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  const serverRoom = rooms[hostCode];
+  if (timerValue.total <= 0) {
+    serverRoom.hadLocationPageTimerEnded = true;
+    serverRoom.locationPhaseTimerValue = {};
+  } else if (timerValue.total > 0) {
+    serverRoom.locationPhaseTimerValue = timerValue;
+  }
+}
+
+const startSellingServerTimer = async (serverRoom, deadline) => {
+  let sellingPhaseTimerValue = getRemainingTime(deadline);
+  if (sellingPhaseTimerValue.total <= 0) {
+    serverRoom.hasSellPaintingTimerEnded = true;
+    serverRoom.sellPaintingTimerValue = {};
+  } else if (sellingPhaseTimerValue.total > 0) {
+    serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
+  }
+}
+
+const startSellingResultsServerTimer = async (hostCode, deadline) => {
+  let sellingPhaseTimerValue = getRemainingTime(deadline);
+  const serverRoom = rooms[hostCode];
+  if (sellingPhaseTimerValue.total <= 0) {
+    serverRoom.hasSellingResultsTimerEnded = true;
+    serverRoom.sellingResultsTimerValue = {};
+  } else if (sellingPhaseTimerValue.total > 0) {
+    serverRoom.sellingResultsTimerValue = sellingPhaseTimerValue;
+  }
+}
+
+const startAuctionResultTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasAuctionResultTimerEnded = true;
+    room.auctionResultTimerValue = {};
+  } else if (room && timerValue.total > 0) {
+    room.auctionResultTimerValue = timerValue;
+  }
+}
 
 router.get("/", (req, res) => {
   res.send({ response: "I am alive" }).status(200);
@@ -135,6 +209,81 @@ router.get('/getNextAuction/:hostCode/:prevAuctionId', async (req, res) => {
   res.send(returnObj.newAuction)
 });
 
+router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, res) => {
+  let db = await dbClient.createConnection();
+  const collection = db.collection('room');
+  console.log('req.params', req.params);
+  const { hostCode, auctionId, auctionType } = req.params;
+  const room = await collection.findOne({ 'hostCode': hostCode });
+  let auction_result = {};
+  let data = [];
+  let auctionWinner = {};
+  if (room) {
+    switch (auctionType) {
+      case '1':
+        data = room.firstPricedSealedBids[`${auctionId}`];
+        if (data) {
+          const fpsbWinner = data.reduce((acc, obj) => {
+            const accBid = parseInt(acc.bidAmount);
+            const objBid = parseInt(obj.bidAmount);
+            if (accBid === objBid) {
+              if (acc.bidAt < obj.bidAt) {
+                return acc;
+              } else {
+                return obj;
+              }
+            }
+            return (accBid > objBid) ? acc : obj;
+          }, {});
+          auctionWinner = {
+            team: fpsbWinner?.bidTeam,
+            bid: fpsbWinner?.bidAmount,
+            paintingName: data[0]?.auctionObj?.name,
+          };
+        } else {
+          data = [];
+        }
+        break;
+      case '2':
+        data = room.englishAuctionBids[`${auctionId}`];
+        auctionWinner = { team: data?.bidTeam, bid: data?.bidAmount, paintingName: data?.auctionObj?.name, };
+        data = !data ? [] : [data];
+        break;
+      case '3':
+        data = room.secondPricedSealedBids[`${auctionId}`];
+        if (!data) {
+          auctionWinner = {};
+          data = [];
+        } else {
+          auctionWinner = {
+            ...getSecondPricedSealedBidWinner(data),
+            paintingName: data[0]?.auctionObj?.name,
+          }
+        }
+        break;
+      default:
+        data = [];
+        break;
+    }
+    // auction result timer
+    if (room && room.hasAuctionResultTimerEnded) {
+      auction_result.auctionResultTimerValue = {};
+    }
+    if (room && Object.keys(room.auctionResultTimerValue).length > 0) {
+      auction_result.auctionResultTimerValue = room.auctionResultTimerValue;
+    } else {
+      const currentTime = Date.parse(new Date());
+      const deadline = new Date(currentTime + 0.2 * 60 * 1000);
+      const timerValue = getRemainingTime(deadline);
+      setInterval(() => startAuctionResultTimer(room, deadline), 1000);
+      auction_result.auctionResultTimerValue = timerValue;
+    }
+    auction_result.result = data;
+    auction_result.winner = auctionWinner;
+    res.status(200).json(auction_result);
+  }
+});
+
 router.get('/getDutchAuctionData/:hostCode', async (req, res) => {
   let db = await dbClient.createConnection();
   const collection = db.collection('room');
@@ -197,36 +346,6 @@ router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
   }
 });
 
-const startAuctionServerTimer = (room, currentAuctionObj, deadline) => {
-  let timerValue = getRemainingTime(deadline);
-  if (room && timerValue.total <= 0) {
-    currentAuctionObj.hasAuctionTimerEnded = true;
-    currentAuctionObj.auctionTimerValue = {};
-  } else if (room && timerValue.total > 0) {
-    currentAuctionObj.auctionTimerValue = timerValue;
-  }
-}
-
-const startDutchAuctionTimer = (room, deadline) => {
-  let timerValue = getRemainingTime(deadline);
-  if (room && timerValue.total <= 0) {
-    room.hasDutchAuctionTimerEnded = true;
-    room.dutchAuctionTimerValue = {};
-  } else if (room && timerValue.total > 0) {
-    room.dutchAuctionTimerValue = timerValue;
-  }
-}
-
-const startServerTimer = (room, deadline) => {
-  let timerValue = getRemainingTime(deadline);
-  if (room && timerValue.total <= 0) {
-    room.hasLandingPageTimerEnded = true;
-    room.landingPageTimerValue = {};
-  } else if (room && timerValue.total > 0) {
-    room.landingPageTimerValue = timerValue;
-  }
-}
-
 var mongoClient = dbClient.createConnection();
 
 mongoClient.then(db => {
@@ -253,39 +372,6 @@ mongoClient.then(db => {
       res.send({ type: "error", message: "Invalid code. Enter the code again!" })
     }
   });
-
-  const startLocationPhaseServerTimer = async (hostCode, deadline) => {
-    let timerValue = getRemainingTime(deadline);
-    const serverRoom = rooms[hostCode];
-    if (timerValue.total <= 0) {
-      serverRoom.hadLocationPageTimerEnded = true;
-      serverRoom.locationPhaseTimerValue = {};
-    } else if (timerValue.total > 0) {
-      serverRoom.locationPhaseTimerValue = timerValue;
-    }
-  }
-
-  const startSellingServerTimer = async (serverRoom, deadline) => {
-    let sellingPhaseTimerValue = getRemainingTime(deadline);
-    if (sellingPhaseTimerValue.total <= 0) {
-      serverRoom.hasSellPaintingTimerEnded = true;
-      serverRoom.sellPaintingTimerValue = {};
-    } else if (sellingPhaseTimerValue.total > 0) {
-      serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
-    }
-  }
-
-  const startSellingResultsServerTimer = async (hostCode, deadline) => {
-    let sellingPhaseTimerValue = getRemainingTime(deadline);
-    const serverRoom = rooms[hostCode];
-    if (sellingPhaseTimerValue.total <= 0) {
-      serverRoom.hasSellingResultsTimerEnded = true;
-      serverRoom.sellingResultsTimerValue = {};
-    } else if (sellingPhaseTimerValue.total > 0) {
-      serverRoom.sellingResultsTimerValue = sellingPhaseTimerValue;
-    }
-  }
-
 
   router.get('/getMap', (req, res) => {
     collection.find({}).toArray()
