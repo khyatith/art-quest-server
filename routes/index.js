@@ -273,7 +273,7 @@ router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, r
       auction_result.auctionResultTimerValue = room.auctionResultTimerValue;
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.3 * 60 * 1000);
+      const deadline = new Date(currentTime + 0.2 * 60 * 1000);
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startAuctionResultTimer(room, deadline), 1000);
       auction_result.auctionResultTimerValue = timerValue;
