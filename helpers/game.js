@@ -311,36 +311,6 @@ function teamPaintingAverage(arr) {
   }, {});
 };
 
-// function getTopTwoTeams(sortedObj) {
-//   let index = 0;
-//   let result = {};
-//   const topTwo = Object.entries(sortedObj).map(([key, value]) => {         
-//       if (index <= 1) {
-//         result[key] = value;
-//         index++;
-//       }
-//       return result;
-//     });
-//   return topTwo[0];
-// }
-
-// function getWinnerFromTopTwo(sortedByPaintingsWon, teamEfficiency, leaderBoard) {
-//   let avgPaintingQualityByTeam = {};
-//   const result = Object.entries(sortedByPaintingsWon).sort(([ka,a],[kb,b]) => {
-//     if (parseFloat(teamEfficiency[ka]) === parseFloat(teamEfficiency[kb])) {
-//       avgPaintingQualityByTeam = calculatePaintingQuality(leaderBoard);
-//       const kaTeamData = leaderBoard[ka];
-//       const kaTeamPaintingAvg = teamPaintingAverage(kaTeamData);
-//       const kbTeamData = leaderBoard[kb];
-//       const kbTeamPaintingAvg = teamPaintingAverage(kbTeamData);
-//       return kaTeamPaintingAvg > kbTeamPaintingAvg ? -1 : 1;
-//     }
-//     return parseFloat(teamEfficiency[ka]) < parseFloat(teamEfficiency[kb]) ? 1 : -1;
-//   })
-//   .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
-//   return { winnerName: Object.keys(result)[0], avgPaintingQualityByTeam }
-// }
-
 function calculateBuyingPhaseWinner(room) {
   const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam, auctions } = room;
   const teamRanks = createTeamRankForBuyingPhase(totalPaintingsWonByTeam,teamEfficiency, auctions.artifacts.length);
@@ -429,25 +399,21 @@ function createTeamRankForBuyingPhase(totalPaintingsWonByTeam, teamEfficiency, t
   return teamRanks;
 }
 
-// function createTeamRankForBuyingPhase(totalPaintingsWonByTeams, totalAmountSpentByTeam, teamEfficiency) {
-//   const sortedObjByPaintingsWon = Object.entries(totalPaintingsWonByTeams)
-//   .sort(([ka,a],[kb,b]) => {
-//     if (b-a === 0) {
-//       if (totalAmountSpentByTeam[ka] < totalAmountSpentByTeam[kb]) {
-//         return -1;
-//     } else {
-//         return 1;
-//       }
-//     }
-//     return b-a;
-//   })
-//   .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
-//   const teamRanks = Object.entries(sortedObjByPaintingsWon).sort(([ka,a],[kb,b]) => {
-//     return parseFloat(teamEfficiency[ka]) < parseFloat(teamEfficiency[kb]) ? 1 : -1;
-//   })
-//   .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
-//   return teamRanks;
-// }
+function getSecondPricedSealedBidWinner(SPSBItem) {
+  const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
+  const secondHighestBid = allBidsArr.length === 1 ? allBidsArr[0]: findSecondHighestBid(allBidsArr, allBidsArr.length);
+  let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) >= parseInt(secondHighestBid));
+  if (SPSBwinner.length > 1) {
+    SPSBwinner = SPSBwinner.reduce((acc, winner) => {
+      return winner.bidAt < acc.bidAt ? winner : acc;
+    });
+  } else {
+    SPSBwinner = SPSBwinner[0];
+  }
+  const SBSPWinnerFinal = Object.assign({}, SPSBwinner);
+  const SPSBwinningteam = SBSPWinnerFinal.bidTeam;
+  return { team: SPSBwinningteam, bid: secondHighestBid };
+}
 
 module.exports = {
 	gameLoop,
@@ -460,4 +426,5 @@ module.exports = {
   calculateSellingRevenue,
   createTeamRankForBuyingPhase,
   updateDutchAuctionLeaderboard,
+  getSecondPricedSealedBidWinner,
 };

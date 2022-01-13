@@ -66,10 +66,12 @@ module.exports = async (io, socket, rooms) => {
           rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`] = [bidInfo];
         }
         io.sockets.in(player.hostCode).emit("setLiveStyles", player.teamName);
+        await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "firstPricedSealedBids": rooms[player.hostCode].firstPricedSealedBids } });
 				break;
 			case "2":
         rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = bidInfo;
 				io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
+        await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBids": rooms[player.hostCode].englishAuctionBids } });
         break;
       case "3":
         const allSecondPricedSealedBids = rooms[player.hostCode].secondPricedSealedBids;
@@ -80,6 +82,7 @@ module.exports = async (io, socket, rooms) => {
           rooms[player.hostCode].secondPricedSealedBids[`${auctionId}`] = [bidInfo];
         }
 				io.sockets.in(player.hostCode).emit("setLiveStyles", player.teamName);
+        await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "secondPricedSealedBids": rooms[player.hostCode].secondPricedSealedBids } });
         break;
       case "4":
         const allPayAuctionBids = rooms[player.hostCode].allPayAuctions;
@@ -94,6 +97,7 @@ module.exports = async (io, socket, rooms) => {
       case "5":
         rooms[player.hostCode].dutchAuctionBids[`${auctionId}`] = bidInfo;
         io.sockets.in(player.hostCode).emit("emitBidForPainting", { paintingId: auctionId, teamName: player.teamName });
+        await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "dutchAuctionBids": rooms[player.hostCode].dutchAuctionBids } });
       break;
 			default:
         return;
