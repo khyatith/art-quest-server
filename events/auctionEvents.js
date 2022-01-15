@@ -37,9 +37,10 @@ module.exports = async (io, socket, rooms) => {
   }
 
   const startAuctionsTimer = async ({ player, auctionId }) => {
+    let timerDeadlineForAuctions = auctionId === '2' ? 1 : 0.5;
 		if (!auctionTimerCompleted.includes(auctionId)) {
 			const current = Date.parse(new Date());
-			auctionsTimer = new Date(current + 1 * 60 * 1000);
+			auctionsTimer = new Date(current + timerDeadlineForAuctions * 60 * 1000);
 		}
     auctionTimerInterval = setInterval(() => {
       const t = updateAuctionClock();

@@ -1,24 +1,22 @@
 function findSecondHighestBid(arr, arrSize) {
-  let i;
+  var highest = Number.MIN_VALUE;
+	var secondHighest = Number.MIN_VALUE;
 
-  if (arrSize < 2) {
-    return arr.bidAmount;
+  // Loop over the array
+  for (var i = 0; i < arrSize; i++) {
+
+    // If we've found a new highest number...
+    if (arr[i] > highest) {
+      // ...shift the current highest number to second highest
+      secondHighest = highest;
+
+      // ...and set the new highest.
+      highest = arr[i];
+    } else if (arr[i] > secondHighest)
+    // Just replace the second highest
+    secondHighest = arr[i];
   }
-
-  // sort the array
-  arr.sort();
-
-  for (i = arrSize - 2; i >= 0; i--) {
-      // if the element is not
-      // equal to largest element
-      if (arr[i] != arr[arrSize - 1]) {
-        return arr[i];
-      } else {
-        return arr[i];
-      }
-  }
-
-  return null;
+  return secondHighest;
 }
 
 function updateTotalAmountsForAllPayAuctions(allPayBids) {
@@ -111,7 +109,7 @@ function getLeaderboard(rooms, roomCode) {
       //Find the second highest bid amount
       const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
       const secondHighestBid = allBidsArr.length === 1 ? allBidsArr[0]: findSecondHighestBid(allBidsArr, allBidsArr.length);
-      let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) >= parseInt(secondHighestBid));
+      let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) > parseInt(secondHighestBid));
       if (SPSBwinner.length > 1) {
         SPSBwinner = SPSBwinner.reduce((acc, winner) => {
           return winner.bidAt < acc.bidAt ? winner : acc;
@@ -402,7 +400,7 @@ function createTeamRankForBuyingPhase(totalPaintingsWonByTeam, teamEfficiency, t
 function getSecondPricedSealedBidWinner(SPSBItem) {
   const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
   const secondHighestBid = allBidsArr.length === 1 ? allBidsArr[0]: findSecondHighestBid(allBidsArr, allBidsArr.length);
-  let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) >= parseInt(secondHighestBid));
+  let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) > parseInt(secondHighestBid));
   if (SPSBwinner.length > 1) {
     SPSBwinner = SPSBwinner.reduce((acc, winner) => {
       return winner.bidAt < acc.bidAt ? winner : acc;
