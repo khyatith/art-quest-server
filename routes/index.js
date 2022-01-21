@@ -407,6 +407,7 @@ mongoClient.then(db => {
     var selling_result = new Object();
     const { roomId } = req.query;
     const results = await collection_room.findOne({ "roomCode": roomId });
+    const locResults = await collection_visits.find({"roomId": roomId}).toArray();
     const room = rooms[roomId];
     if (!results) {
       res.status(404).json({ error: 'Room not found' });
@@ -432,6 +433,7 @@ mongoClient.then(db => {
       }
       const visitObjects = await getVisitData(keys, roomId);
       selling_result.visits = visitObjects;
+      selling_result.locationHistory = locResults;
       res.status(200).json(selling_result);
     }
   });
