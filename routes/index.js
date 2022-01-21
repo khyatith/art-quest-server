@@ -384,9 +384,7 @@ mongoClient.then(db => {
   });
 
   router.get('/getSellingResults', async (req, res) => {
-
     var selling_result = new Object();
-    //const currentRoom = rooms[req.query.roomId]
     const { roomId } = req.query;
     const results = await collection_room.findOne({ "roomCode": roomId });
     const room = rooms[roomId];
@@ -411,7 +409,6 @@ mongoClient.then(db => {
         setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
         selling_result.locationPhaseTimerValue = timerValue;
       }
-
       const visitObjects = await getVisitData(keys, roomId);
       selling_result.visits = visitObjects;
       res.status(200).json(selling_result);
