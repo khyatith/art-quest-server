@@ -247,9 +247,10 @@ router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, r
       case '2':
         data = room.englishAuctionBids[`${auctionId}`];
         const maxBidsObj = room.maxEnglishAuctionBids;
-        if (!data || Object.keys(data).length === 0) {
+        if ((!data || Object.keys(data).length === 0) && !maxBidsObj[`${auctionId}`]) {
           auctionWinner = {};
           data = [];
+          break;
         }
         const EAWinner = getWinningEnglishAuctionBid(maxBidsObj, data, auctionId);
         auctionWinner = {
@@ -263,7 +264,6 @@ router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, r
         } else {
           data = [data];
         }
-        data = !data ? [] : data;
         break;
       case '3':
         data = room.secondPricedSealedBids[`${auctionId}`];

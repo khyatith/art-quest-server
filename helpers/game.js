@@ -444,6 +444,7 @@ function findHighestBid(allBids) {
 
 function getWinningEnglishAuctionBid(maxEnglishAuctionBids, highestBidObj, auctionId) {
   let EAWinner = {};
+  if (!maxEnglishAuctionBids[`${auctionId}`] && (!highestBidObj || Object.keys(highestBidObj).length === 0)) return {};
   if (!maxEnglishAuctionBids[`${auctionId}`]) {
     return { EAWinningTeam: highestBidObj.bidTeam, EAWinnerBid: highestBidObj.bidAmount, highestBidObj };
   }
