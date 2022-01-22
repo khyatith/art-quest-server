@@ -61,6 +61,7 @@ module.exports = async (io, socket, rooms) => {
         sellingResultsTimerValue: {},
         hasSellingResultsTimerEnded: false,
         calculatedRoundRevenue: {},
+        totalArtScoreForTeams: {},
       };
       rooms[player.hostCode] = parsedRoom;
       await collection.insertOne(parsedRoom);

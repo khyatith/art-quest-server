@@ -7,11 +7,12 @@ const {
   calculateTotalAmountSpent,
   calculateBuyingPhaseWinner,
   getNextObjectForLiveAuction,
-  calculateTeamEfficiency,
   createTeamRankForBuyingPhase,
   updateDutchAuctionLeaderboard,
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
+  calculateTeamEfficiency,
+  calculateTotalArtScore,
 } = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
@@ -144,11 +145,14 @@ router.get('/getResults/:hostCode', async (req, res) => {
   const teamStats = await calculateTeamEfficiency(totalAmountByTeam, leaderboard);
   room.teamEfficiency = teamStats.efficiencyByTeam;
 
+  const totalArtScoreForTeams = await calculateTotalArtScore(leaderboard);
+  room.totalArtScoreForTeams = totalArtScoreForTeams;
+
   room.totalPaintingsWonByTeam = teamStats.totalPaintingsWonByTeams;
 
   const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, room.auctions.artifacts.length);
 
-  const result = JSON.stringify({ leaderboard, totalAmountByTeam, teamEfficiency: teamStats.efficiencyByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks });
+  const result = JSON.stringify({ leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks, totalArtScoreForTeams });
   await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: rooms[hostCode] });
   res.send(result);
 });
