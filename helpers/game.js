@@ -54,22 +54,45 @@ function getLeaderboard(rooms, roomCode) {
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
   const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
+  const maxEnglishAuctionBids = currentRoom.maxEnglishAuctionBids;
 
 	//englishAuctions
 	if (englishAuctionsObj) {
 		for (var englishAuction in englishAuctionsObj) {
 			const leaderBoardKeys = Object.keys(leaderboard);
-      const auctionItem = englishAuctionsObj[englishAuction];
-      const EAwinningTeam = auctionItem.bidTeam;
+      const HighestAuctionItem = englishAuctionsObj[englishAuction];
+      const EAWinner = getWinningEnglishAuctionBid(currentRoom.maxEnglishAuctionBids, HighestAuctionItem, HighestAuctionItem.auctionId);
+      const EAwinningTeam = EAWinner.EAWinningTeam;
 			if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam)) {
-        const isExistingAuction = leaderboard[EAwinningTeam].filter(item => item.auctionObj.id === auctionItem.auctionId)[0];
+        const isExistingAuction = leaderboard[EAwinningTeam].filter(item => item.auctionObj.id === HighestAuctionItem.auctionId)[0];
         if (!isExistingAuction) {
-          leaderboard[`${EAwinningTeam}`].push(auctionItem);
+          leaderboard[`${EAwinningTeam}`].push(EAWinner.highestBidObj);
         }
       } else {
-        leaderboard[`${EAwinningTeam}`] = [auctionItem];
+        leaderboard[`${EAwinningTeam}`] = [EAWinner.highestBidObj];
       }
 		}
+  }
+
+  if (maxEnglishAuctionBids) {
+    for (let maxBids in maxEnglishAuctionBids) {
+      const leaderBoardKeys = Object.keys(leaderboard);
+      if (!leaderBoardKeys || !leaderBoardKeys.includes(maxBids)) {
+        const maxBidArr = maxEnglishAuctionBids[maxBids];
+        const allBidsArr = maxBidArr.map((obj) => parseInt(obj.bidAmount));
+        const highestBidInMaxAuctionBidsArray = allBidsArr.length === 1 ? allBidsArr[0]: findHighestBid(allBidsArr);
+        let englishMaxBidsWinner = maxBidArr.filter((obj) => parseInt(obj.bidAmount) === parseInt(highestBidInMaxAuctionBidsArray));
+        const maxBidsWinningTeam = englishMaxBidsWinner[0].bidTeam;
+        if (leaderBoardKeys && leaderBoardKeys.includes(maxBidsWinningTeam)) {
+          const isExistingMaxBidAuction = leaderboard[maxBidsWinningTeam].filter(item => item.auctionObj.id === englishMaxBidsWinner[0].auctionId)[0];
+          if (!isExistingMaxBidAuction) {
+            leaderboard[`${maxBidsWinningTeam}`].push(englishMaxBidsWinner[0]);
+          }
+        } else {
+          leaderboard[`${maxBidsWinningTeam}`] = [englishMaxBidsWinner[0]];
+        }
+      }
+    }
   }
   
   //firstPricedSealedBidAuctions
@@ -413,6 +436,37 @@ function getSecondPricedSealedBidWinner(SPSBItem) {
   return { team: SPSBwinningteam, bid: secondHighestBid };
 }
 
+function findHighestBid(allBids) {
+  return allBids.reduce(function (p, v) {
+    return ( p > v ? p : v );
+  });
+}
+
+function getWinningEnglishAuctionBid(maxEnglishAuctionBids, highestBidObj, auctionId) {
+  let EAWinner = {};
+  if (!maxEnglishAuctionBids[`${auctionId}`] && (!highestBidObj || Object.keys(highestBidObj).length === 0)) return {};
+  if (!maxEnglishAuctionBids[`${auctionId}`]) {
+    return { EAWinningTeam: highestBidObj.bidTeam, EAWinnerBid: highestBidObj.bidAmount, highestBidObj };
+  }
+  const allBidsArr = maxEnglishAuctionBids[`${auctionId}`].map((obj) => parseInt(obj.bidAmount));
+  const highestBidInMaxAuctionBidsArray = allBidsArr.length === 1 ? allBidsArr[0]: findHighestBid(allBidsArr);
+  let winner = maxEnglishAuctionBids[`${auctionId}`].filter((obj) => parseInt(obj.bidAmount) === parseInt(highestBidInMaxAuctionBidsArray));
+  if (highestBidObj && Object.keys(highestBidObj).length > 0) {
+    if (highestBidInMaxAuctionBidsArray >= highestBidObj.bidAmount) {
+      let winnerObj = {
+        ...winner[0],
+        bidAmount: highestBidObj.bidAmount,
+      }
+      EAWinner = { EAWinningTeam: winner[0].bidTeam, EAWinnerBid: highestBidObj.bidAmount, highestBidObj: winnerObj };
+    } else {
+      EAWinner = { EAWinningTeam: highestBidObj.bidTeam, EAWinnerBid: highestBidObj.bidAmount, highestBidObj };
+    }
+  } else {
+    EAWinner = { EAWinningTeam: winner[0].bidTeam, EAWinnerBid: winner[0].bidAmount, highestBidObj: winner[0] };
+  }
+  return EAWinner;
+}
+
 module.exports = {
 	gameLoop,
 	getNextObjectForLiveAuction,
@@ -425,4 +479,5 @@ module.exports = {
   createTeamRankForBuyingPhase,
   updateDutchAuctionLeaderboard,
   getSecondPricedSealedBidWinner,
+  getWinningEnglishAuctionBid,
 };

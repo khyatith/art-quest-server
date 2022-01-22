@@ -11,6 +11,7 @@ const {
   createTeamRankForBuyingPhase,
   updateDutchAuctionLeaderboard,
   getSecondPricedSealedBidWinner,
+  getWinningEnglishAuctionBid,
 } = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
@@ -212,7 +213,6 @@ router.get('/getNextAuction/:hostCode/:prevAuctionId', async (req, res) => {
 router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, res) => {
   let db = await dbClient.createConnection();
   const collection = db.collection('room');
-  console.log('req.params', req.params);
   const { hostCode, auctionId, auctionType } = req.params;
   const room = await collection.findOne({ 'hostCode': hostCode });
   let auction_result = {};
@@ -246,8 +246,24 @@ router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, r
         break;
       case '2':
         data = room.englishAuctionBids[`${auctionId}`];
-        auctionWinner = { team: data?.bidTeam, bid: data?.bidAmount, paintingName: data?.auctionObj?.name, };
-        data = !data ? [] : [data];
+        const maxBidsObj = room.maxEnglishAuctionBids;
+        if ((!data || Object.keys(data).length === 0) && !maxBidsObj[`${auctionId}`]) {
+          auctionWinner = {};
+          data = [];
+          break;
+        }
+        const EAWinner = getWinningEnglishAuctionBid(maxBidsObj, data, auctionId);
+        auctionWinner = {
+          team: EAWinner.EAWinningTeam,
+          bid: EAWinner.EAWinnerBid,
+          paintingName: data?.auctionObj?.name,
+        }
+        if (Object.keys(maxBidsObj).length > 0 && maxBidsObj[`${auctionId}`]) {
+          maxBidsObj[`${auctionId}`].push(data);
+          data = maxBidsObj[`${auctionId}`];
+        } else {
+          data = [data];
+        }
         break;
       case '3':
         data = room.secondPricedSealedBids[`${auctionId}`];

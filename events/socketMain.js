@@ -35,6 +35,7 @@ module.exports = async (io, socket, rooms) => {
         numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
         englishAuctionBids: {},
+        maxEnglishAuctionBids: {},
         firstPricedSealedBids: {},
         secondPricedSealedBids: {},
         dutchAuctionBids: {},
