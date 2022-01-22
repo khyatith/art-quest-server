@@ -451,7 +451,7 @@ function getWinningEnglishAuctionBid(maxEnglishAuctionBids, highestBidObj, aucti
   const allBidsArr = maxEnglishAuctionBids[`${auctionId}`].map((obj) => parseInt(obj.bidAmount));
   const highestBidInMaxAuctionBidsArray = allBidsArr.length === 1 ? allBidsArr[0]: findHighestBid(allBidsArr);
   let winner = maxEnglishAuctionBids[`${auctionId}`].filter((obj) => parseInt(obj.bidAmount) === parseInt(highestBidInMaxAuctionBidsArray));
-  if (Object.keys(highestBidObj).length > 0) {
+  if (highestBidObj && Object.keys(highestBidObj).length > 0) {
     if (highestBidInMaxAuctionBidsArray >= highestBidObj.bidAmount) {
       let winnerObj = {
         ...winner[0],
