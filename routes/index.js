@@ -489,15 +489,15 @@ mongoClient.then(db => {
     const locationId = req.query.locationId;
     const teamName = req.query.teamName;
     const roundId = req.query.roundId;
-    const existingRecord = await collection_visits.findOne({"roomId":roomId, "teamName": teamName});
+    collection_visits.findOne({"roomId":roomId, "teamName": teamName}).then(existingRecord => {
     if (existingRecord) {
       if (existingRecord.roundNumber === roundId) {
         return;
       }
-      await collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{allVisitLocations:locationId}}, {upsert:true});
+      collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{allVisitLocations:locationId}}, {upsert:true});
     } else {
-      const result = await collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "allVisitLocations": [locationId]});
-    }
+      collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations":[], "allVisitLocations": [locationId],"roundNumber": roundId});
+    }});
     collection_room.findOne({ "roomCode": req.query.roomId })
       .then(results => {
         if (!results) res.status(404).json({ error: 'Room not found' })
