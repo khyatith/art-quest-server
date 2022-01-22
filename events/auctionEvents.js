@@ -70,6 +70,18 @@ module.exports = async (io, socket, rooms) => {
         await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "firstPricedSealedBids": rooms[player.hostCode].firstPricedSealedBids } });
 				break;
 			case "2":
+        if (bidInfo.bidType === 'maxBid') {
+          const maxEnglishAuctionBids = rooms[player.hostCode].maxEnglishAuctionBids;
+          const maxEABidObj = Object.keys(maxEnglishAuctionBids);
+          if (maxEABidObj.includes(`${auctionId}`)) {
+            rooms[player.hostCode].maxEnglishAuctionBids[`${auctionId}`].push(bidInfo);
+          } else {
+            rooms[player.hostCode].maxEnglishAuctionBids[`${auctionId}`] = [bidInfo];
+          }
+          io.sockets.in(player.hostCode).emit("setMaxEnglishAuctionBid", player.teamName);
+          await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "maxEnglishAuctionBids": rooms[player.hostCode].maxEnglishAuctionBids } });
+          return;
+        }
         rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = bidInfo;
 				io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
         await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBids": rooms[player.hostCode].englishAuctionBids } });
