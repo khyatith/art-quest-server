@@ -267,18 +267,18 @@ function updateDutchAuctionLeaderboard(room) {
   return leaderBoard;
 }
 
-const calculatePaintingQuality = (leaderBoard) => {
+const calculateTotalArtScore = (leaderBoard) => {
   if (!leaderBoard) return null;
-  let paintingQualityResult = {};
+  let artScore = {};
   for(team in leaderBoard) {
     const currentTeamData = leaderBoard[team];
-    const currentTeamAvg = teamPaintingAverage(currentTeamData);
-    paintingQualityResult = {
-      ...paintingQualityResult,
-      [team]: currentTeamAvg,
+    const currentTeamTotalScore = teamArtScore(currentTeamData);
+    artScore = {
+      ...artScore,
+      [team]: currentTeamTotalScore,
     }
   }
-  return paintingQualityResult
+  return artScore
 }
 
 function gameLoop(state) {
@@ -323,11 +323,11 @@ function getRemainingTime(deadline) {
 	};
 }
 
-function teamPaintingAverage(arr) {
+function teamArtScore(arr) {
   let totalPaintingQuality = 0.0;
   return arr.reduce((acc,v) => {
     totalPaintingQuality += v.auctionObj.paintingQuality;
-    acc = totalPaintingQuality / arr.length;
+    acc = totalPaintingQuality;
     return Math.round((acc + Number.EPSILON) * 100) / 100
   }, {});
 };
@@ -480,4 +480,5 @@ module.exports = {
   updateDutchAuctionLeaderboard,
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
+  calculateTotalArtScore,
 };
