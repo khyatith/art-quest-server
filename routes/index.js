@@ -407,7 +407,6 @@ mongoClient.then(db => {
     var selling_result = new Object();
     const { roomId } = req.query;
     const results = await collection_room.findOne({ "roomCode": roomId });
-    const locResults = await collection_visits.find({"roomId": roomId}).toArray();
     const room = rooms[roomId];
     if (!results) {
       res.status(404).json({ error: 'Room not found' });
@@ -426,14 +425,13 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 1 * 60 * 1000);
+        const deadline = new Date(currentTime + 0.2 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
         selling_result.locationPhaseTimerValue = timerValue;
       }
       const visitObjects = await getVisitData(keys, roomId);
       selling_result.visits = visitObjects;
-      selling_result.locationHistory = locResults;
       res.status(200).json(selling_result);
     }
   });
@@ -665,13 +663,13 @@ mongoClient.then(db => {
 
     const unresolvedPromises = keys.map(key => getDataByTeamName(key));
     const allVisitsByTeams = await Promise.all(unresolvedPromises);
-
     if (allVisitsByTeams.length === 0) {
       teamVisit = keys.reduce((acc, key) => {
         acc.push({
           teamName: key,
           visitCount: 0,
-          currentLocation: 2
+          currentLocation: 2,
+          allVisitLocations: [],
         });
         return acc;
       }, []);
@@ -682,7 +680,8 @@ mongoClient.then(db => {
           acc.push({
             teamName: v.teamName,
             visitCount: v.locations.length || 0,
-            currentLocation: v.locationId || 2
+            currentLocation: v.locationId || 2,
+            allVisitLocations: v.allVisitLocations || [],
           });
         }
         return acc;
