@@ -31,6 +31,7 @@ module.exports = async (io, socket, rooms) => {
         sellingAuctions: cloneDeep(sellingAuctionObj),
         dutchAuctions: cloneDeep(dutchAuctionObj),
         dutchAuctionsOrder: [],
+        allTeams: [],
         leaderBoard: {},
         numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
@@ -73,10 +74,13 @@ module.exports = async (io, socket, rooms) => {
     const room = await collection.findOne({'hostCode': parsedPlayer.hostCode});
     if (room) {
       const parsedRoom = room;
-      const { players } = parsedRoom;
+      const { players, allTeams } = parsedRoom;
       const isExistingPlayer = players.filter((item) => item.playerId === parsedPlayer.playerId);
       if (isExistingPlayer.length === 0) {
         parsedRoom.players.push(parsedPlayer);
+      }
+      if (!allTeams.includes(parsedPlayer.teamName)) {
+        parsedRoom.allTeams.push(parsedPlayer.teamName);
       }
       if (!rooms || !rooms[parsedPlayer.hostCode]) {
         rooms[parsedPlayer.hostCode] = parsedRoom;

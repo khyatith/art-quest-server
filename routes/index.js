@@ -415,7 +415,7 @@ mongoClient.then(db => {
       selling_result.totalArtScoreForTeams = results.totalArtScoreForTeams;
       selling_result.roundNumber = results.sellingRoundNumber;
       selling_result.players = results.players;
-      var keys = Object.keys(selling_result.amountSpentByTeam);
+      var keys = results.allTeams;
 
       //location phase timer value
       if (room && room.hadLocationPageTimerEnded) {
@@ -619,7 +619,7 @@ mongoClient.then(db => {
 
       //update art score for team
       if (totalArtScoreForTeam[EAwinningTeam]) {
-        totalArtScoreForTeam[EAwinningTeam] = parseFloat(totalArtScoreForTeam[EAWinningTeam]) + parseFloat(auctionItem.paintingQuality);
+        totalArtScoreForTeam[EAwinningTeam] = parseFloat(totalArtScoreForTeam[EAwinningTeam]) + parseFloat(auctionItem.paintingQuality);
       } else {
         totalArtScoreForTeam[EAwinningTeam] = parseFloat(auctionItem.paintingQuality);
       }
