@@ -425,7 +425,7 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 1 * 60 * 1000);
+        const deadline = new Date(currentTime + 0.2 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
         selling_result.locationPhaseTimerValue = timerValue;
@@ -483,6 +483,19 @@ mongoClient.then(db => {
 
     var selling_info = new Object();
     const room = rooms[req.query.roomId];
+    const roomId = req.query.roomId;
+    const locationId = req.query.locationId;
+    const teamName = req.query.teamName;
+    const roundId = req.query.roundId;
+    collection_visits.findOne({"roomId":roomId, "teamName": teamName}).then(existingRecord => {
+    if (existingRecord) {
+      if (existingRecord.roundNumber === roundId) {
+        return;
+      }
+      collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{allVisitLocations:locationId}}, {upsert:true});
+    } else {
+      collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations":[], "allVisitLocations": [locationId],"roundNumber": roundId});
+    }});
     collection_room.findOne({ "roomCode": req.query.roomId })
       .then(results => {
         if (!results) res.status(404).json({ error: 'Room not found' })
@@ -650,13 +663,13 @@ mongoClient.then(db => {
 
     const unresolvedPromises = keys.map(key => getDataByTeamName(key));
     const allVisitsByTeams = await Promise.all(unresolvedPromises);
-
     if (allVisitsByTeams.length === 0) {
       teamVisit = keys.reduce((acc, key) => {
         acc.push({
           teamName: key,
           visitCount: 0,
-          currentLocation: 2
+          currentLocation: 2,
+          allVisitLocations: [],
         });
         return acc;
       }, []);
@@ -667,7 +680,8 @@ mongoClient.then(db => {
           acc.push({
             teamName: v.teamName,
             visitCount: v.locations.length || 0,
-            currentLocation: v.locationId || 2
+            currentLocation: v.locationId || 2,
+            allVisitLocations: v.allVisitLocations || [],
           });
         }
         return acc;
