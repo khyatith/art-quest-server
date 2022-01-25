@@ -203,7 +203,7 @@ module.exports = async (io, socket, rooms) => {
     results.totalAmountSpentByTeam[teamName] = parseFloat(totalAmountByCurrentTeam).toFixed(1);
     const caculatedRevenueAfterRound = results.calculatedRoundRevenue[roundId] || {};
     if (Object.keys(caculatedRevenueAfterRound).length > 0) {
-      results.calculatedRoundRevenue[roundId][teamName] = caculatedRevenueAfterRound[teamName] ? parseFloat(caculatedRevenueAfterRound[teamName]) + parseFloat(calculatedRevenue) : parseFloat(calculatedRevenue);
+      results.calculatedRoundRevenue[roundId][teamName] = parseFloat(calculatedRevenue);
     } else {
       results.calculatedRoundRevenue = { [roundId]: { [teamName]: parseFloat(calculatedRevenue) } };
     }
@@ -211,10 +211,10 @@ module.exports = async (io, socket, rooms) => {
     return calculatedRevenue;
   }
 
-  const emitNominatedPaintingId = (data) => {
+  const emitNominatedPaintingId = async (data) => {
     const { paintingId, roomCode, teamName } = data;
-    io.sockets.in(roomCode).emit("emitNominatedPainting", {paintingId, teamName});
-    calculateRevenue(data);
+    const calculatedRevenue = await calculateRevenue(data);
+    io.sockets.in(roomCode).emit("emitNominatedPainting", {paintingId, teamName, ticketPrice: data.ticketPrice, calculatedRevenue});
   }
 
   socket.on("createRoom", createRoom);
