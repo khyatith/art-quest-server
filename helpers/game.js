@@ -364,10 +364,10 @@ function isInt(n) {
 function calculateSellingRevenue(data) {
   const { interestInArt, population, paintingQuality, ticketPrice, allTeamsInCity } = data;
   let demandFunc;
-  if (ticketPrice > 50) {
+  if (parseFloat(ticketPrice) > 50) {
     const utilityFunc =  parseFloat(ticketPrice) + parseFloat(interestInArt) + parseFloat(paintingQuality);
     demandFunc =  (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
-  } else if (ticketPrice <= 50) {
+  } else if (parseFloat(ticketPrice) <= 50) {
     const utilityFunc =  parseFloat(ticketPrice) * (parseFloat(interestInArt) + parseFloat(paintingQuality));
     demandFunc = (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
   }

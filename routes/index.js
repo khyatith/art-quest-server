@@ -514,7 +514,7 @@ mongoClient.then(db => {
                 selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
               } else {
                 const currentTime = Date.parse(new Date());
-                const deadline = new Date(currentTime + 2 * 60 * 1000);
+                const deadline = new Date(currentTime + 0.2 * 60 * 1000);
                 const timerValue = getRemainingTime(deadline);
                 setInterval(() => startSellingServerTimer(room, deadline), 1000);
                 selling_info.sellPaintingTimerValue = timerValue;
