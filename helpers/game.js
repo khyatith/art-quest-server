@@ -333,10 +333,10 @@ function teamArtScore(arr) {
 };
 
 function calculateBuyingPhaseWinner(room) {
-  const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam, auctions } = room;
+  const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam, totalArtScoreForTeams, auctions } = room;
   const teamRanks = createTeamRankForBuyingPhase(totalPaintingsWonByTeam,teamEfficiency, auctions.artifacts.length);
   const winnerArr = Object.keys(teamRanks);
-  return { leaderBoard, winner: winnerArr[0], totalPaintingsWonByTeam: totalPaintingsWonByTeam, teamsByRank: winnerArr, teamEfficiency, totalAmountSpentByTeam };
+  return { leaderBoard, winner: winnerArr[0], totalPaintingsWonByTeam: totalPaintingsWonByTeam, teamsByRank: winnerArr, teamEfficiency, totalAmountSpentByTeam, totalArtScoreForTeams };
 }
 
 function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
@@ -363,15 +363,7 @@ function isInt(n) {
 
 function calculateSellingRevenue(data) {
   const { interestInArt, population, paintingQuality, ticketPrice, allTeamsInCity } = data;
-  let demandFunc;
-  if (parseFloat(ticketPrice) > 50) {
-    const utilityFunc =  parseFloat(ticketPrice) + parseFloat(interestInArt) + parseFloat(paintingQuality);
-    demandFunc =  (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
-  } else if (parseFloat(ticketPrice) <= 50) {
-    const utilityFunc =  parseFloat(ticketPrice) * (parseFloat(interestInArt) + parseFloat(paintingQuality));
-    demandFunc = (1 + Math.log(utilityFunc))/Math.log(utilityFunc);
-  }
-  const revenue = parseFloat(population/allTeamsInCity) * demandFunc;
+  let revenue = (parseFloat(interestInArt) * parseFloat(paintingQuality)) / (parseFloat(population) + parseInt(ticketPrice) + parseInt(allTeamsInCity));
   if (isInt(revenue)) {
     return revenue
   } else {

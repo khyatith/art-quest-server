@@ -669,7 +669,7 @@ mongoClient.then(db => {
         acc.push({
           teamName: key,
           visitCount: 0,
-          currentLocation: 2,
+          currentLocation: 10,
           allVisitLocations: [],
         });
         return acc;
@@ -681,7 +681,7 @@ mongoClient.then(db => {
           acc.push({
             teamName: v.teamName,
             visitCount: v.locations.length || 0,
-            currentLocation: v.locationId || 2,
+            currentLocation: v.locationId || 10,
             allVisitLocations: v.allVisitLocations || [],
           });
         }
