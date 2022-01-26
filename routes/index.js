@@ -432,6 +432,7 @@ mongoClient.then(db => {
       }
       const visitObjects = await getVisitData(keys, roomId);
       selling_result.visits = visitObjects;
+      console.log('selling_Results', selling_result);
       res.status(200).json(selling_result);
     }
   });
