@@ -153,7 +153,7 @@ router.get('/getResults/:hostCode', async (req, res) => {
   const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, room.auctions.artifacts.length);
 
   const result = JSON.stringify({ leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks, totalArtScoreForTeams });
-  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: rooms[hostCode] });
+  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: {"leaderBoard": leaderboard, "totalAmountSpentByTeam": totalAmountByTeam, "teamEfficiency": teamStats.efficiencyByTeam, "totalArtScoreForTeams": totalArtScoreForTeams, "totalPaintingsWonByTeam":  teamStats.totalPaintingsWonByTeams } });
   res.send(result);
 });
 
@@ -351,7 +351,7 @@ router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
   let auctionObj = room.auctions.artifacts.filter((item) => parseInt(item.id) === parseInt(params.auctionId));
   if (!auctionObj) return;
   const currentAuctionObj = auctionObj[0];
-  const timerValueForAuction = currentAuctionObj.auctionType === '2' ? 1 : 0.7;
+  const timerValueForAuction = currentAuctionObj.auctionType === '2' ? 0.2 : 0.2;
   if (currentAuctionObj && currentAuctionObj.hasAuctionTimerEnded) {
     res.send({ currentAuctionObjTimer: {} });
     return;
