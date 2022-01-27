@@ -520,8 +520,7 @@ mongoClient.then(db => {
                 setInterval(() => startSellingServerTimer(room, deadline), 1000);
                 selling_info.sellPaintingTimerValue = timerValue;
               }
-
-              collection_visits.find({ "roomId": req.query.roomId, locationId: parseInt(req.query.locationId, 10) }).toArray()
+              collection_visits.find({ "roomId": req.query.roomId, locationId: req.query.locationId }).toArray()
                 .then(results_visits => {
                   var otherTeams = [];
                   results_visits.forEach(function (visit, index) {
