@@ -178,7 +178,7 @@ module.exports = async (io, socket, rooms) => {
     const { roomId, locationId, teamName, roundId } = data;
     const existingRecord = await collection_visits.findOne({"roomId":roomId, "teamName": teamName});
     if (existingRecord) {
-      if (existingRecord.roundNumber === roundId) {
+      if (parseInt(existingRecord.roundNumber, 10) === parseInt(roundId, 10)) {
         io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId });
         return;
       }
