@@ -121,7 +121,7 @@ router.get('/timer/:hostCode', function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 1 * 60 * 1000);
+    const deadline = new Date(currentTime + 0.5 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
@@ -351,7 +351,7 @@ router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
   let auctionObj = room.auctions.artifacts.filter((item) => parseInt(item.id) === parseInt(params.auctionId));
   if (!auctionObj) return;
   const currentAuctionObj = auctionObj[0];
-  const timerValueForAuction = currentAuctionObj.auctionType === '2' ? 1 : 0.7;
+  const timerValueForAuction = currentAuctionObj.auctionType === '2' ? 0.7 : 0.7;
   if (currentAuctionObj && currentAuctionObj.hasAuctionTimerEnded) {
     res.send({ currentAuctionObjTimer: {} });
     return;
