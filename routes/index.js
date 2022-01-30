@@ -222,6 +222,7 @@ router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, r
   let auction_result = {};
   let data = [];
   let auctionWinner = {};
+  let maxBids = {};
   if (room) {
     switch (auctionType) {
       case '1':
@@ -263,11 +264,9 @@ router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, r
           paintingName: data?.auctionObj?.name,
         }
         if (Object.keys(maxBidsObj).length > 0 && maxBidsObj[`${auctionId}`]) {
-          maxBidsObj[`${auctionId}`].push(data);
-          data = maxBidsObj[`${auctionId}`];
-        } else {
-          data = [data];
+          maxBids = maxBidsObj[`${auctionId}`];
         }
+        data = [data];
         break;
       case '3':
         data = room.secondPricedSealedBids[`${auctionId}`];
@@ -300,6 +299,7 @@ router.get('/getAuctionResults/:hostCode/:auctionId/:auctionType', async (req, r
     }
     auction_result.result = data;
     auction_result.winner = auctionWinner;
+    auction_result.maxBids = maxBids;
     res.status(200).json(auction_result);
   }
 });
