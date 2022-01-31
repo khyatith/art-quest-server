@@ -363,7 +363,7 @@ function isInt(n) {
 
 function calculateSellingRevenue(data) {
   const { interestInArt, population, paintingQuality, ticketPrice, allTeamsInCity } = data;
-  let revenue = (parseFloat(interestInArt) * parseFloat(paintingQuality)) / (parseFloat(population) + parseInt(ticketPrice) + parseInt(allTeamsInCity));
+  let revenue = (parseFloat(interestInArt) * parseFloat(paintingQuality)) / (parseFloat(population) + parseFloat(ticketPrice) + parseInt(allTeamsInCity));
   if (isInt(revenue)) {
     return revenue
   } else {
