@@ -148,7 +148,7 @@ module.exports = async (io, socket, rooms) => {
     const hasLandingPageTimerStarted = parsedRoom.hasLandingPageTimerStarted;
     if (!hasLandingPageTimerStarted) {
       const currentTime = Date.parse(new Date());
-      parsedRoom.landingPageTimerDeadline = new Date(currentTime + 0.5 * 60 * 1000);
+      parsedRoom.landingPageTimerDeadline = new Date(currentTime + 0.1 * 60 * 1000);
       parsedRoom.hasLandingPageTimerStarted = true;
       collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
     }
@@ -176,8 +176,10 @@ module.exports = async (io, socket, rooms) => {
 
   const putCurrentLocation = async (data) => {
     const { roomId, locationId, teamName, roundId } = data;
+    console.log('data', data);
     const existingRecord = await collection_visits.findOne({"roomId":roomId, "teamName": teamName});
     if (existingRecord) {
+      console.log('inside existingRecord', existingRecord);
       if (parseInt(existingRecord.roundNumber, 10) === parseInt(roundId, 10)) {
         io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId });
         return;
@@ -185,6 +187,7 @@ module.exports = async (io, socket, rooms) => {
       await collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{locations:locationId}}, {upsert:true});
       io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: locationId, roundId });
     } else {
+      console.log('not existing record');
       const result = await collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations": [locationId], "allVisitLocations": []});
       if (result) io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId });
     }
