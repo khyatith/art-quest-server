@@ -181,6 +181,8 @@ module.exports = async (io, socket, rooms) => {
     if (existingRecord) {
       console.log('inside existingRecord', existingRecord);
       if (parseInt(existingRecord.roundNumber, 10) === parseInt(roundId, 10)) {
+        console.log('roundNumber equals', roundId);
+        console.log('roundNumber equals', existingRecord.roundNumber);
         io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId });
         return;
       }
