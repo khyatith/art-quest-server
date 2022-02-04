@@ -89,28 +89,6 @@
 			}
 		},
 		{
-			"id": 11,
-			"name": "Illustration from the Khamsah of Nizami",
-			"region": "Middle east",
-			"country": "Iran",
-			"dateCreated": "1539",
-			"artist": "Sultan Muhammad",
-			"imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fkhamsah-of-nizami.png?alt=media&token=00027b02-4473-4007-8992-83807063ca16",
-			"auctionType": "2",
-			"auctionDescription": "English auction",
-			"originalValue": 23,
-			"paintingQuality": 3.3,
-			"hasAuctionTimerStarted": false,
-			"auctionTimerDeadline": 1,
-			"hasAuctionTimerEnded": false,
-			"auctionTimerValue": {},
-			"auctionState": 0,
-			"bid": {
-				"bidAmount": 0,
-				"bidTeam": ""
-			}
-		},
-		{
 			"id": 12,
 			"name": "Nok Sculpture of a Seated Man",
 			"region": "Africa",
@@ -121,28 +99,6 @@
 			"auctionType": "2",
 			"auctionDescription": "First priced sealed bid",
 			"originalValue": 55,
-			"paintingQuality": 3.3,
-			"hasAuctionTimerStarted": false,
-			"auctionTimerDeadline": 1,
-			"hasAuctionTimerEnded": false,
-			"auctionTimerValue": {},
-			"auctionState": 0,
-			"bid": {
-				"bidAmount": 0,
-				"bidTeam": ""
-			}
-		},
-		{
-			"id": 13,
-			"name": "Karin by the Shore",
-			"region": "Europe",
-			"country": "Sweden",
-			"dateCreated": "1908",
-			"artist": "Carl Larsson",
-			"imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fkaren-by-the-shore.png?alt=media&token=3f791f15-93e4-4f17-8650-31b157d8584f",
-			"auctionType": "2",
-			"auctionDescription": "second priced sealed bid",
-			"originalValue": 23,
 			"paintingQuality": 3.3,
 			"hasAuctionTimerStarted": false,
 			"auctionTimerDeadline": 1,
