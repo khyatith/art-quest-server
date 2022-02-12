@@ -196,7 +196,7 @@ module.exports = async (io, socket, rooms) => {
   }
 
   const calculateRevenue = async (data) => {
-    const { teamName, roomCode, roundId } = data;
+    const { teamName, roomCode, roundId, transportCost } = data;
     const calculatedRevenue = calculateSellingRevenue(data);
     const results = await collection.findOne({'hostCode':roomCode});
     let totalAmountByCurrentTeam = results?.totalAmountSpentByTeam[teamName];
@@ -207,10 +207,12 @@ module.exports = async (io, socket, rooms) => {
     }
     results.totalAmountSpentByTeam[teamName] = parseFloat(totalAmountByCurrentTeam).toFixed(1);
     const caculatedRevenueAfterRound = results.calculatedRoundRevenue[roundId] || {};
+    const formattedTransportCost = parseInt(transportCost, 10) / 1000000;
+    const realCalculatedRevenue = parseFloat(calculatedRevenue) - parseFloat(formattedTransportCost);
     if (Object.keys(caculatedRevenueAfterRound).length > 0) {
-      results.calculatedRoundRevenue[roundId][teamName] = parseFloat(calculatedRevenue);
+      results.calculatedRoundRevenue[roundId][teamName] = parseFloat(realCalculatedRevenue);
     } else {
-      results.calculatedRoundRevenue = { [roundId]: { [teamName]: parseFloat(calculatedRevenue) } };
+      results.calculatedRoundRevenue = { [roundId]: { [teamName]: parseFloat(realCalculatedRevenue) } };
     }
     await collection.findOneAndUpdate({"hostCode":roomCode},{$set:{ "totalAmountSpentByTeam": results.totalAmountSpentByTeam, "calculatedRoundRevenue": results.calculatedRoundRevenue}});
     return calculatedRevenue;
