@@ -197,24 +197,19 @@ module.exports = async (io, socket, rooms) => {
 
   const putCurrentLocation = async (data) => {
     const { roomId, locationId, teamName, roundId, flyTicketPrice } = data;
-    console.log('data', data);
     const result = await updateFlyTicketPricesForLocation(roomId, locationId, flyTicketPrice);
-    console.log('result after updating ticket price');
     if (result) {
       const existingRecord = await collection_visits.findOne({"roomId":roomId, "teamName": teamName});
       if (existingRecord) {
-        console.log('inside existingRecord', existingRecord);
         if (parseInt(existingRecord.roundNumber, 10) === parseInt(roundId, 10)) {
-          console.log('roundNumber equals', roundId);
-          console.log('roundNumber equals', existingRecord.roundNumber);
           io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId, flyTicketPrice });
           return;
         }
-        await collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{locations:locationId}}, {upsert:true});
+        const totalVisitPrice = existingRecord.totalVisitPrice ? parseInt(existingRecord.totalVisitPrice, 10) + parseInt(flyTicketPrice, 10) : parseInt(flyTicketPrice, 0);
+        await collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId, "totalVisitPrice": totalVisitPrice}, $push:{locations:locationId}}, {upsert:true});
         io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId, flyTicketPrice });
       } else {
-        console.log('not existing record');
-        const result = await collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations": [locationId], "allVisitLocations": []});
+        const result = await collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations": [locationId], "allVisitLocations": [], "totalVisitPrice": parseInt(flyTicketPrice, 10)});
         if (result) io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId, flyTicketPrice });
       }
     }

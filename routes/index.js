@@ -432,6 +432,7 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = timerValue;
       }
       const visitObjects = await getVisitData(keys, roomId);
+      console.log('visitobjects>>>>>', visitObjects);
       selling_result.visits = visitObjects;
       selling_result.allTeams = keys;
       const flyTicketsPriceData = await getFlyTicketPrice(roomId);
@@ -688,6 +689,7 @@ mongoClient.then(db => {
           visitCount: 0,
           currentLocation: 10,
           allVisitLocations: [],
+          totalVisitPrice: 0,
         });
         return acc;
       }, []);
@@ -700,6 +702,7 @@ mongoClient.then(db => {
             visitCount: v.locations.length || 0,
             currentLocation: v.locationId || 10,
             allVisitLocations: v.allVisitLocations || [],
+            totalVisitPrice: v.totalVisitPrice,
           });
         }
         return acc;
