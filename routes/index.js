@@ -374,6 +374,7 @@ mongoClient.then(db => {
   const collection = db.collection('city');
   const collection_visits = db.collection('visits');
   const collection_room = db.collection('room');
+  const collection_flyTicketPrice = db.collection('flyTicketPrice');
 
   router.get('/validatePlayerId/:hostCode', async (req, res) => {
     const { params } = req;
@@ -433,8 +434,19 @@ mongoClient.then(db => {
       const visitObjects = await getVisitData(keys, roomId);
       selling_result.visits = visitObjects;
       selling_result.allTeams = keys;
+      const flyTicketsPriceData = await getFlyTicketPrice(roomId);
+      console.log('flyTicketsPriceData', flyTicketsPriceData);
+      selling_result.flyTicketsPrice = flyTicketsPriceData;
       res.status(200).json(selling_result);
     }
+  });
+
+  router.get('/getFlyTicketPriceForLocation', async (req, res) => {
+    console.log('req', req);
+    const { roomId } = req.query;
+    const result = await getFlyTicketPrice(roomId);
+    console.log('inside room id', roomId);
+    res.status(200).json(result);
   });
 
   router.post('/updateRoundId', async (req, res) => {
@@ -653,6 +665,12 @@ mongoClient.then(db => {
     }
     res.status(200).json({ message: "updated" });
   });
+
+  const getFlyTicketPrice = async (roomId) => {
+    const result = await collection_flyTicketPrice.findOne({'roomId': roomId});
+    console.log('result', result);
+    return result;
+  }
 
   const getVisitData = async (keys, roomCode) => {
     let teamVisit = [];

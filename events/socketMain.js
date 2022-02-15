@@ -10,6 +10,7 @@ module.exports = async (io, socket, rooms) => {
   const db = await dbClient.createConnection();
   const collection = db.collection('room');
   const collection_visits = db.collection('visits');
+  const collection_flyTicketPrice = db.collection('flyTicketPrice');
 
   const createRoom = async (stringifiedPlayer) => {
     player = JSON.parse(stringifiedPlayer);
@@ -174,24 +175,48 @@ module.exports = async (io, socket, rooms) => {
     await collection.findOneAndUpdate({"hostCode":roomCode},{$set:parsedRoom});
   }
 
-  const putCurrentLocation = async (data) => {
-    const { roomId, locationId, teamName, roundId } = data;
-    console.log('data', data);
-    const existingRecord = await collection_visits.findOne({"roomId":roomId, "teamName": teamName});
+  const updateFlyTicketPricesForLocation = async (roomId, locationId, flyTicketPrice) => {
+    let result;
+    let ticketPriceForLocation = {};
+    const existingRecord = await collection_flyTicketPrice.findOne({'roomId': roomId});
+    console.log('isExistingRecord', existingRecord);
     if (existingRecord) {
-      console.log('inside existingRecord', existingRecord);
-      if (parseInt(existingRecord.roundNumber, 10) === parseInt(roundId, 10)) {
-        console.log('roundNumber equals', roundId);
-        console.log('roundNumber equals', existingRecord.roundNumber);
-        io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId });
-        return;
-      }
-      await collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{locations:locationId}}, {upsert:true});
-      io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: locationId, roundId });
+      ticketPriceForLocation = existingRecord.ticketPriceByLocation;
+      ticketPriceForLocation = {
+        ...ticketPriceForLocation,
+        [locationId]: flyTicketPrice
+      };
+      result = await collection_flyTicketPrice.findOneAndUpdate({"roomId":roomId}, {$set: {"ticketPriceByLocation": ticketPriceForLocation}});
     } else {
-      console.log('not existing record');
-      const result = await collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations": [locationId], "allVisitLocations": []});
-      if (result) io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId });
+      ticketPriceForLocation[locationId] = flyTicketPrice;
+      result = await collection_flyTicketPrice.insertOne({"roomId": roomId, "ticketPriceByLocation": ticketPriceForLocation });
+    }
+    console.log('result after updating ticket price', result);
+    return result;
+  }
+
+  const putCurrentLocation = async (data) => {
+    const { roomId, locationId, teamName, roundId, flyTicketPrice } = data;
+    console.log('data', data);
+    const result = await updateFlyTicketPricesForLocation(roomId, locationId, flyTicketPrice);
+    console.log('result after updating ticket price');
+    if (result) {
+      const existingRecord = await collection_visits.findOne({"roomId":roomId, "teamName": teamName});
+      if (existingRecord) {
+        console.log('inside existingRecord', existingRecord);
+        if (parseInt(existingRecord.roundNumber, 10) === parseInt(roundId, 10)) {
+          console.log('roundNumber equals', roundId);
+          console.log('roundNumber equals', existingRecord.roundNumber);
+          io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId: existingRecord.locationId, roundId, flyTicketPrice });
+          return;
+        }
+        await collection_visits.findOneAndUpdate({"roomId":roomId, "teamName": teamName},{$set:{"roomId": roomId, "locationId": locationId, "teamName": teamName,"roundNumber": roundId}, $push:{locations:locationId}}, {upsert:true});
+        io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId, flyTicketPrice });
+      } else {
+        console.log('not existing record');
+        const result = await collection_visits.insertOne({"roomId":roomId, "teamName": teamName, "locationId": locationId, "locations": [locationId], "allVisitLocations": []});
+        if (result) io.sockets.in(roomId).emit("locationUpdatedForTeam", { roomId, teamName, locationId, roundId, flyTicketPrice });
+      }
     }
   }
 
