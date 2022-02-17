@@ -351,7 +351,7 @@ router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
   let auctionObj = room.auctions.artifacts.filter((item) => parseInt(item.id) === parseInt(params.auctionId));
   if (!auctionObj) return;
   const currentAuctionObj = auctionObj[0];
-  const timerValueForAuction = currentAuctionObj.auctionType === '2' ? 1 : 0.7;
+  const timerValueForAuction = currentAuctionObj.auctionType === '2' ? 0.5 : 0.5;
   if (currentAuctionObj && currentAuctionObj.hasAuctionTimerEnded) {
     res.send({ currentAuctionObjTimer: {} });
     return;
@@ -371,9 +371,10 @@ var mongoClient = dbClient.createConnection();
 
 mongoClient.then(db => {
 
-  const collection = db.collection('city');
+  const collection = db.collection('city2');
   const collection_visits = db.collection('visits');
   const collection_room = db.collection('room');
+  const collection_flyTicketPrice = db.collection('flyTicketPrice');
 
   router.get('/validatePlayerId/:hostCode', async (req, res) => {
     const { params } = req;
@@ -425,16 +426,28 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 1.5 * 60 * 1000);
+        const deadline = new Date(currentTime + 1 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
         selling_result.locationPhaseTimerValue = timerValue;
       }
       const visitObjects = await getVisitData(keys, roomId);
+      console.log('visitobjects>>>>>', visitObjects);
       selling_result.visits = visitObjects;
       selling_result.allTeams = keys;
+      const flyTicketsPriceData = await getFlyTicketPrice(roomId);
+      console.log('flyTicketsPriceData', flyTicketsPriceData);
+      selling_result.flyTicketsPrice = flyTicketsPriceData;
       res.status(200).json(selling_result);
     }
+  });
+
+  router.get('/getFlyTicketPriceForLocation', async (req, res) => {
+    console.log('req', req);
+    const { roomId } = req.query;
+    const result = await getFlyTicketPrice(roomId);
+    console.log('inside room id', roomId);
+    res.status(200).json(result);
   });
 
   router.post('/updateRoundId', async (req, res) => {
@@ -515,7 +528,7 @@ mongoClient.then(db => {
                 selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
               } else {
                 const currentTime = Date.parse(new Date());
-                const deadline = new Date(currentTime + 1.50 * 60 * 1000);
+                const deadline = new Date(currentTime + 1 * 60 * 1000);
                 const timerValue = getRemainingTime(deadline);
                 setInterval(() => startSellingServerTimer(room, deadline), 1000);
                 selling_info.sellPaintingTimerValue = timerValue;
@@ -654,6 +667,12 @@ mongoClient.then(db => {
     res.status(200).json({ message: "updated" });
   });
 
+  const getFlyTicketPrice = async (roomId) => {
+    const result = await collection_flyTicketPrice.findOne({'roomId': roomId});
+    console.log('result', result);
+    return result;
+  }
+
   const getVisitData = async (keys, roomCode) => {
     let teamVisit = [];
     const getDataByTeamName = async (key) => {
@@ -670,6 +689,7 @@ mongoClient.then(db => {
           visitCount: 0,
           currentLocation: 10,
           allVisitLocations: [],
+          totalVisitPrice: 0,
         });
         return acc;
       }, []);
@@ -682,6 +702,7 @@ mongoClient.then(db => {
             visitCount: v.locations.length || 0,
             currentLocation: v.locationId || 10,
             allVisitLocations: v.allVisitLocations || [],
+            totalVisitPrice: v.totalVisitPrice,
           });
         }
         return acc;
