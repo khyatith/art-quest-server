@@ -351,7 +351,7 @@ router.get('/auctionTimer/:hostCode/:auctionId', function (req, res) {
   let auctionObj = room.auctions.artifacts.filter((item) => parseInt(item.id) === parseInt(params.auctionId));
   if (!auctionObj) return;
   const currentAuctionObj = auctionObj[0];
-  const timerValueForAuction = currentAuctionObj.auctionType === '2' ? 1 : 0.7;
+  const timerValueForAuction = currentAuctionObj.auctionType === '2' ? 0.5 : 0.5;
   if (currentAuctionObj && currentAuctionObj.hasAuctionTimerEnded) {
     res.send({ currentAuctionObjTimer: {} });
     return;
@@ -371,7 +371,7 @@ var mongoClient = dbClient.createConnection();
 
 mongoClient.then(db => {
 
-  const collection = db.collection('city');
+  const collection = db.collection('city2');
   const collection_visits = db.collection('visits');
   const collection_room = db.collection('room');
   const collection_flyTicketPrice = db.collection('flyTicketPrice');
@@ -426,7 +426,7 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 1.5 * 60 * 1000);
+        const deadline = new Date(currentTime + 1 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
         selling_result.locationPhaseTimerValue = timerValue;
@@ -528,7 +528,7 @@ mongoClient.then(db => {
                 selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
               } else {
                 const currentTime = Date.parse(new Date());
-                const deadline = new Date(currentTime + 1.50 * 60 * 1000);
+                const deadline = new Date(currentTime + 1 * 60 * 1000);
                 const timerValue = getRemainingTime(deadline);
                 setInterval(() => startSellingServerTimer(room, deadline), 1000);
                 selling_info.sellPaintingTimerValue = timerValue;
