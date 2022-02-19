@@ -1,0 +1,114 @@
+{
+    "artifacts": [
+    {
+      "id": 1,
+      "name": "Karin by the Shore",
+      "region": "Europe",
+      "country": "Sweden",
+      "dateCreated": "1908",
+      "artist": "Carl Larsson",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fkaren-by-the-shore.png?alt=media&token=3f791f15-93e4-4f17-8650-31b157d8584f",
+      "auctionType": "2",
+      "auctionDescription": "second priced sealed bid",
+      "originalValue": 10,
+      "paintingQuality": 3.3,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "auctionState": 0,
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 2,
+      "name": "The Fointaine",
+      "region": "Asia",
+      "country": "China",
+      "dateCreated": "1113",
+      "artist": "Wang Ximeng",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/Art%2Ffontaine.jpeg?alt=media&token=57246c64-1041-4785-8b04-9537b678a062",
+      "auctionType": "3",
+      "auctionDescription": "Second priced sealed bid",
+      "originalValue": 15,
+      "auctionState": 0,
+      "paintingQuality": 3.0,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 3,
+      "name": "The Lady with a Fan",
+      "region": "Asia",
+      "country": "Japan",
+      "dateCreated": "1917",
+      "artist": "Gustav Klimt",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/Art%2Flady-with-a-fan.jpg?alt=media&token=040c2b89-227c-479f-9bd2-5d849f2d019c",
+      "auctionType": "2",
+      "auctionDescription": "English Auction",
+      "originalValue": 25,
+      "auctionState": 0,
+      "paintingQuality": 3.8,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+      "id": 4,
+      "name": "Nefertiti",
+      "region": "Africa",
+      "country": "Egypt",
+      "dateCreated": "1350",
+      "artist": "Thutmose",
+      "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-test-nov6%2Fbust-of-nefertiti.png?alt=media&token=8668eed5-67dc-49f9-a877-54d9e8eb1cea",
+      "auctionType": "1",
+      "auctionDescription": "First priced sealed bid",
+      "originalValue": 35,
+      "auctionState": 0,
+      "paintingQuality": 4.5,
+      "hasAuctionTimerStarted": false,
+      "auctionTimerDeadline": 1,
+      "hasAuctionTimerEnded": false,
+      "auctionTimerValue": {},
+      "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    },
+    {
+    "id": 5,
+    "name": "Sierra Falls",
+    "region": "Americas",
+    "country": "USA",
+    "dateCreated": "2016",
+    "artist": "Jon Rattenbury",
+    "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/Art%2Fseirra-falls.jpeg?alt=media&token=a7502746-9de2-44fe-8d05-9afe39a7e785",
+    "auctionType": "3",
+    "auctionDescription": "second priced sealed bid",
+    "originalValue": 32,
+    "paintingQuality": 3.2,
+    "hasAuctionTimerStarted": false,
+    "auctionTimerDeadline": 1,
+    "hasAuctionTimerEnded": false,
+    "auctionTimerValue": {},
+    "auctionState": 0,
+    "bid": {
+        "bidAmount": 0,
+        "bidTeam": ""
+      }
+    }
+  ]
+}
