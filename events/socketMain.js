@@ -18,6 +18,7 @@ module.exports = async (io, socket, rooms) => {
     let room = await collection.findOne({'hostCode': player.hostCode});
     let parsedRoom = room;
     if (!room) {
+      const allPaintings = [...auctionsObj.artifacts, ...sellingAuctionObj.sellingArtifacts, ...dutchAuctionObj.artifacts];
       let playerObj = {
         socketId: socket.id,
         playerId: player.playerId,
@@ -28,6 +29,7 @@ module.exports = async (io, socket, rooms) => {
         hostCode: player.hostCode,
         roomCode: player.playerId,
         players: [playerObj],
+        allPaintings,
         auctions: cloneDeep(auctionsObj),
         sellingAuctions: cloneDeep(sellingAuctionObj),
         dutchAuctions: cloneDeep(dutchAuctionObj),
