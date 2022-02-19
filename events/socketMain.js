@@ -244,6 +244,12 @@ module.exports = async (io, socket, rooms) => {
     io.sockets.in(roomCode).emit("emitNominatedPainting", {paintingId, teamName, ticketPrice: data.ticketPrice, calculatedRevenue});
   }
 
+  const addToFavorites = async (data) => {
+    console.log('data', data);
+    const { favoritedItems, roomCode } = data;
+    io.sockets.in(roomCode).emit("updatedFavorites", favoritedItems);
+  }
+
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
@@ -259,4 +265,7 @@ module.exports = async (io, socket, rooms) => {
   socket.on("locationPhaseTimerEnded", hasLocationPhaseTimerEnded);
   socket.on("expoBeginningTimerEnded", hasExpoBeginningTimerEnded);
   socket.on("sellingResultsTimerEnded", hasSellingResultsTimerEnded);
+  
+  //new design additions
+  socket.on("addtofavorites", addToFavorites);
 }
