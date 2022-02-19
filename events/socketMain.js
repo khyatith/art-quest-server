@@ -179,7 +179,6 @@ module.exports = async (io, socket, rooms) => {
     let result;
     let ticketPriceForLocation = {};
     const existingRecord = await collection_flyTicketPrice.findOne({'roomId': roomId});
-    console.log('isExistingRecord', existingRecord);
     if (existingRecord) {
       ticketPriceForLocation = existingRecord.ticketPriceByLocation;
       ticketPriceForLocation = {

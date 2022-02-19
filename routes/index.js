@@ -436,17 +436,14 @@ mongoClient.then(db => {
       selling_result.visits = visitObjects;
       selling_result.allTeams = keys;
       const flyTicketsPriceData = await getFlyTicketPrice(roomId);
-      console.log('flyTicketsPriceData', flyTicketsPriceData);
       selling_result.flyTicketsPrice = flyTicketsPriceData;
       res.status(200).json(selling_result);
     }
   });
 
   router.get('/getFlyTicketPriceForLocation', async (req, res) => {
-    console.log('req', req);
     const { roomId } = req.query;
     const result = await getFlyTicketPrice(roomId);
-    console.log('inside room id', roomId);
     res.status(200).json(result);
   });
 
@@ -474,6 +471,7 @@ mongoClient.then(db => {
             "sellingAuctions": { "sellingArtifacts": sellingArtifacts }
           }
         });
+        await collection_flyTicketPrice.findOneAndUpdate({ "roomId": req.body.roomId }, { $set: { "ticketPriceByLocation": {} }});
         res.status(200).json({ message: "updated" });
         serverRoom = {
           ...serverRoom,
@@ -528,7 +526,7 @@ mongoClient.then(db => {
                 selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
               } else {
                 const currentTime = Date.parse(new Date());
-                const deadline = new Date(currentTime + 1 * 60 * 1000);
+                const deadline = new Date(currentTime + 0.1 * 60 * 1000);
                 const timerValue = getRemainingTime(deadline);
                 setInterval(() => startSellingServerTimer(room, deadline), 1000);
                 selling_info.sellPaintingTimerValue = timerValue;
@@ -669,7 +667,6 @@ mongoClient.then(db => {
 
   const getFlyTicketPrice = async (roomId) => {
     const result = await collection_flyTicketPrice.findOne({'roomId': roomId});
-    console.log('result', result);
     return result;
   }
 
