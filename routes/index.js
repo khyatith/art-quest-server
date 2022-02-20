@@ -51,6 +51,16 @@ const startServerTimer = (room, deadline) => {
   }
 }
 
+const startEnglishAuctionTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasEnglishAuctionTimerEnded = true;
+    room.englishAuctionTimer = {};
+  } else if (room && timerValue.total > 0) {
+    room.englishAuctionTimer = timerValue;
+  }
+}
+
 
 const startLocationPhaseServerTimer = async (hostCode, deadline) => {
   let timerValue = getRemainingTime(deadline);
@@ -125,6 +135,25 @@ router.get('/timer/:hostCode', function (req, res) {
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
+  }
+});
+
+router.get('/englishauctionTimer/:hostCode', (req, res) => {
+  const { params } = req;
+  const hostCode = params.hostCode;
+  let room = rooms[hostCode];
+  if (room && room.hasEnglishAuctionTimerEnded) {
+    res.send({ englishAuctionTimer: {} });
+    return;
+  }
+  if (room && Object.keys(room.englishAuctionTimer).length > 0) {
+    res.send({ englishAuctionTimer: room.englishAuctionTimer });
+  } else {
+    const currentTime = Date.parse(new Date());
+    const deadline = new Date(currentTime + 2 * 60 * 1000);
+    const timerValue = getRemainingTime(deadline);
+    setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
+    res.send({ englishAuctionTimer: timerValue });
   }
 });
 

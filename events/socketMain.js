@@ -56,6 +56,8 @@ module.exports = async (io, socket, rooms) => {
         auctionResultTimerDeadline: 0,
         auctionResultTimerValue: {},
         hasAuctionResultTimerEnded: false,
+        hasEnglishAuctionTimerEnded: false,
+        englishAuctionTimer: {},
         winner: null,
         sellingRoundNumber: 1,
         hadLocationPageTimerEnded: false,
@@ -251,6 +253,13 @@ module.exports = async (io, socket, rooms) => {
     io.sockets.in(roomCode).emit("updatedFavorites", favoritedItems);
   }
 
+  const addEnglishAuctionBid = async (data) => {
+    const { player, auctionId } = data;
+    rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = data;
+    io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
+    await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBids": rooms[player.hostCode].englishAuctionBids } });
+  }
+
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
@@ -269,4 +278,5 @@ module.exports = async (io, socket, rooms) => {
   
   //new design additions
   socket.on("addtofavorites", addToFavorites);
+  socket.on("addEnglishAuctionBid", addEnglishAuctionBid);
 }
