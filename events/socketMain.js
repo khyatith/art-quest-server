@@ -2,6 +2,7 @@ const { getRemainingTime, calculateSellingRevenue } = require("../helpers/game")
 var auctionsObj = require("../data/auctionData.json");
 var sellingAuctionObj = require("../data/sellingAuctionData.json");
 var dutchAuctionObj = require("../data/dutchAuctionData.json");
+var secretAuctionObj = require("../data/secretAuctionData.json");
 const dbClient = require('../mongoClient');
 var cloneDeep = require('lodash.clonedeep');
 
@@ -18,7 +19,7 @@ module.exports = async (io, socket, rooms) => {
     let room = await collection.findOne({'hostCode': player.hostCode});
     let parsedRoom = room;
     if (!room) {
-      const allPaintings = [...auctionsObj.artifacts, ...sellingAuctionObj.sellingArtifacts, ...dutchAuctionObj.artifacts];
+      const allPaintings = [...auctionsObj.artifacts, secretAuctionObj.artifacts, ...dutchAuctionObj.artifacts];
       let playerObj = {
         socketId: socket.id,
         playerId: player.playerId,
@@ -31,6 +32,7 @@ module.exports = async (io, socket, rooms) => {
         players: [playerObj],
         allPaintings,
         auctions: cloneDeep(auctionsObj),
+        secretAuctions: cloneDeep(secretAuctionObj),
         sellingAuctions: cloneDeep(sellingAuctionObj),
         dutchAuctions: cloneDeep(dutchAuctionObj),
         dutchAuctionsOrder: [],
@@ -58,6 +60,8 @@ module.exports = async (io, socket, rooms) => {
         hasAuctionResultTimerEnded: false,
         hasEnglishAuctionTimerEnded: false,
         englishAuctionTimer: {},
+        hasSecretAuctionTimerEnded: false,
+        secretAuctionTimer: {},
         winner: null,
         sellingRoundNumber: 1,
         hadLocationPageTimerEnded: false,
@@ -260,6 +264,48 @@ module.exports = async (io, socket, rooms) => {
     await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBids": rooms[player.hostCode].englishAuctionBids } });
   }
 
+  const renderEnglishAuctionResults = async (roomId) => {
+    const room = await collection.findOne({"hostCode": roomId});
+    io.sockets.in(roomId).emit("renderEnglishAuctionsResults", room.englishAuctionBids);
+  }
+
+  const addToFirstPricedSealedBidAuction = async (data) => {
+    const { player, auctionId, bidAmount } = data;
+    const allFirstPricedSealedBids = rooms[player.hostCode].firstPricedSealedBids;
+    const fpsbObj = Object.keys(allFirstPricedSealedBids);
+    if (fpsbObj.includes(`${auctionId}`)) {
+      rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`].push(data);
+    } else {
+      rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`] = [data];
+    }
+    io.sockets.in(player.hostCode).emit("setLiveStyles", { teamName: player.teamName, auctionId, bidAmount });
+    await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "firstPricedSealedBids": rooms[player.hostCode].firstPricedSealedBids } });
+  }
+
+  const renderSecretAuctionResults = async (roomId) => {
+    let result = {};
+    const room = await collection.findOne({"hostCode": roomId});
+    const firstPricedSealedBidAuctionsObj = room.firstPricedSealedBids;
+    for (var fristPricedSealedAuction in firstPricedSealedBidAuctionsObj) {
+      const FPSBItem = firstPricedSealedBidAuctionsObj[fristPricedSealedAuction];
+      const FPSBwinner = FPSBItem.reduce((acc, obj) => {
+        const accBid = parseInt(acc.bidAmount);
+        const objBid = parseInt(obj.bidAmount);
+        if (accBid === objBid) {
+          if (acc.bidAt < obj.bidAt) {
+            return acc;
+          } else {
+            return obj;
+          }
+        }
+        return (accBid > objBid) ? acc : obj;
+      }, {});
+      result[fristPricedSealedAuction] = FPSBwinner;
+    }
+    console.log('result', result);
+    io.sockets.in(roomId).emit("renderSecretAuctionsResult", result);
+  }
+
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
@@ -279,4 +325,7 @@ module.exports = async (io, socket, rooms) => {
   //new design additions
   socket.on("addtofavorites", addToFavorites);
   socket.on("addEnglishAuctionBid", addEnglishAuctionBid);
+  socket.on("englishAuctionTimerEnded", renderEnglishAuctionResults);
+  socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
+  socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
 }
