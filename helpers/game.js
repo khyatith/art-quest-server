@@ -60,16 +60,16 @@ function getLeaderboard(rooms, roomCode) {
 	if (englishAuctionsObj) {
 		for (var englishAuction in englishAuctionsObj) {
 			const leaderBoardKeys = Object.keys(leaderboard);
-      const HighestAuctionItem = englishAuctionsObj[englishAuction];
-      const EAWinner = getWinningEnglishAuctionBid(currentRoom.maxEnglishAuctionBids, HighestAuctionItem, HighestAuctionItem.auctionId);
-      const EAwinningTeam = EAWinner.EAWinningTeam;
+      const EAWinner = englishAuctionsObj[englishAuction];
+      // const EAWinner = getWinningEnglishAuctionBid(currentRoom.maxEnglishAuctionBids, HighestAuctionItem, HighestAuctionItem.auctionId);
+      const EAwinningTeam = EAWinner.bidTeam;
 			if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam)) {
-        const isExistingAuction = leaderboard[EAwinningTeam].filter(item => item.auctionObj.id === HighestAuctionItem.auctionId)[0];
+        const isExistingAuction = leaderboard[EAwinningTeam].filter(item => parseInt(item.auctionId, 10) === parseInt(EAWinner.auctionId, 10))[0];
         if (!isExistingAuction) {
-          leaderboard[`${EAwinningTeam}`].push(EAWinner.highestBidObj);
+          leaderboard[`${EAwinningTeam}`].push(EAWinner);
         }
       } else {
-        leaderboard[`${EAwinningTeam}`] = [EAWinner.highestBidObj];
+        leaderboard[`${EAwinningTeam}`] = [EAWinner];
       }
 		}
   }
@@ -326,7 +326,7 @@ function getRemainingTime(deadline) {
 function teamArtScore(arr) {
   let totalPaintingQuality = 0.0;
   return arr.reduce((acc,v) => {
-    totalPaintingQuality += v.auctionObj.paintingQuality;
+    totalPaintingQuality += v.paintingQuality;
     acc = totalPaintingQuality;
     return Math.round((acc + Number.EPSILON) * 100) / 100
   }, {});

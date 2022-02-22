@@ -160,7 +160,7 @@ router.get('/englishauctionTimer/:hostCode', (req, res) => {
     res.send({ englishAuctionTimer: room.englishAuctionTimer });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.5 * 60 * 1000);
+    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
     res.send({ englishAuctionTimer: timerValue });

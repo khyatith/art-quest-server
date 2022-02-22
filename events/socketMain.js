@@ -1,4 +1,5 @@
 const { getRemainingTime, calculateSellingRevenue } = require("../helpers/game");
+const { getNewLeaderboard } = require('../helpers/new-game-helpers');
 var auctionsObj = require("../data/auctionData.json");
 var sellingAuctionObj = require("../data/sellingAuctionData.json");
 var dutchAuctionObj = require("../data/dutchAuctionData.json");
@@ -252,7 +253,6 @@ module.exports = async (io, socket, rooms) => {
   }
 
   const addToFavorites = async (data) => {
-    console.log('data', data);
     const { favoritedItems, roomCode } = data;
     io.sockets.in(roomCode).emit("updatedFavorites", favoritedItems);
   }
@@ -266,7 +266,9 @@ module.exports = async (io, socket, rooms) => {
 
   const renderEnglishAuctionResults = async (roomId) => {
     const room = await collection.findOne({"hostCode": roomId});
-    io.sockets.in(roomId).emit("renderEnglishAuctionsResults", room.englishAuctionBids);
+    // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
+    io.sockets.in(roomId).emit("renderEnglishAuctionsResults", { englishAutionBids: room.englishAuctionBids });
+    // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalArtScoreForTeams": results.totalArtScoreForTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
   }
 
   const addToFirstPricedSealedBidAuction = async (data) => {
@@ -302,7 +304,6 @@ module.exports = async (io, socket, rooms) => {
       }, {});
       result[fristPricedSealedAuction] = FPSBwinner;
     }
-    console.log('result', result);
     io.sockets.in(roomId).emit("renderSecretAuctionsResult", result);
   }
 
