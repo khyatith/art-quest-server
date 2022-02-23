@@ -114,7 +114,7 @@ function getLeaderboard(rooms, roomCode) {
       }, {});
       const FPSBwinningteam = FPSBwinner.bidTeam;
       if (leaderBoardFSBKeys && leaderBoardFSBKeys.includes(FPSBwinningteam)) {
-        const isExistingFPSBAuction = leaderboard[FPSBwinningteam].filter(item => item.auctionObj.id === FPSBwinner.auctionId)[0];
+        const isExistingFPSBAuction = leaderboard[FPSBwinningteam].filter(item => item.auctionId === FPSBwinner.auctionId)[0];
         if (!isExistingFPSBAuction) {
           leaderboard[`${FPSBwinningteam}`].push(FPSBwinner);
         }

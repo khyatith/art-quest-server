@@ -484,7 +484,7 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 1 * 60 * 1000);
+        const deadline = new Date(currentTime + 0.3 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
         selling_result.locationPhaseTimerValue = timerValue;
@@ -649,7 +649,7 @@ mongoClient.then(db => {
             const result = value.map(val => {
               return {
                 auctionId: val.auctionId,
-                paintingURL: val.auctionObj.imageURL,
+                paintingURL: val.imageURL,
               }
             });
             acc = {
