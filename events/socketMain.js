@@ -1,7 +1,9 @@
 const { getRemainingTime, calculateSellingRevenue } = require("../helpers/game");
+const { getNewLeaderboard } = require('../helpers/new-game-helpers');
 var auctionsObj = require("../data/auctionData.json");
 var sellingAuctionObj = require("../data/sellingAuctionData.json");
 var dutchAuctionObj = require("../data/dutchAuctionData.json");
+var secretAuctionObj = require("../data/secretAuctionData.json");
 const dbClient = require('../mongoClient');
 var cloneDeep = require('lodash.clonedeep');
 
@@ -18,6 +20,7 @@ module.exports = async (io, socket, rooms) => {
     let room = await collection.findOne({'hostCode': player.hostCode});
     let parsedRoom = room;
     if (!room) {
+      const allPaintings = [...auctionsObj.artifacts, secretAuctionObj.artifacts, ...dutchAuctionObj.artifacts];
       let playerObj = {
         socketId: socket.id,
         playerId: player.playerId,
@@ -28,7 +31,9 @@ module.exports = async (io, socket, rooms) => {
         hostCode: player.hostCode,
         roomCode: player.playerId,
         players: [playerObj],
+        allPaintings,
         auctions: cloneDeep(auctionsObj),
+        secretAuctions: cloneDeep(secretAuctionObj),
         sellingAuctions: cloneDeep(sellingAuctionObj),
         dutchAuctions: cloneDeep(dutchAuctionObj),
         dutchAuctionsOrder: [],
@@ -54,6 +59,10 @@ module.exports = async (io, socket, rooms) => {
         auctionResultTimerDeadline: 0,
         auctionResultTimerValue: {},
         hasAuctionResultTimerEnded: false,
+        hasEnglishAuctionTimerEnded: false,
+        englishAuctionTimer: {},
+        hasSecretAuctionTimerEnded: false,
+        secretAuctionTimer: {},
         winner: null,
         sellingRoundNumber: 1,
         hadLocationPageTimerEnded: false,
@@ -244,9 +253,58 @@ module.exports = async (io, socket, rooms) => {
   }
 
   const addToFavorites = async (data) => {
-    console.log('data', data);
     const { favoritedItems, roomCode } = data;
     io.sockets.in(roomCode).emit("updatedFavorites", favoritedItems);
+  }
+
+  const addEnglishAuctionBid = async (data) => {
+    const { player, auctionId } = data;
+    rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = data;
+    io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
+    await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBids": rooms[player.hostCode].englishAuctionBids } });
+  }
+
+  const renderEnglishAuctionResults = async (roomId) => {
+    const room = await collection.findOne({"hostCode": roomId});
+    // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
+    io.sockets.in(roomId).emit("renderEnglishAuctionsResults", { englishAutionBids: room.englishAuctionBids });
+    // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalArtScoreForTeams": results.totalArtScoreForTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
+  }
+
+  const addToFirstPricedSealedBidAuction = async (data) => {
+    const { player, auctionId, bidAmount } = data;
+    const allFirstPricedSealedBids = rooms[player.hostCode].firstPricedSealedBids;
+    const fpsbObj = Object.keys(allFirstPricedSealedBids);
+    if (fpsbObj.includes(`${auctionId}`)) {
+      rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`].push(data);
+    } else {
+      rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`] = [data];
+    }
+    io.sockets.in(player.hostCode).emit("setLiveStyles", { teamName: player.teamName, auctionId, bidAmount });
+    await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "firstPricedSealedBids": rooms[player.hostCode].firstPricedSealedBids } });
+  }
+
+  const renderSecretAuctionResults = async (roomId) => {
+    let result = {};
+    const room = await collection.findOne({"hostCode": roomId});
+    const firstPricedSealedBidAuctionsObj = room.firstPricedSealedBids;
+    for (var fristPricedSealedAuction in firstPricedSealedBidAuctionsObj) {
+      const FPSBItem = firstPricedSealedBidAuctionsObj[fristPricedSealedAuction];
+      const FPSBwinner = FPSBItem.reduce((acc, obj) => {
+        const accBid = parseInt(acc.bidAmount);
+        const objBid = parseInt(obj.bidAmount);
+        if (accBid === objBid) {
+          if (acc.bidAt < obj.bidAt) {
+            return acc;
+          } else {
+            return obj;
+          }
+        }
+        return (accBid > objBid) ? acc : obj;
+      }, {});
+      result[fristPricedSealedAuction] = FPSBwinner;
+    }
+    io.sockets.in(roomId).emit("renderSecretAuctionsResult", result);
   }
 
   socket.on("createRoom", createRoom);
@@ -267,4 +325,8 @@ module.exports = async (io, socket, rooms) => {
   
   //new design additions
   socket.on("addtofavorites", addToFavorites);
+  socket.on("addEnglishAuctionBid", addEnglishAuctionBid);
+  socket.on("englishAuctionTimerEnded", renderEnglishAuctionResults);
+  socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
+  socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
 }

@@ -51,6 +51,26 @@ const startServerTimer = (room, deadline) => {
   }
 }
 
+const startEnglishAuctionTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasEnglishAuctionTimerEnded = true;
+    room.englishAuctionTimer = {};
+  } else if (room && timerValue.total > 0) {
+    room.englishAuctionTimer = timerValue;
+  }
+}
+
+const startSecretAuctionTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasSecretAuctionTimerEnded = true;
+    room.secretAuctionTimer = {};
+  } else if (room && timerValue.total > 0) {
+    room.secretAuctionTimer = timerValue;
+  }
+}
+
 
 const startLocationPhaseServerTimer = async (hostCode, deadline) => {
   let timerValue = getRemainingTime(deadline);
@@ -127,6 +147,44 @@ router.get('/timer/:hostCode', function (req, res) {
     res.send({ landingPageTimerValue: timerValue });
   }
 });
+
+router.get('/englishauctionTimer/:hostCode', (req, res) => {
+  const { params } = req;
+  const hostCode = params.hostCode;
+  let room = rooms[hostCode];
+  if (room && room.hasEnglishAuctionTimerEnded) {
+    res.send({ englishAuctionTimer: {} });
+    return;
+  }
+  if (room && Object.keys(room.englishAuctionTimer).length > 0) {
+    res.send({ englishAuctionTimer: room.englishAuctionTimer });
+  } else {
+    const currentTime = Date.parse(new Date());
+    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
+    const timerValue = getRemainingTime(deadline);
+    setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
+    res.send({ englishAuctionTimer: timerValue });
+  }
+});
+
+router.get('/secretauctionTimer/:hostCode', (req, res) => {
+  const { params } = req;
+  const hostCode = params.hostCode;
+  let room = rooms[hostCode];
+  if (room && room.hasSecretAuctionTimerEnded) {
+    res.send({ secretAuctionTimer: {} });
+    return;
+  }
+  if (room && Object.keys(room.secretAuctionTimer).length > 0) {
+    res.send({ secretAuctionTimer: room.secretAuctionTimer });
+  } else {
+    const currentTime = Date.parse(new Date());
+    const deadline = new Date(currentTime + 0.5 * 60 * 1000);
+    const timerValue = getRemainingTime(deadline);
+    setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
+    res.send({ secretAuctionTimer: timerValue });
+  }
+})
 
 router.get('/getResults/:hostCode', async (req, res) => {
   db = await dbClient.createConnection();
@@ -426,7 +484,7 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 1 * 60 * 1000);
+        const deadline = new Date(currentTime + 0.3 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
         selling_result.locationPhaseTimerValue = timerValue;
@@ -591,7 +649,7 @@ mongoClient.then(db => {
             const result = value.map(val => {
               return {
                 auctionId: val.auctionId,
-                paintingURL: val.auctionObj.imageURL,
+                paintingURL: val.imageURL,
               }
             });
             acc = {
