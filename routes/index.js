@@ -141,7 +141,7 @@ router.get('/timer/:hostCode', function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
+    const deadline = new Date(currentTime + 1 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
@@ -160,7 +160,7 @@ router.get('/englishauctionTimer/:hostCode', (req, res) => {
     res.send({ englishAuctionTimer: room.englishAuctionTimer });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
+    const deadline = new Date(currentTime + 0.5 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
     res.send({ englishAuctionTimer: timerValue });
@@ -179,7 +179,7 @@ router.get('/secretauctionTimer/:hostCode', (req, res) => {
     res.send({ secretAuctionTimer: room.secretAuctionTimer });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.5 * 60 * 1000);
+    const deadline = new Date(currentTime + 0.3 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
     res.send({ secretAuctionTimer: timerValue });
@@ -484,7 +484,7 @@ mongoClient.then(db => {
         selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 0.3 * 60 * 1000);
+        const deadline = new Date(currentTime + 1 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startLocationPhaseServerTimer(roomId, deadline), 1000);
         selling_result.locationPhaseTimerValue = timerValue;
@@ -584,7 +584,7 @@ mongoClient.then(db => {
                 selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
               } else {
                 const currentTime = Date.parse(new Date());
-                const deadline = new Date(currentTime + 0.1 * 60 * 1000);
+                const deadline = new Date(currentTime + 0.5 * 60 * 1000);
                 const timerValue = getRemainingTime(deadline);
                 setInterval(() => startSellingServerTimer(room, deadline), 1000);
                 selling_info.sellPaintingTimerValue = timerValue;

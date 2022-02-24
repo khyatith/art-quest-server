@@ -20,7 +20,7 @@ module.exports = async (io, socket, rooms) => {
     let room = await collection.findOne({'hostCode': player.hostCode});
     let parsedRoom = room;
     if (!room) {
-      const allPaintings = [...auctionsObj.artifacts, secretAuctionObj.artifacts, ...dutchAuctionObj.artifacts];
+      const allPaintings = [...auctionsObj.artifacts, ...secretAuctionObj.artifacts];
       let playerObj = {
         socketId: socket.id,
         playerId: player.playerId,
