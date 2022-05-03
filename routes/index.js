@@ -701,9 +701,9 @@ mongoClient.then(db => {
 
       //update art score for team
       if (totalArtScoreForTeam[EAwinningTeam]) {
-        totalArtScoreForTeam[EAwinningTeam] = parseFloat(totalArtScoreForTeam[EAwinningTeam]) + parseFloat(auctionItem.paintingQuality);
+        totalArtScoreForTeam[EAwinningTeam] = parseFloat(totalArtScoreForTeam[EAwinningTeam]) + 5.0;  //paintingQuality Removed and replace with value 5.0
       } else {
-        totalArtScoreForTeam[EAwinningTeam] = parseFloat(auctionItem.paintingQuality);
+        totalArtScoreForTeam[EAwinningTeam] = 5.0;  //paintingQuality Removed and replace with value 5.0
       }
       roomInServer.totalArtScoreForTeams = totalArtScoreForTeam;
       //update team leaderboard
