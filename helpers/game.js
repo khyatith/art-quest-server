@@ -326,7 +326,7 @@ function getRemainingTime(deadline) {
 function teamArtScore(arr) {
   let totalPaintingQuality = 0.0;
   return arr.reduce((acc,v) => {
-    totalPaintingQuality += v.paintingQuality;
+    totalPaintingQuality += 5.0;      //paintingQuality replaced with value 5.0
     acc = totalPaintingQuality;
     return Math.round((acc + Number.EPSILON) * 100) / 100
   }, {});
@@ -362,8 +362,8 @@ function isInt(n) {
 }
 
 function calculateSellingRevenue(data) {
-  const { interestInArt, population, paintingQuality, ticketPrice, allTeamsInCity } = data;
-  let revenue = (parseFloat(interestInArt) * parseFloat(paintingQuality)) / (parseFloat(population) + parseFloat(ticketPrice) + parseInt(allTeamsInCity));
+  const { interestInArt, population, ticketPrice, allTeamsInCity } = data;
+  let revenue = (parseFloat(interestInArt) * parseFloat(5.0)) / (parseFloat(population) + parseFloat(ticketPrice) + parseInt(allTeamsInCity));  //paintingQuality is replaced with fixed value 5.0
   if (isInt(revenue)) {
     return revenue
   } else {
