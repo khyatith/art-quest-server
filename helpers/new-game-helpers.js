@@ -1,4 +1,4 @@
-const { getLeaderboard, calculateTotalAmountSpent, calculateTeamEfficiency, calculateTotalArtScore, createTeamRankForBuyingPhase } = require("../helpers/game");
+const { getLeaderboard, calculateTotalAmountSpent, calculateTeamEfficiency,  createTeamRankForBuyingPhase } = require("../helpers/game");
 
 async function getNewLeaderboard(rooms, hostCode, totalArtifacts) {
   // update leaderboard
@@ -10,11 +10,9 @@ async function getNewLeaderboard(rooms, hostCode, totalArtifacts) {
 
   const teamStats = await calculateTeamEfficiency(totalAmountByTeam, leaderboard);
 
-  const totalArtScoreForTeams = await calculateTotalArtScore(leaderboard);
-
   const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, totalArtifacts);
 
-  return { leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks, totalArtScoreForTeams };
+  return { leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks };
 };
 
 module.exports = {

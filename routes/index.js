@@ -12,7 +12,6 @@ const {
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
   calculateTeamEfficiency,
-  calculateTotalArtScore,
 } = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
@@ -213,15 +212,13 @@ router.get('/getResults/:hostCode', async (req, res) => {
   const teamStats = await calculateTeamEfficiency(totalAmountByTeam, leaderboard);
   room.teamEfficiency = teamStats.efficiencyByTeam;
 
-  const totalArtScoreForTeams = await calculateTotalArtScore(leaderboard);
-  room.totalArtScoreForTeams = totalArtScoreForTeams;
 
   room.totalPaintingsWonByTeam = teamStats.totalPaintingsWonByTeams;
 
   // const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, room.auctions.artifacts.length);
 
-  const result = JSON.stringify({ leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, totalArtScoreForTeams });
-  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: {"leaderBoard": leaderboard, "totalAmountSpentByTeam": totalAmountByTeam, "teamEfficiency": teamStats.efficiencyByTeam, "totalArtScoreForTeams": totalArtScoreForTeams, "totalPaintingsWonByTeam":  teamStats.totalPaintingsWonByTeams } });
+  const result = JSON.stringify({ leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams });
+  await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: {"leaderBoard": leaderboard, "totalAmountSpentByTeam": totalAmountByTeam, "teamEfficiency": teamStats.efficiencyByTeam, "totalPaintingsWonByTeam":  teamStats.totalPaintingsWonByTeams } });
   res.send(result);
 });
 
@@ -481,7 +478,6 @@ mongoClient.then(db => {
       res.status(404).json({ error: 'Room not found' });
     } else {
       selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
-      selling_result.totalArtScoreForTeams = results.totalArtScoreForTeams;
       selling_result.roundNumber = results.sellingRoundNumber;
       selling_result.players = results.players;
       var keys = results.allTeams;
@@ -697,7 +693,6 @@ mongoClient.then(db => {
       const roomInServer = await collection_room.findOne({ "roomCode": roomId });
       const leaderboard = roomInServer.leaderBoard;
       let totalAmountSpentByTeam = roomInServer.totalAmountSpentByTeam;
-      let totalArtScoreForTeam = roomInServer.totalArtScoreForTeams;
       const leaderBoardKeys = Object.keys(leaderboard);
       const EAwinningTeam = auctionItem.bidTeam;
 
@@ -709,13 +704,6 @@ mongoClient.then(db => {
       }
       roomInServer.totalAmountSpentByTeam = totalAmountSpentByTeam;
 
-      //update art score for team
-      if (totalArtScoreForTeam[EAwinningTeam]) {
-        totalArtScoreForTeam[EAwinningTeam] = parseFloat(totalArtScoreForTeam[EAwinningTeam]) + 5.0;  //paintingQuality Removed and replace with value 5.0
-      } else {
-        totalArtScoreForTeam[EAwinningTeam] = 5.0;  //paintingQuality Removed and replace with value 5.0
-      }
-      roomInServer.totalArtScoreForTeams = totalArtScoreForTeam;
       //update team leaderboard
       if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam)) {
         const isExistingAuctionForTeam = leaderboard[EAwinningTeam].filter(item => item.auctionObj.id === auctionId);

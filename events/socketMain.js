@@ -81,7 +81,6 @@ module.exports = async (io, socket, rooms) => {
         sellingResultsTimerValue: {},
         hasSellingResultsTimerEnded: false,
         calculatedRoundRevenue: {},
-        totalArtScoreForTeams: {},
       };
       rooms[player.hostCode] = parsedRoom;
       await collection.insertOne(parsedRoom);
@@ -277,7 +276,7 @@ module.exports = async (io, socket, rooms) => {
     const room = await collection.findOne({"hostCode": roomId});
     // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
     io.sockets.in(roomId).emit("renderEnglishAuctionsResults", { englishAutionBids: room.englishAuctionBids });
-    // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalArtScoreForTeams": results.totalArtScoreForTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
+    // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
   }
 
   const addToFirstPricedSealedBidAuction = async (data) => {
