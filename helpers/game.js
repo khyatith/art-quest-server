@@ -333,10 +333,9 @@ function teamArtScore(arr) {
 };
 
 function calculateBuyingPhaseWinner(room) {
-  const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam, totalArtScoreForTeams, auctions } = room;
-  const teamRanks = createTeamRankForBuyingPhase(totalPaintingsWonByTeam,teamEfficiency, auctions.artifacts.length);
-  const winnerArr = Object.keys(teamRanks);
-  return { leaderBoard, winner: winnerArr[0], totalPaintingsWonByTeam: totalPaintingsWonByTeam, teamsByRank: winnerArr, teamEfficiency, totalAmountSpentByTeam, totalArtScoreForTeams };
+  const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam, totalArtScoreForTeams, allTeams } = room;
+  // const teamRanks = createTeamRankForBuyingPhase(totalPaintingsWonByTeam,teamEfficiency, auctions.artifacts.length);
+  return { leaderBoard, totalPaintingsWonByTeam: totalPaintingsWonByTeam, allTeams, teamEfficiency, totalAmountSpentByTeam, totalArtScoreForTeams };
 }
 
 function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {

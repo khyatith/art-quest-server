@@ -71,6 +71,7 @@ module.exports = async (io, socket, rooms) => {
         englishAuctionTimer: {},
         hasSecretAuctionTimerEnded: false,
         secretAuctionTimer: {},
+        auctionNumber: '1',
         winner: null,
         sellingRoundNumber: 1,
         hadLocationPageTimerEnded: false,
@@ -282,6 +283,7 @@ module.exports = async (io, socket, rooms) => {
   const addToFirstPricedSealedBidAuction = async (data) => {
     const { player, auctionId, bidAmount } = data;
     const allFirstPricedSealedBids = rooms[player.hostCode].firstPricedSealedBids;
+    console.log('allFirstPricedSealedBids', allFirstPricedSealedBids);
     const fpsbObj = Object.keys(allFirstPricedSealedBids);
     if (fpsbObj.includes(`${auctionId}`)) {
       rooms[player.hostCode].firstPricedSealedBids[`${auctionId}`].push(data);
