@@ -141,24 +141,30 @@ router.get('/timer/:hostCode', function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 1 * 60 * 1000);
+    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
   }
 });
 
-router.get('/englishauctionTimer/:hostCode', (req, res) => {
+router.get('/englishauctionTimer/:hostCode/:englishAuctionsNumber', (req, res) => {
   const { params } = req;
   const hostCode = params.hostCode;
   let room = rooms[hostCode];
+  if (params.englishAuctionsNumber !== room.auctionNumber) {
+    room.hasEnglishAuctionTimerEnded = false;
+    room.englishAuctionTimer = {};
+  }
   if (room && room.hasEnglishAuctionTimerEnded) {
     res.send({ englishAuctionTimer: {} });
     return;
   }
+  console.log('rooms.hasEnglishAuctionsTimer before', room.hasEnglishAuctionTimerEnded);
   if (room && Object.keys(room.englishAuctionTimer).length > 0) {
     res.send({ englishAuctionTimer: room.englishAuctionTimer });
   } else {
+    console.log('inside else >>>>');
     const currentTime = Date.parse(new Date());
     const deadline = new Date(currentTime + 0.5 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
@@ -167,10 +173,14 @@ router.get('/englishauctionTimer/:hostCode', (req, res) => {
   }
 });
 
-router.get('/secretauctionTimer/:hostCode', (req, res) => {
+router.get('/secretauctionTimer/:hostCode/:secretAuctionsNumber', (req, res) => {
   const { params } = req;
   const hostCode = params.hostCode;
   let room = rooms[hostCode];
+  if (params.secretAuctionsNumber !== room.auctionNumber) {
+    room.hasSecretAuctionTimerEnded = false;
+    room.secretAuctionTimer = {};
+  }
   if (room && room.hasSecretAuctionTimerEnded) {
     res.send({ secretAuctionTimer: {} });
     return;
@@ -208,9 +218,9 @@ router.get('/getResults/:hostCode', async (req, res) => {
 
   room.totalPaintingsWonByTeam = teamStats.totalPaintingsWonByTeams;
 
-  const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, room.auctions.artifacts.length);
+  // const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, room.auctions.artifacts.length);
 
-  const result = JSON.stringify({ leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks, totalArtScoreForTeams });
+  const result = JSON.stringify({ leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, totalArtScoreForTeams });
   await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: {"leaderBoard": leaderboard, "totalAmountSpentByTeam": totalAmountByTeam, "teamEfficiency": teamStats.efficiencyByTeam, "totalArtScoreForTeams": totalArtScoreForTeams, "totalPaintingsWonByTeam":  teamStats.totalPaintingsWonByTeams } });
   res.send(result);
 });
