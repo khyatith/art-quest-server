@@ -208,9 +208,9 @@ router.get('/getResults/:hostCode', async (req, res) => {
 
   room.totalPaintingsWonByTeam = teamStats.totalPaintingsWonByTeams;
 
-  const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, room.auctions.artifacts.length);
+  // const teamRanks = createTeamRankForBuyingPhase(teamStats.totalPaintingsWonByTeams, teamStats.efficiencyByTeam, room.auctions.artifacts.length);
 
-  const result = JSON.stringify({ leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, teamRanks, totalArtScoreForTeams });
+  const result = JSON.stringify({ leaderboard, totalAmountByTeam, totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams, totalArtScoreForTeams });
   await collection.findOneAndUpdate({ "hostCode": hostCode }, { $set: {"leaderBoard": leaderboard, "totalAmountSpentByTeam": totalAmountByTeam, "teamEfficiency": teamStats.efficiencyByTeam, "totalArtScoreForTeams": totalArtScoreForTeams, "totalPaintingsWonByTeam":  teamStats.totalPaintingsWonByTeams } });
   res.send(result);
 });

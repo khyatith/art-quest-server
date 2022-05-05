@@ -1,6 +1,8 @@
 const { getRemainingTime, calculateSellingRevenue } = require("../helpers/game");
 var englishAuctionObj1 = require("../data/englishAuctionData1.json");
+var englishAuctionObj2 = require("../data/englishAuctionData2.json");
 var secretAuctionObj1 = require("../data/secretAuctionData1.json");
+var secretAuctionObj2 = require("../data/secretAuctionData2.json");
 var sellingAuctionObj = require("../data/sellingAuctionData.json");
 var dutchAuctionObj = require("../data/dutchAuctionData.json");
 const dbClient = require('../mongoClient');
@@ -19,7 +21,12 @@ module.exports = async (io, socket, rooms) => {
     let room = await collection.findOne({'hostCode': player.hostCode});
     let parsedRoom = room;
     if (!room) {
-      const allPaintings = [...englishAuctionObj1.artifacts, ...secretAuctionObj1.artifacts];
+      const allPaintings = [
+        ...englishAuctionObj1.artifacts,
+        ...secretAuctionObj1.artifacts,
+        ...englishAuctionObj2.artifacts,
+        ...secretAuctionObj2.artifacts
+      ];
       let playerObj = {
         socketId: socket.id,
         playerId: player.playerId,
@@ -31,8 +38,10 @@ module.exports = async (io, socket, rooms) => {
         roomCode: player.playerId,
         players: [playerObj],
         allPaintings,
-        auctions: cloneDeep(englishAuctionObj1),
-        secretAuctions: cloneDeep(secretAuctionObj1),
+        englishAuctions1: cloneDeep(englishAuctionObj1),
+        englishAuctions2: cloneDeep(englishAuctionObj2),
+        secretAuctions1: cloneDeep(secretAuctionObj1),
+        secretAuctions2: cloneDeep(secretAuctionObj2),
         sellingAuctions: cloneDeep(sellingAuctionObj),
         dutchAuctions: cloneDeep(dutchAuctionObj),
         dutchAuctionsOrder: [],
