@@ -408,16 +408,19 @@ module.exports = async (io, socket, rooms) => {
       const findRoom = await collection_classify.findOne({ roomCode: roomId });
       if (!findRoom) await collection_classify.insertOne(classifyPoints);
       else {
-        await collection_classify.findOneAndUpdate({
-          roomCode: roomId,
-          $set: {
-            classify: classifyPoints.classify,
-          },
-        });
+        await collection_classify.findOneAndUpdate(
+          { roomCode: roomId },
+          {
+            $set: {
+              classify: classifyPoints.classify,
+            },
+          }
+        );
       }
     } catch (err) {
       console.log(err);
     }
+    // console.log(classifyPoints);
     // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
     io.sockets.in(roomId).emit("renderEnglishAuctionsResults", {
       englishAutionBids: room.englishAuctionBids,
@@ -493,11 +496,16 @@ module.exports = async (io, socket, rooms) => {
 
       resultingObj.roomCode = roomId;
 
-      await collection_classify.findOneAndDelete({
-        roomCode: roomId,
-      });
+      await collection_classify.findOneAndUpdate(
+        { roomCode: roomId },
+        {
+          $set: {
+            classify: resultingObj.classify,
+          },
+        }
+      );
 
-      await collection_classify.insertOne(resultingObj);
+      //   console.log(resultingObj);
 
       io.sockets.in(roomId).emit("renderSecretAuctionsResult", {
         result,
