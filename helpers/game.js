@@ -267,20 +267,6 @@ function updateDutchAuctionLeaderboard(room) {
   return leaderBoard;
 }
 
-const calculateTotalArtScore = (leaderBoard) => {
-  if (!leaderBoard) return null;
-  let artScore = {};
-  for(team in leaderBoard) {
-    const currentTeamData = leaderBoard[team];
-    const currentTeamTotalScore = teamArtScore(currentTeamData);
-    artScore = {
-      ...artScore,
-      [team]: currentTeamTotalScore,
-    }
-  }
-  return artScore
-}
-
 function gameLoop(state) {
 	if (!state) {
 		return;
@@ -323,19 +309,11 @@ function getRemainingTime(deadline) {
 	};
 }
 
-function teamArtScore(arr) {
-  let totalPaintingQuality = 0.0;
-  return arr.reduce((acc,v) => {
-    totalPaintingQuality += 5.0;      //paintingQuality replaced with value 5.0
-    acc = totalPaintingQuality;
-    return Math.round((acc + Number.EPSILON) * 100) / 100
-  }, {});
-};
 
 function calculateBuyingPhaseWinner(room) {
-  const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam, totalArtScoreForTeams, allTeams } = room;
+  const { leaderBoard, totalAmountSpentByTeam, teamEfficiency, totalPaintingsWonByTeam,  allTeams } = room;
   // const teamRanks = createTeamRankForBuyingPhase(totalPaintingsWonByTeam,teamEfficiency, auctions.artifacts.length);
-  return { leaderBoard, totalPaintingsWonByTeam: totalPaintingsWonByTeam, allTeams, teamEfficiency, totalAmountSpentByTeam, totalArtScoreForTeams };
+  return { leaderBoard, totalPaintingsWonByTeam: totalPaintingsWonByTeam, allTeams, teamEfficiency, totalAmountSpentByTeam };
 }
 
 function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
@@ -471,5 +449,4 @@ module.exports = {
   updateDutchAuctionLeaderboard,
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
-  calculateTotalArtScore,
 };
