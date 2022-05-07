@@ -314,6 +314,12 @@ module.exports = async (io, socket, rooms) => {
     }
     io.sockets.in(roomId).emit("renderSecretAuctionsResult", result);
   }
+  
+  const biddingStarted = async (roomId) => {
+    io.sockets.in(roomId).emit("startBidding", true);
+
+  }
+  
 
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
@@ -337,4 +343,5 @@ module.exports = async (io, socket, rooms) => {
   socket.on("englishAuctionTimerEnded", renderEnglishAuctionResults);
   socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
   socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
+  socket.on("biddingStarted", biddingStarted);
 }
