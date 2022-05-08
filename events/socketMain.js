@@ -542,9 +542,5 @@ module.exports = async (io, socket, rooms) => {
   socket.on("englishAuctionTimerEnded", renderEnglishAuctionResults);
   socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
   socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
-<<<<<<< HEAD
   socket.on("biddingStarted", biddingStarted);
 }
-=======
-};
->>>>>>> bb80742 (implemented classify points engAuction & secretAuction)

@@ -230,7 +230,6 @@ router.get("/getResults/:hostCode", async (req, res) => {
     leaderboard,
     totalAmountByTeam,
     totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams,
-    totalArtScoreForTeams,
     classifyPoints: classifyObj,
   });
   await collection.findOneAndUpdate(
@@ -240,7 +239,6 @@ router.get("/getResults/:hostCode", async (req, res) => {
         leaderBoard: leaderboard,
         totalAmountSpentByTeam: totalAmountByTeam,
         teamEfficiency: teamStats.efficiencyByTeam,
-        totalArtScoreForTeams: totalArtScoreForTeams,
         totalPaintingsWonByTeam: teamStats.totalPaintingsWonByTeams,
       },
     }
