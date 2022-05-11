@@ -4,7 +4,7 @@ var englishAuctionObj2 = require("../data/englishAuctionData2.json");
 var secretAuctionObj1 = require("../data/secretAuctionData1.json");
 var secretAuctionObj2 = require("../data/secretAuctionData2.json");
 var sellingAuctionObj = require("../data/sellingAuctionData.json");
-var dutchAuctionObj = require("../data/dutchAuctionData.json");
+var dutchAuctionObj = require("../data/dutchAuctionData1.json");
 const dbClient = require('../mongoClient');
 var cloneDeep = require('lodash.clonedeep');
 

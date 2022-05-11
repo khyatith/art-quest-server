@@ -401,7 +401,7 @@ router.get('/getDutchAuctionData/:hostCode', async (req, res) => {
     val = updateRoom.dutchAuctionTimerValue;
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.2 * 60 * 1000);
+    const deadline = new Date(currentTime + 1 * 60 * 1000);
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startDutchAuctionTimer(updateRoom, deadline), 1000);
     val = timerValue;
