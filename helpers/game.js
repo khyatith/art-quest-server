@@ -186,7 +186,7 @@ function getLeaderboard(rooms, roomCode) {
   return leaderboard;
 }
 
-function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
+async function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
   if (!leaderboard || !roomCode) return null;
   const currentRoom = rooms[roomCode];
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
@@ -316,7 +316,7 @@ function calculateBuyingPhaseWinner(room) {
   return { leaderBoard, totalPaintingsWonByTeam: totalPaintingsWonByTeam, allTeams, teamEfficiency, totalAmountSpentByTeam };
 }
 
-function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
+async function  calculateTeamEfficiency (totalAmountByTeam, leaderboard) {
   let efficiencyByTeam = {};
   let totalPaintingsWonByTeams = {};
   for(team in leaderboard) {
