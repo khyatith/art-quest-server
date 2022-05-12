@@ -187,7 +187,7 @@ module.exports = async (io, socket, rooms) => {
     if (!hasLandingPageTimerStarted) {
       const currentTime = Date.parse(new Date());
       parsedRoom.landingPageTimerDeadline = new Date(
-        currentTime + 0.5 * 60 * 1000
+        currentTime + 0.1 * 60 * 1000         // 0.5
       );
       parsedRoom.hasLandingPageTimerStarted = true;
       collection.findOneAndUpdate({ hostCode: roomCode }, { $set: parsedRoom });
@@ -218,7 +218,8 @@ module.exports = async (io, socket, rooms) => {
   }) => {
     const room = await collection.findOne({ hostCode: roomCode });
     const parsedRoom = room;
-    parsedRoom.numberOfPlayers = parseInt(numberOfPlayers);
+    // if(!room) return;
+    parsedRoom.numberOfPlayers = parseInt(numberOfPlayers?numberOfPlayers:"1");
     parsedRoom.version = parseInt(version);
     rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayers);
     rooms[roomCode].version = parseInt(version);
@@ -433,6 +434,37 @@ module.exports = async (io, socket, rooms) => {
     });
     // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalArtScoreForTeams": results.totalArtScoreForTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
   };
+  const renderDutchAuctionResults = async (roomId) => {
+    const room = await collection.findOne({ hostCode: roomId });
+    const classifyPoints = {};
+
+    try {
+      classifyPoints.roomCode = roomId;
+      classifyPoints.classify = calculate(room, "DUTCH");
+
+      const findRoom = await collection_classify.findOne({ roomCode: roomId });
+      if (!findRoom) await collection_classify.insertOne(classifyPoints);
+      else {
+        await collection_classify.findOneAndUpdate(
+          { roomCode: roomId },
+          {
+            $set: {
+              classify: classifyPoints.classify,
+            },
+          }
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    // console.log(classifyPoints);
+    // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
+    io.sockets.in(roomId).emit("renderDutchAuctionsResults", {
+      dutchAutionBids: room.dutchAuctionBids,
+      classifyPoints,
+    });
+  
+  };
 
   const addToFirstPricedSealedBidAuction = async (data) => {
     const { player, auctionId, bidAmount } = data;
@@ -548,4 +580,7 @@ module.exports = async (io, socket, rooms) => {
   socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
   socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
   socket.on("biddingStarted", biddingStarted);
-};
+  socket.on("dutchAuctionTimerEnded", renderDutchAuctionResults);
+
+  
+}
