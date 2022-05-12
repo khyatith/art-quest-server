@@ -180,37 +180,6 @@ module.exports = async (io, socket, rooms) => {
     io.to(hostCode).emit("goToSellingResults");
   };
 
-  const startLandingPageTimer = async ({ roomCode }) => {
-    const room = await collection.findOne({ hostCode: roomCode });
-    const parsedRoom = room;
-    const hasLandingPageTimerStarted = parsedRoom.hasLandingPageTimerStarted;
-    if (!hasLandingPageTimerStarted) {
-      const currentTime = Date.parse(new Date());
-      parsedRoom.landingPageTimerDeadline = new Date(
-        currentTime + 0.1 * 60 * 1000         // 0.5
-      );
-      parsedRoom.hasLandingPageTimerStarted = true;
-      collection.findOneAndUpdate({ hostCode: roomCode }, { $set: parsedRoom });
-    }
-    setInterval(() => {
-      const timerValue = getRemainingTime(parsedRoom.landingPageTimerDeadline);
-      if (timerValue.total <= 0) {
-        io.sockets
-          .in(roomCode)
-          .emit("landingPageTimerEnded", { roomCode, timerValue });
-        //parsedRoom.hasLandingPageTimerStarted = false;
-        collection.findOneAndUpdate(
-          { hostCode: roomCode },
-          { $set: parsedRoom }
-        );
-      } else if (timerValue.total > 0) {
-        io.sockets
-          .in(roomCode)
-          .emit("landingPageTimerValue", { roomCode, timerValue });
-      }
-    }, 1000);
-  };
-
   const setTotalNumberOfPlayers = async ({
     roomCode,
     numberOfPlayers,
@@ -218,14 +187,14 @@ module.exports = async (io, socket, rooms) => {
   }) => {
     const room = await collection.findOne({ hostCode: roomCode });
     const parsedRoom = room;
-    if(!room) return;
-    parsedRoom.numberOfPlayers = parseInt(numberOfPlayers?numberOfPlayers:"1");
-    parsedRoom.version = parseInt(version);
-    rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayers);
+    // if(!room) return;
+    let numberOfPlayersInRoom = parseInt(numberOfPlayers ? numberOfPlayers : "1");
+    let versionRoom = parseInt(version);
+    rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayersInRoom);
     rooms[roomCode].version = parseInt(version);
     await collection.findOneAndUpdate(
       { hostCode: roomCode },
-      { $set: parsedRoom }
+      { $set: { numberOfPlayers: numberOfPlayersInRoom, version: versionRoom } }
     );
   };
 
@@ -561,7 +530,6 @@ module.exports = async (io, socket, rooms) => {
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
-  socket.on("startLandingPageTimer", startLandingPageTimer);
   socket.on("startGame", startGame);
   socket.on("landingPageTimerEnded", landingPageTimerEnded);
   socket.on("auctionTimerEnded", hasAuctionTimerEnded);
