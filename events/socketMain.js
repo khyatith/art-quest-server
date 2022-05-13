@@ -11,6 +11,7 @@ var dutchAuctionObj = require("../data/dutchAuctionData.json");
 const { calculate } = require("../helpers/classify-points");
 const dbClient = require("../mongoClient");
 var cloneDeep = require("lodash.clonedeep");
+const { visitedLocationDetails } = require("../helpers/location-visits");
 
 module.exports = async (io, socket, rooms) => {
   const db = await dbClient.createConnection();
@@ -301,12 +302,17 @@ module.exports = async (io, socket, rooms) => {
           },
           { upsert: true }
         );
+        const fetchedRoom = await collection_visits.find({ roomId });
+        const allTeamsVisitedLocations = visitedLocationDetails(
+          await fetchedRoom.toArray()
+        );
         io.sockets.in(roomId).emit("locationUpdatedForTeam", {
           roomId,
           teamName,
           locationId,
           roundId,
           flyTicketPrice,
+          disabledLocations: allTeamsVisitedLocations,
         });
       } else {
         const result = await collection_visits.insertOne({
@@ -317,6 +323,10 @@ module.exports = async (io, socket, rooms) => {
           allVisitLocations: [],
           totalVisitPrice: parseInt(flyTicketPrice, 10),
         });
+        const fetchedRoom = await collection_visits.find({ roomId });
+        const allTeamsVisitedLocations = visitedLocationDetails(
+          await fetchedRoom.toArray()
+        );
         if (result)
           io.sockets.in(roomId).emit("locationUpdatedForTeam", {
             roomId,
@@ -324,6 +334,7 @@ module.exports = async (io, socket, rooms) => {
             locationId,
             roundId,
             flyTicketPrice,
+            disabledLoactions: allTeamsVisitedLocations,
           });
       }
     }
@@ -518,7 +529,7 @@ module.exports = async (io, socket, rooms) => {
 
   const biddingStarted = async (roomId) => {
     io.sockets.in(roomId).emit("startBidding", true);
-  }
+  };
 
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
@@ -543,4 +554,4 @@ module.exports = async (io, socket, rooms) => {
   socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
   socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
   socket.on("biddingStarted", biddingStarted);
-}
+};
