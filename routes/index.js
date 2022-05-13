@@ -577,10 +577,8 @@ mongoClient
       if (!results) {
         res.status(404).json({ error: "Room not found" });
       } else {
-        const fetchedRoom = await collection_visits.find({ roomId });
-        const allTeamsVisitedLocations = visitedLocationDetails(
-          await fetchedRoom.toArray()
-        );
+        const fetchedRoomVisits = await collection_visits.find({ roomId }).toArray();
+        const allTeamsVisitedLocations = visitedLocationDetails(fetchedRoomVisits);
         selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
         selling_result.totalArtScoreForTeams = results.totalArtScoreForTeams;
         selling_result.roundNumber = results.sellingRoundNumber;

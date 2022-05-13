@@ -255,7 +255,6 @@ module.exports = async (io, socket, rooms) => {
         ticketPriceByLocation: ticketPriceForLocation,
       });
     }
-    console.log("result after updating ticket price", result);
     return result;
   };
 
@@ -267,10 +266,9 @@ module.exports = async (io, socket, rooms) => {
       flyTicketPrice
     );
     if (result) {
-      const existingRecord = await collection_visits.findOne({
-        roomId: roomId,
-        teamName: teamName,
-      });
+      const fetchedRoom = await collection_visits.find({ roomId }).toArray();
+      const existingRecordArray = fetchedRoom && fetchedRoom.length > 0 && fetchedRoom.filter((fr) => fr.teamName === teamName);
+      const existingRecord = existingRecordArray && existingRecordArray[0];
       if (existingRecord) {
         if (
           parseInt(existingRecord.roundNumber, 10) === parseInt(roundId, 10)
@@ -302,10 +300,8 @@ module.exports = async (io, socket, rooms) => {
           },
           { upsert: true }
         );
-        const fetchedRoom = await collection_visits.find({ roomId });
-        const allTeamsVisitedLocations = visitedLocationDetails(
-          await fetchedRoom.toArray()
-        );
+        const fetchAllTeamsVisits = await collection_visits.find({ roomId }).toArray();
+        const allTeamsVisitedLocations = visitedLocationDetails(fetchAllTeamsVisits);
         io.sockets.in(roomId).emit("locationUpdatedForTeam", {
           roomId,
           teamName,
@@ -323,10 +319,8 @@ module.exports = async (io, socket, rooms) => {
           allVisitLocations: [],
           totalVisitPrice: parseInt(flyTicketPrice, 10),
         });
-        const fetchedRoom = await collection_visits.find({ roomId });
-        const allTeamsVisitedLocations = visitedLocationDetails(
-          await fetchedRoom.toArray()
-        );
+        const fetchAllTeamsVisits = await collection_visits.find({ roomId }).toArray();
+        const allTeamsVisitedLocations = visitedLocationDetails(fetchAllTeamsVisits);
         if (result)
           io.sockets.in(roomId).emit("locationUpdatedForTeam", {
             roomId,
@@ -334,7 +328,7 @@ module.exports = async (io, socket, rooms) => {
             locationId,
             roundId,
             flyTicketPrice,
-            disabledLoactions: allTeamsVisitedLocations,
+            disabledLocations: allTeamsVisitedLocations,
           });
       }
     }
