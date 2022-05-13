@@ -187,11 +187,11 @@ module.exports = async (io, socket, rooms) => {
   }) => {
     const room = await collection.findOne({ hostCode: roomCode });
     const parsedRoom = room;
-    // if(!room) return;
-    let numberOfPlayersInRoom = parseInt(numberOfPlayers ? numberOfPlayers : "1");
-    let versionRoom = parseInt(version);
-    rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayersInRoom);
-    rooms[roomCode].version = parseInt(version);
+    if(!room) return;
+    parsedRoom.numberOfPlayers = parseInt(numberOfPlayers?numberOfPlayers:"1");
+    parsedRoom.version = parseInt(version);
+    numberOfPlayersInRoom = parseInt(numberOfPlayers);
+    versionRoom = parseInt(version);
     await collection.findOneAndUpdate(
       { hostCode: roomCode },
       { $set: { numberOfPlayers: numberOfPlayersInRoom, version: versionRoom } }
