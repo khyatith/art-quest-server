@@ -312,7 +312,7 @@ router.get("/getNextAuction/:hostCode/:prevAuctionId", async (req, res) => {
   udpatedParsedRoom.totalAmountSpentByTeam = globalRoom.totalAmountSpentByTeam;
   await collection.findOneAndUpdate(
     { hostCode: hostCode },
-    { $set: udpatedParsedRoom }
+    { $set: { leaderBoard: globalRoom.leaderBoard, totalAmountSpentByTeam: globalRoom.totalAmountSpentByTeam } }
   );
   res.send(returnObj.newAuction);
 });
@@ -450,7 +450,7 @@ router.get("/getDutchAuctionData/:hostCode", async (req, res) => {
   updateRoom.dutchAuctionsOrder = order;
   await collection.findOneAndUpdate(
     { hostCode: hostCode },
-    { $set: updateRoom }
+    { $set: { dutchAuctionsOrder: order } }
   );
   let val = {};
   if (updateRoom && updateRoom.hasDutchAuctionTimerEnded) {
@@ -872,7 +872,7 @@ mongoClient
         } else {
           leaderboard[`${EAwinningTeam}`] = [auctionItem];
         }
-        await collection_room.findOneAndUpdate({ "hostCode": roomId }, { $set: roomInServer });
+        await collection_room.findOneAndUpdate({ "hostCode": roomId }, { $set: { totalAmountSpentByTeam: totalAmountSpentByTeam }});
       }
       res.status(200).json({ message: "updated" });
     });
