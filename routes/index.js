@@ -258,7 +258,6 @@ router.put("/updateDutchAuctionResults/:hostCode", async (req, res) => {
   const { params } = req;
   const hostCode = params.hostCode;
   const room = rooms[hostCode];
-
   //update leaderboard with dutch auctions
   const dutchAuctionLeaderboard = await updateDutchAuctionLeaderboard(room);
   room.leaderBoard = dutchAuctionLeaderboard;
@@ -279,7 +278,8 @@ router.put("/updateDutchAuctionResults/:hostCode", async (req, res) => {
       },
     }
   );
-  res.send({ leaderBoard :dutchAuctionLeaderboard });
+  res.send({ message: "updated" });
+  // res.send({ leaderBoard :dutchAuctionLeaderboard });
 });
 
 router.get("/getWinner/:hostCode", async (req, res) => {
@@ -432,6 +432,7 @@ router.get("/getDutchAuctionData/:hostCode", async (req, res) => {
   const collection = db.collection("room");
   const { hostCode } = req.params;
   const room = await collection.findOne({ hostCode: hostCode });
+  console.log('updatedRoom 1->',room);
   const order = [];
   if (room.dutchAuctionsOrder.length === 0) {
     for (var i = 0; i < 5; ++i) {
@@ -452,6 +453,7 @@ router.get("/getDutchAuctionData/:hostCode", async (req, res) => {
     order.push.apply(order, room.dutchAuctionsOrder);
   }
   const updateRoom = rooms[hostCode];
+  console.log('updatedRoom->',rooms);
   updateRoom.dutchAuctionsOrder = order;
   await collection.findOneAndUpdate(
     { hostCode: hostCode },

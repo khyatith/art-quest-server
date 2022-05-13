@@ -218,7 +218,7 @@ module.exports = async (io, socket, rooms) => {
   }) => {
     const room = await collection.findOne({ hostCode: roomCode });
     const parsedRoom = room;
-    // if(!room) return;
+    if(!room) return;
     parsedRoom.numberOfPlayers = parseInt(numberOfPlayers?numberOfPlayers:"1");
     parsedRoom.version = parseInt(version);
     rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayers);
@@ -436,6 +436,7 @@ module.exports = async (io, socket, rooms) => {
   };
   const renderDutchAuctionResults = async (roomId) => {
     const room = await collection.findOne({ hostCode: roomId });
+    console.log('renderResult->', room);
     const classifyPoints = {};
 
     try {
