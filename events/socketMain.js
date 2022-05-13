@@ -400,7 +400,6 @@ module.exports = async (io, socket, rooms) => {
   };
   const renderDutchAuctionResults = async (roomId) => {
     const room = await collection.findOne({ hostCode: roomId });
-    console.log('renderResult->', room);
     const classifyPoints = {};
 
     try {
