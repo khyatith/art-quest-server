@@ -80,7 +80,6 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE) => {
           artMovement: dutchAuctionBids[bidIndex].artMovement,
         });
       });
-      console.log('dutch->',teamsScorecard, classifyPoints);
       
       return calculateClassify(teamsScorecard, classifyPoints);
     } catch (err) {
