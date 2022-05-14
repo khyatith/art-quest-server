@@ -521,13 +521,13 @@ module.exports = async (io, socket, rooms) => {
         roomCode: roomId,
       });
 
-      const secretAuctionResult = calculate(result, "SECRET");
-
+      const secretAuctionResult = calculate(result, "SECRET", room.leaderBoard);
+      console.log('secretAuctionResult', secretAuctionResult);
       const { classify } = englishAuctionResult;
       const resultingObj = {};
       resultingObj.classify = classify;
 
-      Object.keys(classify).map((teamName) => {
+      Object.keys(classify).forEach((teamName) => {
         if (secretAuctionResult[teamName])
           resultingObj.classify[teamName] += parseInt(
             secretAuctionResult[teamName]
@@ -545,7 +545,7 @@ module.exports = async (io, socket, rooms) => {
         }
       );
 
-      //   console.log(resultingObj);
+      console.log('resultingobj', resultingObj);
 
       io.sockets.in(roomId).emit("renderSecretAuctionsResult", {
         result,
