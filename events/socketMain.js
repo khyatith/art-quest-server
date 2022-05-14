@@ -408,30 +408,57 @@ module.exports = async (io, socket, rooms) => {
     const classifyPoints = {};
 
     try {
+      // classifyPoints.roomCode = roomId;
+      // classifyPoints.classify = calculate(room, "DUTCH");
+      
+      // const findRoom = await collection_classify.findOne({ roomCode: roomId });
+      // if (!findRoom) await collection_classify.insertOne(classifyPoints);
+      // else {
+      //   await collection_classify.findOneAndUpdate(
+      //     { roomCode: roomId },
+      //     {
+        //       $set: {
+      //         classify: classifyPoints.classify,
+      //       },
+      //     }
+      //   );
+      // }
+      const englishAuctionResult = await collection_classify.findOne({
+        roomCode: roomId,
+      });
       classifyPoints.roomCode = roomId;
-      classifyPoints.classify = calculate(room, "DUTCH");
-
-      const findRoom = await collection_classify.findOne({ roomCode: roomId });
-      if (!findRoom) await collection_classify.insertOne(classifyPoints);
-      else {
-        await collection_classify.findOneAndUpdate(
-          { roomCode: roomId },
-          {
-            $set: {
-              classify: classifyPoints.classify,
-            },
-          }
-        );
-      }
+      const dutchAuctionResult = calculate(room, "DUTCH");
+      const { classify } = englishAuctionResult;
+      const resultingObj = {};
+      resultingObj.classify = classify;
+      Object.keys(classify).map((teamName) => {
+        if (dutchAuctionResult[teamName])
+          resultingObj.classify[teamName] += parseInt(
+            dutchAuctionResult[teamName]
+          );
+      });
+      
+      resultingObj.roomCode = roomId;
+      
+      await collection_classify.findOneAndUpdate(
+        { roomCode: roomId },
+        {
+          $set: {
+            classify: resultingObj.classify,
+          },
+        }
+      );
+      
+      
+      // console.log(classifyPoints);
+      // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
+      io.sockets.in(roomId).emit("renderDutchAuctionsResults", {
+        dutchAutionBids: room.dutchAuctionBids,
+        classifyPoints: resultingObj.classify,
+      });
     } catch (err) {
       console.log(err);
     }
-    // console.log(classifyPoints);
-    // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
-    io.sockets.in(roomId).emit("renderDutchAuctionsResults", {
-      dutchAutionBids: room.dutchAuctionBids,
-      classifyPoints,
-    });
   
   };
 

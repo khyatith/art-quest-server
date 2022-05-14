@@ -1,7 +1,7 @@
 {
     "artifacts": [
       {
-        "id": 14,
+        "id": 19,
         "name": "The Great Wave off Kanagawa",
         "region": "Asia",
         "country": "Japan",
@@ -14,7 +14,7 @@
         "basePrice": 2
       },
       {
-        "id": 15,
+        "id": 20,
         "name": "The Block",
         "region": "North America",
         "country": "USA",
@@ -27,7 +27,7 @@
         "basePrice": 15
       },
       {
-        "id": 16,
+        "id": 21,
         "name": "The Bridge in Curve",
         "region": "North America",
         "country": "USA",
@@ -40,7 +40,7 @@
         "basePrice": 10
       },
       {
-        "id": 17,
+        "id": 22,
         "name": "The Gleaners",
         "region": "Europe",
         "country": "France",
@@ -53,7 +53,7 @@
         "basePrice": 20
       },
       {
-        "id": 18,
+        "id": 23,
         "name": "Whaam",
         "region": "North America",
         "country": "USA",
@@ -66,7 +66,7 @@
         "basePrice": 20
       },
       {
-        "id": 19,
+        "id": 24,
         "name": "The Water Lillies",
         "region": "Europe",
         "country": "France",
