@@ -147,7 +147,7 @@ router.get("/timer/:hostCode", function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.1 * 60 * 1000); //0.2
+    const deadline = new Date(currentTime + 0.2 * 60 * 1000); //0.2
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
@@ -172,12 +172,13 @@ router.get('/englishauctionTimer/:hostCode/:englishAuctionsNumber', (req, res) =
   } else {
     console.log('inside else >>>>');
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.1 * 60 * 1000);// 0.5
+    const deadline = new Date(currentTime + 0.5 * 60 * 1000);// 0.5
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
     res.send({ englishAuctionTimer: timerValue });
   }
-);
+  }
+  );
 
 router.get('/secretauctionTimer/:hostCode/:secretAuctionsNumber', (req, res) => {
   const { params } = req;
@@ -195,11 +196,12 @@ router.get('/secretauctionTimer/:hostCode/:secretAuctionsNumber', (req, res) => 
     res.send({ secretAuctionTimer: room.secretAuctionTimer });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.1 * 60 * 1000);// 0.3
+    const deadline = new Date(currentTime + 0.3 * 60 * 1000);// 0.3
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
     res.send({ secretAuctionTimer: timerValue });
   }
+}
 );
 
 router.get("/getResults/:hostCode", async (req, res) => {
@@ -467,7 +469,7 @@ router.get("/getDutchAuctionData/:hostCode", async (req, res) => {
     val = updateRoom.dutchAuctionTimerValue;
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.2 * 60 * 1000);   // 1
+    const deadline = new Date(currentTime + 1 * 60 * 1000);   // 1
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startDutchAuctionTimer(updateRoom, deadline), 1000);
     val = timerValue;
