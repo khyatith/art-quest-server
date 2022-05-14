@@ -7,7 +7,7 @@ var englishAuctionObj2 = require("../data/englishAuctionData2.json");
 var secretAuctionObj1 = require("../data/secretAuctionData1.json");
 var secretAuctionObj2 = require("../data/secretAuctionData2.json");
 var sellingAuctionObj = require("../data/sellingAuctionData.json");
-var dutchAuctionObj = require("../data/dutchAuctionData.json");
+var dutchAuctionObj = require("../data/dutchAuctionData1.json");
 const { calculate } = require("../helpers/classify-points");
 const dbClient = require("../mongoClient");
 var cloneDeep = require("lodash.clonedeep");
@@ -171,6 +171,11 @@ module.exports = async (io, socket, rooms) => {
     io.to(hostCode).emit("goToExpo");
   };
 
+  const locationPhaseStartTimer = ({ player }) => {
+    const hostCode = player.hostCode;
+    io.to(hostCode).emit("timerStarted");
+  };
+
   const hasSellingResultsTimerEnded = ({ player }) => {
     const hostCode = player.hostCode;
     io.to(hostCode).emit("startNextRound");
@@ -180,37 +185,6 @@ module.exports = async (io, socket, rooms) => {
     io.to(hostCode).emit("goToSellingResults");
   };
 
-  const startLandingPageTimer = async ({ roomCode }) => {
-    const room = await collection.findOne({ hostCode: roomCode });
-    const parsedRoom = room;
-    const hasLandingPageTimerStarted = parsedRoom.hasLandingPageTimerStarted;
-    if (!hasLandingPageTimerStarted) {
-      const currentTime = Date.parse(new Date());
-      parsedRoom.landingPageTimerDeadline = new Date(
-        currentTime + 0.5 * 60 * 1000
-      );
-      parsedRoom.hasLandingPageTimerStarted = true;
-      collection.findOneAndUpdate({ hostCode: roomCode }, { $set: parsedRoom });
-    }
-    setInterval(() => {
-      const timerValue = getRemainingTime(parsedRoom.landingPageTimerDeadline);
-      if (timerValue.total <= 0) {
-        io.sockets
-          .in(roomCode)
-          .emit("landingPageTimerEnded", { roomCode, timerValue });
-        //parsedRoom.hasLandingPageTimerStarted = false;
-        collection.findOneAndUpdate(
-          { hostCode: roomCode },
-          { $set: parsedRoom }
-        );
-      } else if (timerValue.total > 0) {
-        io.sockets
-          .in(roomCode)
-          .emit("landingPageTimerValue", { roomCode, timerValue });
-      }
-    }, 1000);
-  };
-
   const setTotalNumberOfPlayers = async ({
     roomCode,
     numberOfPlayers,
@@ -218,13 +192,14 @@ module.exports = async (io, socket, rooms) => {
   }) => {
     const room = await collection.findOne({ hostCode: roomCode });
     const parsedRoom = room;
-    parsedRoom.numberOfPlayers = parseInt(numberOfPlayers);
+    if(!room) return;
+    parsedRoom.numberOfPlayers = parseInt(numberOfPlayers?numberOfPlayers:"1");
     parsedRoom.version = parseInt(version);
-    rooms[roomCode].numberOfPlayers = parseInt(numberOfPlayers);
-    rooms[roomCode].version = parseInt(version);
+    numberOfPlayersInRoom = parseInt(numberOfPlayers);
+    versionRoom = parseInt(version);
     await collection.findOneAndUpdate(
       { hostCode: roomCode },
-      { $set: parsedRoom }
+      { $set: { numberOfPlayers: numberOfPlayersInRoom, version: versionRoom } }
     );
   };
 
@@ -433,6 +408,64 @@ module.exports = async (io, socket, rooms) => {
     });
     // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalArtScoreForTeams": results.totalArtScoreForTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
   };
+  const renderDutchAuctionResults = async (roomId) => {
+    const room = await collection.findOne({ hostCode: roomId });
+    const classifyPoints = {};
+
+    try {
+      // classifyPoints.roomCode = roomId;
+      // classifyPoints.classify = calculate(room, "DUTCH");
+      
+      // const findRoom = await collection_classify.findOne({ roomCode: roomId });
+      // if (!findRoom) await collection_classify.insertOne(classifyPoints);
+      // else {
+      //   await collection_classify.findOneAndUpdate(
+      //     { roomCode: roomId },
+      //     {
+        //       $set: {
+      //         classify: classifyPoints.classify,
+      //       },
+      //     }
+      //   );
+      // }
+      const englishAuctionResult = await collection_classify.findOne({
+        roomCode: roomId,
+      });
+      classifyPoints.roomCode = roomId;
+      const dutchAuctionResult = calculate(room, "DUTCH");
+      const { classify } = englishAuctionResult;
+      const resultingObj = {};
+      resultingObj.classify = classify;
+      Object.keys(classify).map((teamName) => {
+        if (dutchAuctionResult[teamName])
+          resultingObj.classify[teamName] += parseInt(
+            dutchAuctionResult[teamName]
+          );
+      });
+      
+      resultingObj.roomCode = roomId;
+      
+      await collection_classify.findOneAndUpdate(
+        { roomCode: roomId },
+        {
+          $set: {
+            classify: resultingObj.classify,
+          },
+        }
+      );
+      
+      
+      // console.log(classifyPoints);
+      // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
+      io.sockets.in(roomId).emit("renderDutchAuctionsResults", {
+        dutchAutionBids: room.dutchAuctionBids,
+        classifyPoints: resultingObj.classify,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  
+  };
 
   const addToFirstPricedSealedBidAuction = async (data) => {
     const { player, auctionId, bidAmount } = data;
@@ -528,7 +561,6 @@ module.exports = async (io, socket, rooms) => {
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
-  socket.on("startLandingPageTimer", startLandingPageTimer);
   socket.on("startGame", startGame);
   socket.on("landingPageTimerEnded", landingPageTimerEnded);
   socket.on("auctionTimerEnded", hasAuctionTimerEnded);
@@ -538,6 +570,7 @@ module.exports = async (io, socket, rooms) => {
   socket.on("calculateTeamRevenue", calculateRevenue);
   socket.on("paintingNominated", emitNominatedPaintingId);
   socket.on("locationPhaseTimerEnded", hasLocationPhaseTimerEnded);
+  socket.on("startTimer", locationPhaseStartTimer);
   socket.on("expoBeginningTimerEnded", hasExpoBeginningTimerEnded);
   socket.on("sellingResultsTimerEnded", hasSellingResultsTimerEnded);
 
@@ -548,4 +581,7 @@ module.exports = async (io, socket, rooms) => {
   socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
   socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
   socket.on("biddingStarted", biddingStarted);
-};
+  socket.on("dutchAuctionTimerEnded", renderDutchAuctionResults);
+
+  
+}

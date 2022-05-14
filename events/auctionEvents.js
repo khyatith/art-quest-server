@@ -108,8 +108,10 @@ module.exports = async (io, socket, rooms) => {
         io.sockets.in(player.hostCode).emit("setLiveStyles", player.teamName);
       break;
       case "5":
-        rooms[player.hostCode].dutchAuctionBids[`${auctionId}`] = bidInfo;
+        rooms[player.hostCode].dutchAuctionBids[`${auctionId}`] = { ...rooms[player.hostCode].dutchAuctionBids[`${auctionId}`],
+          ...bidInfo};
         io.sockets.in(player.hostCode).emit("emitBidForPainting", { paintingId: auctionId, teamName: player.teamName });
+        console.log('adding Painting.',bidInfo);
         await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "dutchAuctionBids": rooms[player.hostCode].dutchAuctionBids } });
       break;
 			default:

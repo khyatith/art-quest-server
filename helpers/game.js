@@ -55,7 +55,8 @@ function getLeaderboard(rooms, roomCode) {
   const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
   const maxEnglishAuctionBids = currentRoom.maxEnglishAuctionBids;
-
+  const dutchAuctionObj = currentRoom.dutchAuctionBids;
+  console.log('dutchAuctionObj->',dutchAuctionObj);
 	//englishAuctions
 	if (englishAuctionsObj) {
 		for (var englishAuction in englishAuctionsObj) {
@@ -73,6 +74,7 @@ function getLeaderboard(rooms, roomCode) {
       }
 		}
   }
+
 
   if (maxEnglishAuctionBids) {
     for (let maxBids in maxEnglishAuctionBids) {
@@ -94,7 +96,26 @@ function getLeaderboard(rooms, roomCode) {
       }
     }
   }
-  
+  if (dutchAuctionObj) {
+		for (var dutchAuction in dutchAuctionObj) {
+			const leaderBoardKeys = Object.keys(leaderboard);
+      console.log('dutch keys->', leaderBoardKeys);
+      const DAWinner = dutchAuctionObj[dutchAuction];
+      console.log('dutch DAWINNER keys->', DAWinner);
+      
+      const DAwinningTeam = DAWinner.bidTeam;
+      console.log('dutch DAW Team keys->', DAwinningTeam);
+			if (leaderBoardKeys && leaderBoardKeys.includes(DAwinningTeam)) {
+        const isExistingAuction = leaderboard[DAwinningTeam].filter(item => parseInt(item.auctionId, 10) === parseInt(DAWinner.auctionId, 10))[0];
+        console.log("dutch->", isExistingAuction);
+        if (!isExistingAuction) {
+          leaderboard[`${DAwinningTeam}`].push(DAWinner);
+        }
+      } else {
+        leaderboard[`${DAwinningTeam}`] = [DAWinner];
+      }
+		}
+  }
   //firstPricedSealedBidAuctions
   if (firstPricedSealedBidAuctionsObj) {
     for (var fristPricedSealedAuction in firstPricedSealedBidAuctionsObj) {
@@ -186,7 +207,7 @@ function getLeaderboard(rooms, roomCode) {
   return leaderboard;
 }
 
-function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
+async function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
   if (!leaderboard || !roomCode) return null;
   const currentRoom = rooms[roomCode];
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
@@ -316,7 +337,7 @@ function calculateBuyingPhaseWinner(room) {
   return { leaderBoard, totalPaintingsWonByTeam: totalPaintingsWonByTeam, allTeams, teamEfficiency, totalAmountSpentByTeam };
 }
 
-function calculateTeamEfficiency(totalAmountByTeam, leaderboard) {
+async function  calculateTeamEfficiency (totalAmountByTeam, leaderboard) {
   let efficiencyByTeam = {};
   let totalPaintingsWonByTeams = {};
   for(team in leaderboard) {

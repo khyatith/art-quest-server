@@ -56,6 +56,36 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE) => {
       console.log(err);
     }
   }
+  
+  if (AUCTION_TYPE === "DUTCH") {
+    try {
+      const { dutchAuctionBids } = auctionBidsDetails;
+      const teamArray = [];
+      const teamsScorecard = {};
+      const classifyPoints = {};
+      Object.keys(dutchAuctionBids).map((cd) => {
+        const frequency = teamArray.filter(
+          (item) => item === dutchAuctionBids[cd].bidTeam
+        );
+        if (frequency.length === 0)
+          teamArray.push(dutchAuctionBids[cd].bidTeam);
+      });
+      for (const teamName of teamArray) {
+        teamsScorecard[teamName] = [];
+        classifyPoints[teamName] = 0;
+      }
+
+      Object.keys(dutchAuctionBids).map((bidIndex) => {
+        teamsScorecard[dutchAuctionBids[bidIndex].bidTeam].push({
+          artMovement: dutchAuctionBids[bidIndex].artMovement,
+        });
+      });
+      
+      return calculateClassify(teamsScorecard, classifyPoints);
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
   if (AUCTION_TYPE === "SECRET") {
     try {
