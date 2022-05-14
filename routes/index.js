@@ -670,37 +670,37 @@ mongoClient
       const locationId = req.query.locationId;
       const teamName = req.query.teamName;
       const roundId = req.query.roundId;
-      collection_visits
-        .findOne({ roomId: roomId, teamName: teamName })
-        .then((existingRecord) => {
-          if (existingRecord) {
-            if (existingRecord.roundNumber === roundId) {
-              return;
-            }
-            collection_visits.findOneAndUpdate(
-              { roomId: roomId, teamName: teamName },
-              {
-                $set: {
-                  roomId: roomId,
-                  locationId: locationId,
-                  teamName: teamName,
-                  roundNumber: roundId,
-                },
-                $push: { allVisitLocations: locationId },
-              },
-              { upsert: true }
-            );
-          } else {
-            collection_visits.insertOne({
-              roomId: roomId,
-              teamName: teamName,
-              locationId: locationId,
-              locations: [],
-              allVisitLocations: [locationId],
-              roundNumber: roundId,
-            });
-          }
-        });
+      // collection_visits
+      //   .findOne({ roomId: roomId, teamName: teamName })
+      //   .then((existingRecord) => {
+      //     if (existingRecord) {
+      //       if (existingRecord.roundNumber === roundId) {
+      //         return;
+      //       }
+      //       collection_visits.findOneAndUpdate(
+      //         { roomId: roomId, teamName: teamName },
+      //         {
+      //           $set: {
+      //             roomId: roomId,
+      //             locationId: locationId,
+      //             teamName: teamName,
+      //             roundNumber: roundId,
+      //           },
+      //           $push: { allVisitLocations: locationId },
+      //         },
+      //         { upsert: true }
+      //       );
+      //     } else {
+      //       collection_visits.insertOne({
+      //         roomId: roomId,
+      //         teamName: teamName,
+      //         locationId: locationId,
+      //         locations: [],
+      //         allVisitLocations: [locationId],
+      //         roundNumber: roundId,
+      //       });
+      //     }
+      //   });
       collection_room
         .findOne({ roomCode: req.query.roomId })
         .then((results) => {

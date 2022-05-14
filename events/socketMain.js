@@ -288,6 +288,7 @@ module.exports = async (io, socket, rooms) => {
       } else {
         const result = await collection_visits.insertOne({
           roomId: roomId,
+          roundNumber: roundId,
           teamName: teamName,
           locationId: locationId,
           locations: [locationId],
