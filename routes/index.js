@@ -262,7 +262,6 @@ router.put("/updateDutchAuctionResults/:hostCode", async (req, res) => {
   const room = rooms[hostCode];
   //update leaderboard with dutch auctions
   const dutchAuctionLeaderboard = await updateDutchAuctionLeaderboard(room);
-  // console.log('dutchAuctionLeaderBoard->', dutchAuctionLeaderboard);
   room.leaderBoard = dutchAuctionLeaderboard;
 
   //update total amount by team with dutch auctions
@@ -578,8 +577,29 @@ mongoClient
         selling_result.disabledLocations = allTeamsVisitedLocations;
         var keys = results.allTeams;
 
-        //location phase timer value
-        if (room && room.hadLocationPageTimerEnded) {
+        // //location phase timer value -> moved to new api //startAirportTimer
+        const visitObjects = await getVisitData(keys, roomId);
+        console.log("visitobjects>>>>>", visitObjects);
+        selling_result.visits = visitObjects;
+        selling_result.allTeams = keys;
+        const flyTicketsPriceData = await getFlyTicketPrice(roomId);
+        selling_result.flyTicketsPrice = flyTicketsPriceData;
+        console.log('sellingResult->',selling_result);
+        res.status(200).json(selling_result);
+      }
+    });
+
+    router.get("/startAirportTimer", async (req, res) => {
+      try{
+        var selling_result = new Object();
+        const { roomId } = req.query;
+        const results = await collection_room.findOne({ roomCode: roomId });
+        const room = rooms[roomId];
+        if (!results) {
+          res.status(404).json({ error: "Room not found" });
+        } else {
+          //location phase timer value
+          if (room && room.hadLocationPageTimerEnded) {
           selling_result.locationPhaseTimerValue = {};
         }
         if (room && Object.keys(room.locationPhaseTimerValue).length > 0) {
@@ -591,19 +611,16 @@ mongoClient
           setInterval(
             () => startLocationPhaseServerTimer(roomId, deadline),
             1000
-          );
-          selling_result.locationPhaseTimerValue = timerValue;
-        }
-        const visitObjects = await getVisitData(keys, roomId);
-        console.log("visitobjects>>>>>", visitObjects);
-        selling_result.visits = visitObjects;
-        selling_result.allTeams = keys;
-        const flyTicketsPriceData = await getFlyTicketPrice(roomId);
-        selling_result.flyTicketsPrice = flyTicketsPriceData;
-        console.log('sellingResult->',selling_result);
-        res.status(200).json(selling_result);
-      }
-    });
+            );
+            selling_result.locationPhaseTimerValue = timerValue;
+          }
+            res.status(200).json(selling_result);
+          }
+            
+          } catch (e) {
+            console.log(e);
+          }
+          });
 
     router.get("/getFlyTicketPriceForLocation", async (req, res) => {
       const { roomId } = req.query;
@@ -713,7 +730,7 @@ mongoClient
               .then((results_city) => {
                 selling_info.city = results_city;
 
-                //selling phase timer value
+                // selling phase timer value
                 if (room && room.hasSellPaintingTimerEnded) {
                   selling_info.sellPaintingTimerValue = {};
                 }
@@ -756,11 +773,11 @@ mongoClient
         });
     });
 
-    router.get("/getEnglishAuctionForSelling", (req, res) => {
-      const { roomCode } = req.query;
-      var sellingAuctionObj = new Object();
-      collection_room.findOne({ roomCode: roomCode }).then(async (results) => {
-        const { sellingArtifacts } = results.sellingAuctions;
+          router.get("/getEnglishAuctionForSelling", (req, res) => {
+            const { roomCode } = req.query;
+            var sellingAuctionObj = new Object();
+            collection_room.findOne({ roomCode: roomCode }).then(async (results) => {
+              const { sellingArtifacts } = results.sellingAuctions;
         const currentAuction = sellingArtifacts.filter(
           (obj) => obj.auctionState === 1
         );
