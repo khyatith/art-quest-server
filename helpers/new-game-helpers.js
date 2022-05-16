@@ -3,7 +3,6 @@ const { getLeaderboard, calculateTotalAmountSpent, calculateTeamEfficiency,  cre
 async function getNewLeaderboard(rooms, hostCode, totalArtifacts) {
   // update leaderboard
   const leaderboard = await getLeaderboard(rooms, hostCode);
-  console.log('leaderboard', leaderboard);
 
   //total amt by teams
   const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, hostCode, rooms);
