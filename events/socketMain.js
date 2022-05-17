@@ -138,6 +138,7 @@ module.exports = async (io, socket, rooms) => {
       { hostCode: parsedPlayer.hostCode },
       async (err, room) => {
         if (room) {
+          console.log('starting game');
           io.to(parsedPlayer.hostCode).emit("gameState", room);
         }
       }
