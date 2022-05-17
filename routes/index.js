@@ -520,6 +520,7 @@ mongoClient
     const collection_visits = db.collection("visits");
     const collection_room = db.collection("room");
     const collection_flyTicketPrice = db.collection("flyTicketPrice");
+    const collection_classify = db.collection("classify");
 
     router.get("/validatePlayerId/:hostCode", async (req, res) => {
       const { params } = req;
@@ -564,6 +565,8 @@ mongoClient
       var selling_result = new Object();
       const { roomId } = req.query;
       const results = await collection_room.findOne({ roomCode: roomId });
+      const classifyObj = await collection_classify.findOne({ roomCode: roomId });
+      console.log('classifyObj->', classifyObj);
       const room = rooms[roomId];
       if (!results) {
         res.status(404).json({ error: "Room not found" });
@@ -584,6 +587,7 @@ mongoClient
         selling_result.allTeams = keys;
         const flyTicketsPriceData = await getFlyTicketPrice(roomId);
         selling_result.flyTicketsPrice = flyTicketsPriceData;
+        selling_result.classifyPoints = classifyObj.classify;
         console.log('sellingResult->',selling_result);
         res.status(200).json(selling_result);
       }
