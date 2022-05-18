@@ -385,7 +385,7 @@ module.exports = async (io, socket, rooms) => {
 
     try {
       classifyPoints.roomCode = roomId;
-      classifyPoints.classify = calculate(room, "ENGLISH");
+      classifyPoints.classify = calculate(room, "ENGLISH", room.leaderBoard);
 
       const findRoom = await collection_classify.findOne({ roomCode: roomId });
       if (!findRoom) await collection_classify.insertOne(classifyPoints);

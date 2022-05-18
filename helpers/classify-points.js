@@ -32,27 +32,55 @@ const calculateClassify = (teams, classifyPoints) => {
 const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
   if (AUCTION_TYPE === "ENGLISH") {
     try {
+      let teamsScorecard = {};
+      let classifyPoints = {};
       const { englishAuctionBids } = auctionBidsDetails;
-      const teamArray = [];
-      const teamsScorecard = {};
-      const classifyPoints = {};
-      Object.keys(englishAuctionBids).map((cd) => {
-        const frequency = teamArray.filter(
-          (item) => item === englishAuctionBids[cd].bidTeam
-        );
-        if (frequency.length === 0)
-          teamArray.push(englishAuctionBids[cd].bidTeam);
-      });
-      for (const teamName of teamArray) {
-        teamsScorecard[teamName] = [];
-        classifyPoints[teamName] = 0;
-      }
 
-      Object.keys(englishAuctionBids).map((bidIndex) => {
-        teamsScorecard[englishAuctionBids[bidIndex].bidTeam].push({
-          artMovement: englishAuctionBids[bidIndex].artMovement,
-        });
+      Object.entries(englishAuctionBids).forEach(([key, obj]) => {
+        if (!teamsScorecard[obj.bidTeam]) {
+          teamsScorecard = {
+            ...teamsScorecard,
+            [obj.bidTeam]: [{
+              artMovement: obj.artMovement
+            }],
+          }
+        } else {
+          teamsScorecard[obj.bidTeam].push({
+            artMovement: obj.artMovement,
+          });
+        }
+        classifyPoints = {
+          [obj.bidTeam] : 0
+        };
       });
+
+      pastLeaderBoard && Object.values(pastLeaderBoard).forEach((details) => {
+        for (obj in details) {
+          const currentBidTeam = details[obj].bidTeam;
+          const currentArtMovement = details[obj].artMovement;
+          if (!teamsScorecard[currentBidTeam]) {
+            teamsScorecard = {
+              ...teamsScorecard,
+              [currentBidTeam]: [{
+                artMovement: currentArtMovement,
+              }]
+            };
+          } else {
+            teamsScorecard[currentBidTeam].push({
+              artMovement: currentArtMovement,
+            });
+          }
+
+          // classify points
+          if (!classifyPoints[currentBidTeam]) {
+            classifyPoints = {
+              ...classifyPoints,
+              [currentBidTeam]: 0
+            };
+          }
+        }
+      });
+
       return calculateClassify(teamsScorecard, classifyPoints);
     } catch (err) {
       console.log(err);
