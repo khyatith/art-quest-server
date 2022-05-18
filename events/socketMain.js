@@ -517,22 +517,19 @@ module.exports = async (io, socket, rooms) => {
     }
 
     try {
-      const englishAuctionResult = await collection_classify.findOne({
-        roomCode: roomId,
-      });
 
       const secretAuctionResult = calculate(result, "SECRET", room.leaderBoard);
       console.log('secretAuctionResult', secretAuctionResult);
-      const { classify } = englishAuctionResult;
+      //const { classify } = englishAuctionResult;
       const resultingObj = {};
-      resultingObj.classify = classify;
+      resultingObj.classify = secretAuctionResult;
 
-      Object.keys(classify).forEach((teamName) => {
-        if (secretAuctionResult[teamName])
-          resultingObj.classify[teamName] += parseInt(
-            secretAuctionResult[teamName]
-          );
-      });
+      // Object.keys(classify).forEach((teamName) => {
+      //   if (secretAuctionResult[teamName])
+      //     resultingObj.classify[teamName] += parseInt(
+      //       secretAuctionResult[teamName]
+      //     );
+      // });
 
       resultingObj.roomCode = roomId;
 
