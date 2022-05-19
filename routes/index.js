@@ -587,7 +587,7 @@ mongoClient
         selling_result.allTeams = keys;
         const flyTicketsPriceData = await getFlyTicketPrice(roomId);
         selling_result.flyTicketsPrice = flyTicketsPriceData;
-        selling_result.classifyPoints = classifyObj.classify;
+        selling_result.classifyPoints = classifyObj ? classifyObj.classify : {};
         console.log('sellingResult->',selling_result);
         res.status(200).json(selling_result);
       }
