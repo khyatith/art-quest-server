@@ -154,54 +154,61 @@ router.get("/timer/:hostCode", function (req, res) {
   }
 });
 
-router.get('/englishauctionTimer/:hostCode/:englishAuctionsNumber', (req, res) => {
-  const { params } = req;
-  const hostCode = params.hostCode;
-  let room = rooms[hostCode];
-  if (params.englishAuctionsNumber !== room.auctionNumber) {
-    room.hasEnglishAuctionTimerEnded = false;
-    room.englishAuctionTimer = {};
+router.get(
+  "/englishauctionTimer/:hostCode/:englishAuctionsNumber",
+  (req, res) => {
+    const { params } = req;
+    const hostCode = params.hostCode;
+    let room = rooms[hostCode];
+    if (params.englishAuctionsNumber !== room.auctionNumber) {
+      room.hasEnglishAuctionTimerEnded = false;
+      room.englishAuctionTimer = {};
+    }
+    if (room && room.hasEnglishAuctionTimerEnded) {
+      res.send({ englishAuctionTimer: {} });
+      return;
+    }
+    console.log(
+      "rooms.hasEnglishAuctionsTimer before",
+      room.hasEnglishAuctionTimerEnded
+    );
+    if (room && Object.keys(room.englishAuctionTimer).length > 0) {
+      res.send({ englishAuctionTimer: room.englishAuctionTimer });
+    } else {
+      console.log("inside else >>>>");
+      const currentTime = Date.parse(new Date());
+      const deadline = new Date(currentTime + 0.5 * 60 * 1000); // 0.5
+      const timerValue = getRemainingTime(deadline);
+      setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
+      res.send({ englishAuctionTimer: timerValue });
+    }
   }
-  if (room && room.hasEnglishAuctionTimerEnded) {
-    res.send({ englishAuctionTimer: {} });
-    return;
-  }
-  console.log('rooms.hasEnglishAuctionsTimer before', room.hasEnglishAuctionTimerEnded);
-  if (room && Object.keys(room.englishAuctionTimer).length > 0) {
-    res.send({ englishAuctionTimer: room.englishAuctionTimer });
-  } else {
-    console.log('inside else >>>>');
-    const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.5 * 60 * 1000);// 0.5
-    const timerValue = getRemainingTime(deadline);
-    setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
-    res.send({ englishAuctionTimer: timerValue });
-  }
-  }
-  );
+);
 
-router.get('/secretauctionTimer/:hostCode/:secretAuctionsNumber', (req, res) => {
-  const { params } = req;
-  const hostCode = params.hostCode;
-  let room = rooms[hostCode];
-  if (params.secretAuctionsNumber !== room.auctionNumber) {
-    room.hasSecretAuctionTimerEnded = false;
-    room.secretAuctionTimer = {};
+router.get(
+  "/secretauctionTimer/:hostCode/:secretAuctionsNumber",
+  (req, res) => {
+    const { params } = req;
+    const hostCode = params.hostCode;
+    let room = rooms[hostCode];
+    if (params.secretAuctionsNumber !== room.auctionNumber) {
+      room.hasSecretAuctionTimerEnded = false;
+      room.secretAuctionTimer = {};
+    }
+    if (room && room.hasSecretAuctionTimerEnded) {
+      res.send({ secretAuctionTimer: {} });
+      return;
+    }
+    if (room && Object.keys(room.secretAuctionTimer).length > 0) {
+      res.send({ secretAuctionTimer: room.secretAuctionTimer });
+    } else {
+      const currentTime = Date.parse(new Date());
+      const deadline = new Date(currentTime + 0.3 * 60 * 1000); // 0.3
+      const timerValue = getRemainingTime(deadline);
+      setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
+      res.send({ secretAuctionTimer: timerValue });
+    }
   }
-  if (room && room.hasSecretAuctionTimerEnded) {
-    res.send({ secretAuctionTimer: {} });
-    return;
-  }
-  if (room && Object.keys(room.secretAuctionTimer).length > 0) {
-    res.send({ secretAuctionTimer: room.secretAuctionTimer });
-  } else {
-    const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.3 * 60 * 1000);// 0.3
-    const timerValue = getRemainingTime(deadline);
-    setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
-    res.send({ secretAuctionTimer: timerValue });
-  }
-}
 );
 
 router.get("/getResults/:hostCode", async (req, res) => {
@@ -321,7 +328,12 @@ router.get("/getNextAuction/:hostCode/:prevAuctionId", async (req, res) => {
   udpatedParsedRoom.totalAmountSpentByTeam = globalRoom.totalAmountSpentByTeam;
   await collection.findOneAndUpdate(
     { hostCode: hostCode },
-    { $set: { leaderBoard: globalRoom.leaderBoard, totalAmountSpentByTeam: globalRoom.totalAmountSpentByTeam } }
+    {
+      $set: {
+        leaderBoard: globalRoom.leaderBoard,
+        totalAmountSpentByTeam: globalRoom.totalAmountSpentByTeam,
+      },
+    }
   );
   res.send(returnObj.newAuction);
 });
@@ -469,7 +481,7 @@ router.get("/getDutchAuctionData/:hostCode", async (req, res) => {
     val = updateRoom.dutchAuctionTimerValue;
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 1 * 60 * 1000);   // 1
+    const deadline = new Date(currentTime + 1 * 60 * 1000); // 1
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startDutchAuctionTimer(updateRoom, deadline), 1000);
     val = timerValue;
@@ -569,8 +581,11 @@ mongoClient
       if (!results) {
         res.status(404).json({ error: "Room not found" });
       } else {
-        const fetchedRoomVisits = await collection_visits.find({ roomId }).toArray();
-        const allTeamsVisitedLocations = visitedLocationDetails(fetchedRoomVisits);
+        const fetchedRoomVisits = await collection_visits
+          .find({ roomId })
+          .toArray();
+        const allTeamsVisitedLocations =
+          visitedLocationDetails(fetchedRoomVisits);
         selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
         selling_result.totalArtScoreForTeams = results.totalArtScoreForTeams;
         selling_result.roundNumber = results.sellingRoundNumber;
@@ -600,7 +615,7 @@ mongoClient
         selling_result.allTeams = keys;
         const flyTicketsPriceData = await getFlyTicketPrice(roomId);
         selling_result.flyTicketsPrice = flyTicketsPriceData;
-        console.log('sellingResult->',selling_result);
+        console.log("sellingResult->", selling_result);
         res.status(200).json(selling_result);
       }
     });
@@ -887,7 +902,10 @@ mongoClient
         } else {
           leaderboard[`${EAwinningTeam}`] = [auctionItem];
         }
-        await collection_room.findOneAndUpdate({ "hostCode": roomId }, { $set: { totalAmountSpentByTeam: totalAmountSpentByTeam }});
+        await collection_room.findOneAndUpdate(
+          { hostCode: roomId },
+          { $set: { totalAmountSpentByTeam: totalAmountSpentByTeam } }
+        );
       }
       res.status(200).json({ message: "updated" });
     });
