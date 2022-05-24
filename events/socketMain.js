@@ -56,6 +56,7 @@ module.exports = async (io, socket, rooms) => {
         numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
         englishAuctionBids: {},
+        englishAuctionBids3: {},
         maxEnglishAuctionBids: {},
         firstPricedSealedBids: {},
         secondPricedSealedBids: {},
@@ -138,7 +139,6 @@ module.exports = async (io, socket, rooms) => {
       { hostCode: parsedPlayer.hostCode },
       async (err, room) => {
         if (room) {
-          console.log('starting game');
           io.to(parsedPlayer.hostCode).emit("gameState", room);
         }
       }
@@ -368,24 +368,38 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const addEnglishAuctionBid = async (data) => {
-    const { player, auctionId } = data;
-    rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = data;
-    io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
-    await collection.findOneAndUpdate(
-      { hostCode: player.hostCode },
-      {
-        $set: { englishAuctionBids: rooms[player.hostCode].englishAuctionBids },
-      }
-    );
+    const { player, auctionId, englishAuctionsNumber } = data;
+    console.log('englishAuctionsNumber', englishAuctionsNumber);
+    if (englishAuctionsNumber === 1) {
+      rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = data;
+      io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
+      await collection.findOneAndUpdate(
+        { hostCode: player.hostCode },
+        {
+          $set: { englishAuctionBids: rooms[player.hostCode].englishAuctionBids },
+        }
+      );
+    } else if (englishAuctionsNumber === 2) {
+      rooms[player.hostCode].englishAuctionBids3[`${auctionId}`] = data;
+      io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
+      await collection.findOneAndUpdate(
+        { hostCode: player.hostCode },
+        {
+          $set: { englishAuctionBids3: rooms[player.hostCode].englishAuctionBids3 },
+        }
+      );
+    }
   };
 
-  const renderEnglishAuctionResults = async (roomId) => {
+  const renderEnglishAuctionResults = async (params) => {
+    const { roomId, englishAuctionsNumber } = params;
     const room = await collection.findOne({ hostCode: roomId });
     const classifyPoints = {};
 
     try {
+      let englishAuctionBids = englishAuctionsNumber === 1 ? room.englishAuctionBids : room.englishAuctionBids3;
       classifyPoints.roomCode = roomId;
-      classifyPoints.classify = calculate(room, "ENGLISH", room.leaderBoard);
+      classifyPoints.classify = calculate(englishAuctionBids, "ENGLISH", room.leaderBoard);
 
       const findRoom = await collection_classify.findOne({ roomCode: roomId });
       if (!findRoom) await collection_classify.insertOne(classifyPoints);
@@ -405,7 +419,7 @@ module.exports = async (io, socket, rooms) => {
     // console.log(classifyPoints);
     // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
     io.sockets.in(roomId).emit("renderEnglishAuctionsResults", {
-      englishAutionBids: room.englishAuctionBids,
+      englishAutionBids: englishAuctionsNumber === 1 ? room.englishAuctionBids : room.englishAuctionBids3,
       classifyPoints,
     });
     // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalArtScoreForTeams": results.totalArtScoreForTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
@@ -415,21 +429,6 @@ module.exports = async (io, socket, rooms) => {
     const classifyPoints = {};
 
     try {
-      // classifyPoints.roomCode = roomId;
-      // classifyPoints.classify = calculate(room, "DUTCH");
-      
-      // const findRoom = await collection_classify.findOne({ roomCode: roomId });
-      // if (!findRoom) await collection_classify.insertOne(classifyPoints);
-      // else {
-      //   await collection_classify.findOneAndUpdate(
-      //     { roomCode: roomId },
-      //     {
-        //       $set: {
-      //         classify: classifyPoints.classify,
-      //       },
-      //     }
-      //   );
-      // }
       const englishAuctionResult = await collection_classify.findOne({
         roomCode: roomId,
       });
@@ -455,10 +454,7 @@ module.exports = async (io, socket, rooms) => {
           },
         }
       );
-      
-      
-      // console.log(classifyPoints);
-      // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
+
       io.sockets.in(roomId).emit("renderDutchAuctionsResults", {
         dutchAutionBids: room.dutchAuctionBids,
         classifyPoints: resultingObj.classify,
@@ -519,17 +515,8 @@ module.exports = async (io, socket, rooms) => {
     try {
 
       const secretAuctionResult = calculate(result, "SECRET", room.leaderBoard);
-      console.log('secretAuctionResult', secretAuctionResult);
-      //const { classify } = englishAuctionResult;
       const resultingObj = {};
       resultingObj.classify = secretAuctionResult;
-
-      // Object.keys(classify).forEach((teamName) => {
-      //   if (secretAuctionResult[teamName])
-      //     resultingObj.classify[teamName] += parseInt(
-      //       secretAuctionResult[teamName]
-      //     );
-      // });
 
       resultingObj.roomCode = roomId;
 
@@ -541,8 +528,6 @@ module.exports = async (io, socket, rooms) => {
           },
         }
       );
-
-      console.log('resultingobj', resultingObj);
 
       io.sockets.in(roomId).emit("renderSecretAuctionsResult", {
         result,

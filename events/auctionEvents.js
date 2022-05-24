@@ -82,9 +82,16 @@ module.exports = async (io, socket, rooms) => {
           await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "maxEnglishAuctionBids": rooms[player.hostCode].maxEnglishAuctionBids } });
           return;
         }
-        rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = bidInfo;
-				io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
-        await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBids": rooms[player.hostCode].englishAuctionBids } });
+        console.log('bidInfo.englishAuctionsNumber >>>>>>>>', bidInfo.englishAuctionsNumber);
+        if (bidInfo.englishAuctionsNumber === 1) {
+          rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = bidInfo;
+				  io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
+          await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBids": rooms[player.hostCode].englishAuctionBids } });
+        } else if (bidInfo.englishAuctionsNumber === 3) {
+          rooms[player.hostCode].englishAuctionBids3[`${auctionId}`] = bidInfo;
+				  io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
+          await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBid3": rooms[player.hostCode].englishAuctionBids3 } });
+        }
         break;
       case "3":
         const allSecondPricedSealedBids = rooms[player.hostCode].secondPricedSealedBids;
@@ -111,7 +118,6 @@ module.exports = async (io, socket, rooms) => {
         rooms[player.hostCode].dutchAuctionBids[`${auctionId}`] = { ...rooms[player.hostCode].dutchAuctionBids[`${auctionId}`],
           ...bidInfo};
         io.sockets.in(player.hostCode).emit("emitBidForPainting", { paintingId: auctionId, teamName: player.teamName });
-        console.log('adding Painting.',bidInfo);
         await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "dutchAuctionBids": rooms[player.hostCode].dutchAuctionBids } });
       break;
 			default:
