@@ -146,7 +146,7 @@ router.get("/timer/:hostCode", function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.2 * 60 * 1000); //0.2
+    const deadline = new Date(currentTime + 0.1 * 60 * 1000); //0.2
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
@@ -169,7 +169,7 @@ router.get('/englishauctionTimer/:hostCode/:englishAuctionsNumber', (req, res) =
     res.send({ englishAuctionTimer: room.englishAuctionTimer });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.5 * 60 * 1000);// 0.5
+    const deadline = new Date(currentTime + 0.1 * 60 * 1000);// 0.5
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
     res.send({ englishAuctionTimer: timerValue });
@@ -193,7 +193,7 @@ router.get('/secretauctionTimer/:hostCode/:secretAuctionsNumber', (req, res) => 
     res.send({ secretAuctionTimer: room.secretAuctionTimer });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.3 * 60 * 1000);// 0.3
+    const deadline = new Date(currentTime + 0.1 * 60 * 1000);// 0.3
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
     res.send({ secretAuctionTimer: timerValue });
@@ -518,6 +518,7 @@ mongoClient
     const collection_room = db.collection("room");
     const collection_flyTicketPrice = db.collection("flyTicketPrice");
     const collection_classify = db.collection("classify");
+    const collection_nominatedForAuction = db.collection("nominatedForAuction");
 
     router.get("/validatePlayerId/:hostCode", async (req, res) => {
       const { params } = req;
@@ -604,7 +605,7 @@ mongoClient
           selling_result.locationPhaseTimerValue = room.locationPhaseTimerValue;
         } else {
           const currentTime = Date.parse(new Date());
-          const deadline = new Date(currentTime + 1 * 60 * 1000);
+          const deadline = new Date(currentTime + .1 * 60 * 1000);
           const timerValue = getRemainingTime(deadline);
           setInterval(
             () => startLocationPhaseServerTimer(roomId, deadline),
@@ -727,7 +728,6 @@ mongoClient
               .findOne({ cityId: parseInt(req.query.locationId, 10) })
               .then((results_city) => {
                 selling_info.city = results_city;
-
                 // selling phase timer value
                 if (room && room.hasSellPaintingTimerEnded) {
                   selling_info.sellPaintingTimerValue = {};
@@ -756,6 +756,8 @@ mongoClient
                   .toArray()
                   .then((results_visits) => {
                     var otherTeams = [];
+                console.log('resultCity->', results_visits);
+
                     results_visits.forEach(function (visit, index) {
                       if (!otherTeams.includes(visit.teamName))
                         otherTeams.push(visit.teamName);
@@ -907,6 +909,50 @@ mongoClient
       res.status(200).json({ message: "updated" });
     });
 
+    router.post('/nominateForAuction', async (req, res) => {
+      try {
+        const {roomId, auction, roundId, locationId, teamColor} = req.body;
+        console.log('req->', req.body);
+        const data = await collection_nominatedForAuction.findOne({roomId: roomId,locationId: locationId});
+        // if we auction more than one painting from one team then need to add function here, so that auctionData updates as per requirement.
+        const auctionData = {};
+        auctionData[`${teamColor}`] = [auction];
+        
+        // console.log(auctionData);
+        if(!data) {
+          await collection_nominatedForAuction.insertOne({roundId: 1, locationId: locationId, auctions: auctionData, roomId: roomId});
+          res.status(200).json({message: 'updated new data1'});          
+        } else {
+          if(data.roundId === roundId) {
+            const auctions = {...data.auctions, ...auctionData};
+            await collection_nominatedForAuction.findOneAndUpdate({
+              roomId: roomId
+            },{
+              $set: {
+                auctions: auctions
+              } 
+              });
+            } else {
+            const auctions = {...auctionData};
+            await collection_nominatedForAuction.findOneAndUpdate({
+              roomId: roomId
+            },{
+              $set: {
+                roundId: roundId,
+                auctions: auctions
+              } 
+              });
+            
+          }
+          const d = await collection_nominatedForAuction.findOne({roomId: roomId});
+          res.status(200).json({message: 'updated data2', data: d});
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    });
+    
+    
     const getFlyTicketPrice = async (roomId) => {
       const result = await collection_flyTicketPrice.findOne({
         roomId: roomId,
