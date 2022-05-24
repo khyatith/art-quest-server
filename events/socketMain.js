@@ -542,6 +542,13 @@ module.exports = async (io, socket, rooms) => {
     io.sockets.in(roomId).emit("startBidding", true);
   };
 
+  const expoBeginningTimerStart = ({ hostCode }) => {
+    io.to(hostCode).emit("ExpoBeginTimerStarted");
+  }
+  const expoBeginningEnded = () => {
+    console.log('ended expo');
+  }
+
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
@@ -557,6 +564,8 @@ module.exports = async (io, socket, rooms) => {
   socket.on("startTimer", locationPhaseStartTimer);
   socket.on("expoBeginningTimerEnded", hasExpoBeginningTimerEnded);
   socket.on("sellingResultsTimerEnded", hasSellingResultsTimerEnded);
+  socket.on("startExpoBeginTimer", expoBeginningTimerStart);
+  socket.on("expoBeginEnded", expoBeginningEnded);
 
   //new design additions
   socket.on("addtofavorites", addToFavorites);
