@@ -51,10 +51,11 @@ function getLeaderboard(rooms, roomCode) {
   const leaderboard = rooms[roomCode].leaderBoard;
 	const currentRoom = rooms[roomCode];
   const englishAuctionsObj = currentRoom.englishAuctionBids;
+  const englishAuctionsObj3 = currentRoom.englishAuctionBids3;
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
   const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
-  const maxEnglishAuctionBids = currentRoom.maxEnglishAuctionBids;
+  // const maxEnglishAuctionBids = currentRoom.maxEnglishAuctionBids;
   const dutchAuctionObj = currentRoom.dutchAuctionBids;
 	//englishAuctions
 	if (englishAuctionsObj) {
@@ -74,27 +75,45 @@ function getLeaderboard(rooms, roomCode) {
 		}
   }
 
-
-  if (maxEnglishAuctionBids) {
-    for (let maxBids in maxEnglishAuctionBids) {
-      const leaderBoardKeys = Object.keys(leaderboard);
-      if (!leaderBoardKeys || !leaderBoardKeys.includes(maxBids)) {
-        const maxBidArr = maxEnglishAuctionBids[maxBids];
-        const allBidsArr = maxBidArr.map((obj) => parseInt(obj.bidAmount));
-        const highestBidInMaxAuctionBidsArray = allBidsArr.length === 1 ? allBidsArr[0]: findHighestBid(allBidsArr);
-        let englishMaxBidsWinner = maxBidArr.filter((obj) => parseInt(obj.bidAmount) === parseInt(highestBidInMaxAuctionBidsArray));
-        const maxBidsWinningTeam = englishMaxBidsWinner[0].bidTeam;
-        if (leaderBoardKeys && leaderBoardKeys.includes(maxBidsWinningTeam)) {
-          const isExistingMaxBidAuction = leaderboard[maxBidsWinningTeam].filter(item => item.auctionObj.id === englishMaxBidsWinner[0].auctionId)[0];
-          if (!isExistingMaxBidAuction) {
-            leaderboard[`${maxBidsWinningTeam}`].push(englishMaxBidsWinner[0]);
-          }
-        } else {
-          leaderboard[`${maxBidsWinningTeam}`] = [englishMaxBidsWinner[0]];
+  //englishAuctions3
+  if (englishAuctionsObj3) {
+		for (var englishAuction3 in englishAuctionsObj3) {
+			const leaderBoardKeys = Object.keys(leaderboard);
+      const EAWinner3 = englishAuctionsObj3[englishAuction3];
+      // const EAWinner = getWinningEnglishAuctionBid(currentRoom.maxEnglishAuctionBids, HighestAuctionItem, HighestAuctionItem.auctionId);
+      const EAwinningTeam3 = EAWinner3.bidTeam;
+			if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam3)) {
+        const isExistingAuction = leaderboard[EAwinningTeam3].filter(item => parseInt(item.auctionId, 10) === parseInt(EAWinner3.auctionId, 10))[0];
+        if (!isExistingAuction) {
+          leaderboard[`${EAwinningTeam3}`].push(EAWinner3);
         }
+      } else {
+        leaderboard[`${EAwinningTeam3}`] = [EAWinner3];
       }
-    }
+		}
   }
+
+
+  // if (maxEnglishAuctionBids) {
+  //   for (let maxBids in maxEnglishAuctionBids) {
+  //     const leaderBoardKeys = Object.keys(leaderboard);
+  //     if (!leaderBoardKeys || !leaderBoardKeys.includes(maxBids)) {
+  //       const maxBidArr = maxEnglishAuctionBids[maxBids];
+  //       const allBidsArr = maxBidArr.map((obj) => parseInt(obj.bidAmount));
+  //       const highestBidInMaxAuctionBidsArray = allBidsArr.length === 1 ? allBidsArr[0]: findHighestBid(allBidsArr);
+  //       let englishMaxBidsWinner = maxBidArr.filter((obj) => parseInt(obj.bidAmount) === parseInt(highestBidInMaxAuctionBidsArray));
+  //       const maxBidsWinningTeam = englishMaxBidsWinner[0].bidTeam;
+  //       if (leaderBoardKeys && leaderBoardKeys.includes(maxBidsWinningTeam)) {
+  //         const isExistingMaxBidAuction = leaderboard[maxBidsWinningTeam].filter(item => item.auctionObj.id === englishMaxBidsWinner[0].auctionId)[0];
+  //         if (!isExistingMaxBidAuction) {
+  //           leaderboard[`${maxBidsWinningTeam}`].push(englishMaxBidsWinner[0]);
+  //         }
+  //       } else {
+  //         leaderboard[`${maxBidsWinningTeam}`] = [englishMaxBidsWinner[0]];
+  //       }
+  //     }
+  //   }
+  // }
   if (dutchAuctionObj) {
 		for (var dutchAuction in dutchAuctionObj) {
 			const leaderBoardKeys = Object.keys(leaderboard);

@@ -34,9 +34,8 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
     try {
       let teamsScorecard = {};
       let classifyPoints = {};
-      const { englishAuctionBids } = auctionBidsDetails;
 
-      Object.entries(englishAuctionBids).forEach(([key, obj]) => {
+      Object.entries(auctionBidsDetails).forEach(([key, obj]) => {
         if (!teamsScorecard[obj.bidTeam]) {
           teamsScorecard = {
             ...teamsScorecard,
@@ -140,7 +139,6 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
         };
       });
 
-      console.log('teamsScoreCARD0', teamsScorecard);
       Object.values(pastLeaderBoard).forEach((details) => {
         for (obj in details) {
           const currentBidTeam = details[obj].bidTeam;
@@ -167,8 +165,6 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
           }
         }
       });
-
-      console.log('teamsScoreCARD1', teamsScorecard);
 
       return calculateClassify(teamsScorecard, classifyPoints);
     } catch (err) {

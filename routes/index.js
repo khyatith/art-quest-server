@@ -117,7 +117,6 @@ router.get("/collection_visits", async (req, res) => {
   db = await dbClient.createConnection();
   const collection_visits = db.collection("visits");
   const visits_room = await collection_visits.find({ roomId: "5ZB7L" });
-  console.log(await visits_room.toArray());
 });
 
 router.get("/", (req, res) => {
@@ -166,11 +165,9 @@ router.get('/englishauctionTimer/:hostCode/:englishAuctionsNumber', (req, res) =
     res.send({ englishAuctionTimer: {} });
     return;
   }
-  console.log('rooms.hasEnglishAuctionsTimer before', room.hasEnglishAuctionTimerEnded);
   if (room && Object.keys(room.englishAuctionTimer).length > 0) {
     res.send({ englishAuctionTimer: room.englishAuctionTimer });
   } else {
-    console.log('inside else >>>>');
     const currentTime = Date.parse(new Date());
     const deadline = new Date(currentTime + 0.5 * 60 * 1000);// 0.5
     const timerValue = getRemainingTime(deadline);
@@ -566,7 +563,6 @@ mongoClient
       const { roomId } = req.query;
       const results = await collection_room.findOne({ roomCode: roomId });
       const classifyObj = await collection_classify.findOne({ roomCode: roomId });
-      console.log('classifyObj->', classifyObj);
       const room = rooms[roomId];
       if (!results) {
         res.status(404).json({ error: "Room not found" });
@@ -582,13 +578,11 @@ mongoClient
 
         // //location phase timer value -> moved to new api //startAirportTimer
         const visitObjects = await getVisitData(keys, roomId);
-        console.log("visitobjects>>>>>", visitObjects);
         selling_result.visits = visitObjects;
         selling_result.allTeams = keys;
         const flyTicketsPriceData = await getFlyTicketPrice(roomId);
         selling_result.flyTicketsPrice = flyTicketsPriceData;
         selling_result.classifyPoints = classifyObj ? classifyObj.classify : {};
-        console.log('sellingResult->',selling_result);
         res.status(200).json(selling_result);
       }
     });
@@ -873,9 +867,9 @@ mongoClient
     });
 
     router.post("/updateEnglishAuctionResults", async (req, res) => {
-      const { roomId, auctionId } = req.body;
+      const { roomId, auctionId, englishAuctionsNumber } = req.body;
       const currentRoom = rooms[roomId];
-      const auctionItem = currentRoom.englishAuctionBids[auctionId];
+      const auctionItem = englishAuctionsNumber === 1 ? currentRoom.englishAuctionBids[auctionId] : currentRoom.englishAuctionBids3[auctionId];
       if (auctionItem) {
         const roomInServer = await collection_room.findOne({
           roomCode: roomId,
