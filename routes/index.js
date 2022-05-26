@@ -17,8 +17,6 @@ var mod = require("../constants");
 let rooms = mod.rooms;
 const { nanoid } = require("nanoid");
 const { visitedLocationDetails } = require("../helpers/location-visits");
-const { async } = require("q");
-const { auctionConfirmation } = require("../events/socketMain");
 
 let db;
 
