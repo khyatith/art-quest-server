@@ -541,18 +541,10 @@ module.exports = async (io, socket, rooms) => {
         } else {
           SPSBwinner = SPSBwinner[0];
         }
-        result = Object.assign({}, SPSBwinner);
-        result.bidAmount = secondHighestBid;
-        // const SPSBwinningteam = SBSPWinnerFinal.bidTeam;
-        // if (leaderBoardSPSBKeys && leaderBoardSPSBKeys.includes(SPSBwinningteam)) {
-        //   const isExistingSPSBAuction = leaderboard[SPSBwinningteam].filter(item => item.auctionObj.id === SBSPWinnerFinal.auctionId)[0];
-        //   if (!isExistingSPSBAuction) {
-        //     leaderboard[`${SPSBwinningteam}`].push(SBSPWinnerFinal);
-        //   }
-        // } else {
-        //   leaderboard[`${SPSBwinningteam}`] = [SBSPWinnerFinal];
-        // }
+        result[secondPricedSealedAuction] = SPSBwinner;
+        result[secondPricedSealedAuction].bidAmount = secondHighestBid;
       }
+      console.log('result in second priced sealed bid', result);
 
       try {
 
@@ -665,7 +657,7 @@ module.exports = async (io, socket, rooms) => {
   socket.on("englishAuctionTimerEnded", renderEnglishAuctionResults);
   socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
   socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
-  socket.on("renderSecondPriceAuctionsResult", renderSecondPriceAuctionsResult);
+  socket.on("secondPriceAuctionTimerEnded", renderSecondPriceAuctionsResult);
   socket.on("biddingStarted", biddingStarted);
   socket.on("dutchAuctionTimerEnded", renderDutchAuctionResults);
 }
