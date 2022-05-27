@@ -72,6 +72,16 @@ const startSecretAuctionTimer = (room, deadline) => {
   }
 };
 
+const startSecondPriceAuctionTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasSecretAuctionTimerEnded = true;
+    room.secretAuctionTimer = {};
+  } else if (room && timerValue.total > 0) {
+    room.secretAuctionTimer = timerValue;
+  }
+};
+
 const startLocationPhaseServerTimer = async (hostCode, deadline) => {
   let timerValue = getRemainingTime(deadline);
   const serverRoom = rooms[hostCode];
@@ -200,6 +210,30 @@ router.get('/secretauctionTimer/:hostCode/:secretAuctionsNumber', (req, res) => 
     res.send({ secretAuctionTimer: timerValue });
   }
 }
+);
+
+router.get('/secondPricedTimer/:hostCode/:secondPricedSealedBidAuctions', (req, res) => {
+    const { params } = req;
+    const hostCode = params.hostCode;
+    let room = rooms[hostCode];
+    if (params.secondPricedSealedBidAuctions !== room.auctionNumber) {
+      room.hasSecondPriceAuctionTimerEnded = false;
+      room.secondPriceAuctionTimer = {};
+    }
+    if (room && room.hasSecondPriceAuctionTimerEnded) {
+      res.send({ secondPriceAuctionTimer: {} });
+      return;
+    }
+    if (room && Object.keys(room.secondPriceAuctionTimer).length > 0) {
+      res.send({ secondPriceAuctionTimer: room.secondPriceAuctionTimer });
+    } else {
+      const currentTime = Date.parse(new Date());
+      const deadline = new Date(currentTime + 0.1 * 60 * 1000);// 0.3
+      const timerValue = getRemainingTime(deadline);
+      setInterval(() => startSecondPriceAuctionTimer(room, deadline), 1000);
+      res.send({ secondPriceAuctionTimer: timerValue });
+    }
+  }
 );
 
 router.get("/getResults/:hostCode", async (req, res) => {

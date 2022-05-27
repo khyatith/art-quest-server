@@ -484,4 +484,5 @@ module.exports = {
   updateDutchAuctionLeaderboard,
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
+  findSecondHighestBid,
 };
