@@ -51,7 +51,7 @@ function getLeaderboard(rooms, roomCode) {
   const leaderboard = rooms[roomCode].leaderBoard;
 	const currentRoom = rooms[roomCode];
   const englishAuctionsObj = currentRoom.englishAuctionBids;
-  const englishAuctionsObj3 = currentRoom.englishAuctionBids3;
+  const englishAuctionsObj3 = currentRoom.englishAuctionBids2;
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
   const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
@@ -179,7 +179,7 @@ function getLeaderboard(rooms, roomCode) {
       SBSPWinnerFinal.bidAmount = secondHighestBid;
       const SPSBwinningteam = SBSPWinnerFinal.bidTeam;
       if (leaderBoardSPSBKeys && leaderBoardSPSBKeys.includes(SPSBwinningteam)) {
-        const isExistingSPSBAuction = leaderboard[SPSBwinningteam].filter(item => item.auctionObj.id === SBSPWinnerFinal.auctionId)[0];
+        const isExistingSPSBAuction = leaderboard[SPSBwinningteam].filter(item => item.id === SBSPWinnerFinal.auctionId)[0];
         if (!isExistingSPSBAuction) {
           leaderboard[`${SPSBwinningteam}`].push(SBSPWinnerFinal);
         }

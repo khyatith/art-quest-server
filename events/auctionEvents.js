@@ -87,8 +87,12 @@ module.exports = async (io, socket, rooms) => {
           rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = bidInfo;
 				  io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
           await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBids": rooms[player.hostCode].englishAuctionBids } });
+        } else if (bidInfo.englishAuctionsNumber === 2) {
+          rooms[player.hostCode].englishAuctionBids2[`${auctionId}`] = bidInfo;
+				  io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
+          await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBid2": rooms[player.hostCode].englishAuctionBids2 } });
         } else if (bidInfo.englishAuctionsNumber === 3) {
-          rooms[player.hostCode].englishAuctionBids3[`${auctionId}`] = bidInfo;
+          rooms[player.hostCode].englishAuctionBids2[`${auctionId}`] = bidInfo;
 				  io.sockets.in(player.hostCode).emit("setPreviousBid", bidInfo);
           await collection.findOneAndUpdate({"hostCode":player.hostCode},{ $set: { "englishAuctionBid3": rooms[player.hostCode].englishAuctionBids3 } });
         }

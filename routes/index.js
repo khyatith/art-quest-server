@@ -7,7 +7,6 @@ const {
   calculateTotalAmountSpent,
   calculateBuyingPhaseWinner,
   getNextObjectForLiveAuction,
-  createTeamRankForBuyingPhase,
   updateDutchAuctionLeaderboard,
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
@@ -75,10 +74,10 @@ const startSecretAuctionTimer = (room, deadline) => {
 const startSecondPriceAuctionTimer = (room, deadline) => {
   let timerValue = getRemainingTime(deadline);
   if (room && timerValue.total <= 0) {
-    room.hasSecretAuctionTimerEnded = true;
-    room.secretAuctionTimer = {};
+    room.hasSecondPriceAuctionTimerEnded = true;
+    room.secondPriceAuctionTimer = {};
   } else if (room && timerValue.total > 0) {
-    room.secretAuctionTimer = timerValue;
+    room.secondPriceAuctionTimer = timerValue;
   }
 };
 
@@ -924,7 +923,7 @@ mongoClient
     router.post("/updateEnglishAuctionResults", async (req, res) => {
       const { roomId, auctionId, englishAuctionsNumber } = req.body;
       const currentRoom = rooms[roomId];
-      const auctionItem = englishAuctionsNumber === 1 ? currentRoom.englishAuctionBids[auctionId] : currentRoom.englishAuctionBids3[auctionId];
+      const auctionItem = englishAuctionsNumber === 1 ? currentRoom.englishAuctionBids[auctionId] : (englishAuctionsNumber === 2 ? currentRoom.englishAuctionBids2[auctionId] : currentRoom.englishAuctionBids3[auctionId]);
       if (auctionItem) {
         const roomInServer = await collection_room.findOne({
           roomCode: roomId,
