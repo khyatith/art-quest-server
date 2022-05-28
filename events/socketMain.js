@@ -1,17 +1,19 @@
 const {
-  getRemainingTime,
   calculateSellingRevenue,
+  findSecondHighestBid,
 } = require("../helpers/game");
 var englishAuctionObj1 = require("../data/englishAuctionData1.json");
 var englishAuctionObj2 = require("../data/englishAuctionData2.json");
 var secretAuctionObj1 = require("../data/secretAuctionData1.json");
-var secretAuctionObj2 = require("../data/secretAuctionData2.json");
+var englishAuctionObj3 = require("../data/englishAuctionData3.json");
 var sellingAuctionObj = require("../data/sellingAuctionData.json");
 var dutchAuctionObj = require("../data/dutchAuctionData1.json");
+var secondPricedAuctionObj1 = require("../data/secondPricedData1.json");
 const { calculate } = require("../helpers/classify-points");
 const dbClient = require("../mongoClient");
 var cloneDeep = require("lodash.clonedeep");
 const { visitedLocationDetails } = require("../helpers/location-visits");
+const { Socket } = require("socket.io");
 
 module.exports = async (io, socket, rooms) => {
   const db = await dbClient.createConnection();
@@ -31,7 +33,8 @@ module.exports = async (io, socket, rooms) => {
         ...englishAuctionObj1.artifacts,
         ...secretAuctionObj1.artifacts,
         ...englishAuctionObj2.artifacts,
-        ...secretAuctionObj2.artifacts,
+        ...englishAuctionObj3.artifacts,
+        ...secondPricedAuctionObj1.artifacts,
       ];
       let playerObj = {
         socketId: socket.id,
@@ -46,16 +49,18 @@ module.exports = async (io, socket, rooms) => {
         allPaintings,
         englishAuctions1: cloneDeep(englishAuctionObj1),
         englishAuctions2: cloneDeep(englishAuctionObj2),
+        englishAuctions3: cloneDeep(englishAuctionObj3),
         secretAuctions1: cloneDeep(secretAuctionObj1),
-        secretAuctions2: cloneDeep(secretAuctionObj2),
         sellingAuctions: cloneDeep(sellingAuctionObj),
         dutchAuctions: cloneDeep(dutchAuctionObj),
+        secondPricedSealedBidAuctions1: cloneDeep(secondPricedAuctionObj1),
         dutchAuctionsOrder: [],
         allTeams: [],
         leaderBoard: {},
         numberOfPlayers: 0,
         totalAmountSpentByTeam: {},
         englishAuctionBids: {},
+        englishAuctionBids2: {},
         englishAuctionBids3: {},
         maxEnglishAuctionBids: {},
         firstPricedSealedBids: {},
@@ -78,6 +83,8 @@ module.exports = async (io, socket, rooms) => {
         englishAuctionTimer: {},
         hasSecretAuctionTimerEnded: false,
         secretAuctionTimer: {},
+        hasSecondPriceAuctionTimerEnded: false,
+        secondPriceAuctionTimer: {},
         auctionNumber: "1",
         winner: null,
         sellingRoundNumber: 1,
@@ -90,6 +97,7 @@ module.exports = async (io, socket, rooms) => {
         calculatedRoundRevenue: {},
       };
       rooms[player.hostCode] = parsedRoom;
+      console.log('inside create collection');
       await collection.insertOne(parsedRoom);
     }
   };
@@ -380,6 +388,15 @@ module.exports = async (io, socket, rooms) => {
         }
       );
     } else if (englishAuctionsNumber === 2) {
+      rooms[player.hostCode].englishAuctionBids2[`${auctionId}`] = data;
+      io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
+      await collection.findOneAndUpdate(
+        { hostCode: player.hostCode },
+        {
+          $set: { englishAuctionBids2: rooms[player.hostCode].englishAuctionBids2 },
+        }
+      );
+    } else if (englishAuctionsNumber === 3) {
       rooms[player.hostCode].englishAuctionBids3[`${auctionId}`] = data;
       io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
       await collection.findOneAndUpdate(
@@ -397,7 +414,7 @@ module.exports = async (io, socket, rooms) => {
     const classifyPoints = {};
 
     try {
-      let englishAuctionBids = englishAuctionsNumber === 1 ? room.englishAuctionBids : room.englishAuctionBids3;
+      let englishAuctionBids = englishAuctionsNumber === 1 ? room.englishAuctionBids : (englishAuctionsNumber === 2 ? room.englishAuctionBids2 : room.englishAuctionBids3);
       classifyPoints.roomCode = roomId;
       classifyPoints.classify = calculate(englishAuctionBids, "ENGLISH", room.leaderBoard);
 
@@ -419,11 +436,12 @@ module.exports = async (io, socket, rooms) => {
     // console.log(classifyPoints);
     // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
     io.sockets.in(roomId).emit("renderEnglishAuctionsResults", {
-      englishAutionBids: englishAuctionsNumber === 1 ? room.englishAuctionBids : room.englishAuctionBids3,
+      englishAutionBids: englishAuctionsNumber === 1 ? room.englishAuctionBids : (englishAuctionsNumber === 2 ? room.englishAuctionBids2 : room.englishAuctionBids3),
       classifyPoints,
     });
     // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalArtScoreForTeams": results.totalArtScoreForTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
   };
+
   const renderDutchAuctionResults = async (roomId) => {
     const room = await collection.findOne({ hostCode: roomId });
     const classifyPoints = {};
@@ -462,7 +480,6 @@ module.exports = async (io, socket, rooms) => {
     } catch (err) {
       console.log(err);
     }
-  
   };
 
   const addToFirstPricedSealedBidAuction = async (data) => {
@@ -489,6 +506,79 @@ module.exports = async (io, socket, rooms) => {
       }
     );
   };
+
+  const addToSecondPricedSealedBidAuction = async (data) => {
+    const { player, auctionId, bidAmount } = data;
+    const allSecondPricedSealedBids =
+      rooms[player.hostCode].secondPricedSealedBids;
+    const spsbObj = Object.keys(allSecondPricedSealedBids);
+    if (spsbObj.includes(`${auctionId}`)) {
+      rooms[player.hostCode].secondPricedSealedBids[`${auctionId}`].push(data);
+    } else {
+      rooms[player.hostCode].secondPricedSealedBids[`${auctionId}`] = [data];
+    }
+    io.sockets.in(player.hostCode).emit("setSecondPricedLiveStyles", {
+      teamName: player.teamName,
+      auctionId,
+      bidAmount,
+    });
+    await collection.findOneAndUpdate(
+      { hostCode: player.hostCode },
+      {
+        $set: {
+          secondPricedSealedBids: rooms[player.hostCode].secondPricedSealedBids,
+        },
+      }
+    );
+  }
+
+  const renderSecondPriceAuctionsResult = async (roomId) => {
+    let result = {};
+    const room = await collection.findOne({ hostCode: roomId });
+    const secondPricedSealedBidAuctionsObj = room.secondPricedSealedBids;
+
+    if (secondPricedSealedBidAuctionsObj) {
+      for (var secondPricedSealedAuction in secondPricedSealedBidAuctionsObj) {
+        const SPSBItem = secondPricedSealedBidAuctionsObj[secondPricedSealedAuction];
+        //Find the second highest bid amount
+        const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
+        const secondHighestBid = allBidsArr.length === 1 ? allBidsArr[0]: findSecondHighestBid(allBidsArr, allBidsArr.length);
+        let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) > parseInt(secondHighestBid));
+        if (SPSBwinner.length > 1) {
+          SPSBwinner = SPSBwinner.reduce((acc, winner) => {
+            return winner.bidAt < acc.bidAt ? winner : acc;
+          });
+        } else {
+          SPSBwinner = SPSBwinner[0];
+        }
+        result[secondPricedSealedAuction] = SPSBwinner;
+        result[secondPricedSealedAuction].bidAmount = secondHighestBid;
+      }
+
+      try {
+        const secondPriceAuctionResult = calculate(result, "SECOND_PRICED", room.leaderBoard);
+        const resultingObj = {};
+        resultingObj.classify = secondPriceAuctionResult;
+  
+        resultingObj.roomCode = roomId;
+
+        io.sockets.in(roomId).emit("renderSecondPriceAuctionsResult", {
+          result,
+          classifyPoints: resultingObj.classify,
+        });
+        await collection_classify.findOneAndUpdate(
+          { roomCode: roomId },
+          {
+            $set: {
+              classify: resultingObj.classify,
+            },
+          }
+        );
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }
 
   const renderSecretAuctionResults = async (roomId) => {
     let result = {};
@@ -570,11 +660,11 @@ module.exports = async (io, socket, rooms) => {
   //new design additions
   socket.on("addtofavorites", addToFavorites);
   socket.on("addEnglishAuctionBid", addEnglishAuctionBid);
+  socket.on("addSecondPriceAuctionBid", addToSecondPricedSealedBidAuction);
   socket.on("englishAuctionTimerEnded", renderEnglishAuctionResults);
   socket.on("addSecretAuctionBid", addToFirstPricedSealedBidAuction);
   socket.on("secretAuctionTimerEnded", renderSecretAuctionResults);
+  socket.on("secondPriceAuctionTimerEnded", renderSecondPriceAuctionsResult);
   socket.on("biddingStarted", biddingStarted);
   socket.on("dutchAuctionTimerEnded", renderDutchAuctionResults);
-
-  
 }

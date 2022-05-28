@@ -7,7 +7,6 @@ const {
   calculateTotalAmountSpent,
   calculateBuyingPhaseWinner,
   getNextObjectForLiveAuction,
-  createTeamRankForBuyingPhase,
   updateDutchAuctionLeaderboard,
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
@@ -69,6 +68,16 @@ const startSecretAuctionTimer = (room, deadline) => {
     room.secretAuctionTimer = {};
   } else if (room && timerValue.total > 0) {
     room.secretAuctionTimer = timerValue;
+  }
+};
+
+const startSecondPriceAuctionTimer = (room, deadline) => {
+  let timerValue = getRemainingTime(deadline);
+  if (room && timerValue.total <= 0) {
+    room.hasSecondPriceAuctionTimerEnded = true;
+    room.secondPriceAuctionTimer = {};
+  } else if (room && timerValue.total > 0) {
+    room.secondPriceAuctionTimer = timerValue;
   }
 };
 
@@ -200,6 +209,30 @@ router.get('/secretauctionTimer/:hostCode/:secretAuctionsNumber', (req, res) => 
     res.send({ secretAuctionTimer: timerValue });
   }
 }
+);
+
+router.get('/secondPricedTimer/:hostCode/:secondPricedSealedBidAuctions', (req, res) => {
+    const { params } = req;
+    const hostCode = params.hostCode;
+    let room = rooms[hostCode];
+    if (params.secondPricedSealedBidAuctions !== room.auctionNumber) {
+      room.hasSecondPriceAuctionTimerEnded = false;
+      room.secondPriceAuctionTimer = {};
+    }
+    if (room && room.hasSecondPriceAuctionTimerEnded) {
+      res.send({ secondPriceAuctionTimer: {} });
+      return;
+    }
+    if (room && Object.keys(room.secondPriceAuctionTimer).length > 0) {
+      res.send({ secondPriceAuctionTimer: room.secondPriceAuctionTimer });
+    } else {
+      const currentTime = Date.parse(new Date());
+      const deadline = new Date(currentTime + 0.1 * 60 * 1000);// 0.3
+      const timerValue = getRemainingTime(deadline);
+      setInterval(() => startSecondPriceAuctionTimer(room, deadline), 1000);
+      res.send({ secondPriceAuctionTimer: timerValue });
+    }
+  }
 );
 
 router.get("/getResults/:hostCode", async (req, res) => {
@@ -890,7 +923,7 @@ mongoClient
     router.post("/updateEnglishAuctionResults", async (req, res) => {
       const { roomId, auctionId, englishAuctionsNumber } = req.body;
       const currentRoom = rooms[roomId];
-      const auctionItem = englishAuctionsNumber === 1 ? currentRoom.englishAuctionBids[auctionId] : currentRoom.englishAuctionBids3[auctionId];
+      const auctionItem = englishAuctionsNumber === 1 ? currentRoom.englishAuctionBids[auctionId] : (englishAuctionsNumber === 2 ? currentRoom.englishAuctionBids2[auctionId] : currentRoom.englishAuctionBids3[auctionId]);
       if (auctionItem) {
         const roomInServer = await collection_room.findOne({
           roomCode: roomId,

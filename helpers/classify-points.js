@@ -116,7 +116,7 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
     }
   }
 
-  if (AUCTION_TYPE === "SECRET") {
+  if (AUCTION_TYPE === "SECRET" || AUCTION_TYPE === "SECOND_PRICED") {
     try {
       let teamsScorecard = {};
       let classifyPoints = {};
@@ -165,7 +165,7 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
           }
         }
       });
-
+      console.log("teamsScorecard", teamsScorecard);
       return calculateClassify(teamsScorecard, classifyPoints);
     } catch (err) {
       console.log(err);

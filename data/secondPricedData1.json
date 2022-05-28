@@ -1,0 +1,83 @@
+{
+    "artifacts": [
+      {
+        "id": 19,
+        "name": "The Great Wave off Kanagawa",
+        "region": "Asia",
+        "country": "Japan",
+        "artist": "Hokusai",
+        "dateCreated": "1831",
+        "artMovementId": "4",
+        "artMovementName": "ukiyo-e",
+        "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-movements%2Fukiyo-e%2Fthe-great-wave.png?alt=media&token=15c00642-84ae-4711-8a0d-dc28b221b028",
+        "originalValue": 10,
+        "basePrice": 2
+      },
+      {
+        "id": 20,
+        "name": "The Block",
+        "region": "North America",
+        "country": "USA",
+        "dateCreated": "1978",
+        "artist": "Romare Bearden",
+        "artMovementId": "3",
+        "artMovementName": "abstract",
+        "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-movements%2Fabstract%2Fthe-block.jpg?alt=media&token=d164b55f-ca35-4b65-9782-a1d89a81d368",
+        "originalValue": 45,
+        "basePrice": 15
+      },
+      {
+        "id": 21,
+        "name": "The Bridge in Curve",
+        "region": "North America",
+        "country": "USA",
+        "dateCreated": "1930",
+        "artist": "Grace Cossington Smith",
+        "artMovementId": "5",
+        "artMovementName": "modernism",
+        "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-movements%2Fmodernism%2Fthe-bridge-in-curve.png?alt=media&token=ef3764ab-5177-4eef-81c6-c2fb4ae0acb5",
+        "originalValue": 33,
+        "basePrice": 10
+      },
+      {
+        "id": 22,
+        "name": "The Gleaners",
+        "region": "Europe",
+        "country": "France",
+        "dateCreated": "1857",
+        "artist": "Jean-François Millet",
+        "artMovementId": "6",
+        "artMovementName": "realism",
+        "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-movements%2Frealism%2Fthe-gleaners.jpg?alt=media&token=00e1a315-5bec-4fc4-88af-faefba9a7b70",
+        "originalValue": 53,
+        "basePrice": 20
+      },
+      {
+        "id": 23,
+        "name": "Whaam",
+        "region": "North America",
+        "country": "USA",
+        "dateCreated": "1963",
+        "artist": "Roy Lichtenstein",
+        "artMovementId": "2",
+        "artMovementName": "pop-art",
+        "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-movements%2Fpop-art%2Fwhaam.jpeg?alt=media&token=e00d3a32-02c4-4040-bb64-0eed8dea2fa8",
+        "originalValue": 53,
+        "basePrice": 20
+      },
+      {
+        "id": 24,
+        "name": "The Water Lillies",
+        "region": "Europe",
+        "country": "France",
+        "dateCreated": "1840",
+        "artist": "Claude Monet",
+        "artMovementId": "1",
+        "artMovementName": "modern-art",
+        "imageURL": "https://firebasestorage.googleapis.com/v0/b/auctions-f601d.appspot.com/o/art-movements%2Fmodern-art%2Fwater-lillies.jpeg?alt=media&token=03b800f2-5500-40ef-aa4e-53e34db7ccbb",
+        "originalValue": 53,
+        "basePrice": 20
+      }
+    ]
+  }
+  
