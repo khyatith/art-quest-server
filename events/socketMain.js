@@ -373,12 +373,13 @@ module.exports = async (io, socket, rooms) => {
   const emitNominatedPaintingId = async (data) => {
     const { paintingId, roomCode, teamName } = data;
     const calculatedRevenue = await calculateRevenue(data);
-    io.sockets.in(roomCode).emit("emitNominatedPainting", {
-      paintingId,
-      teamName,
-      ticketPrice: data.ticketPrice,
-      calculatedRevenue,
-    });
+    console.log('paintingData ->', data);
+    // io.sockets.in(roomCode).emit("emitNominatedPainting", {
+    //   paintingId,
+    //   teamName,
+    //   ticketPrice: data.ticketPrice,
+    //   calculatedRevenue,
+    // });
   };
 
   const addToFavorites = async (data) => {
