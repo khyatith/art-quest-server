@@ -201,8 +201,10 @@ module.exports = async (io, socket, rooms) => {
   }) => {
     const room = await collection.findOne({ hostCode: roomCode });
     const parsedRoom = room;
-    if(!room) return;
-    parsedRoom.numberOfPlayers = parseInt(numberOfPlayers?numberOfPlayers:"1");
+    if (!room) return;
+    parsedRoom.numberOfPlayers = parseInt(
+      numberOfPlayers ? numberOfPlayers : "1"
+    );
     parsedRoom.version = parseInt(version);
     numberOfPlayersInRoom = parseInt(numberOfPlayers);
     versionRoom = parseInt(version);
@@ -251,7 +253,10 @@ module.exports = async (io, socket, rooms) => {
     );
     if (result) {
       const fetchedRoom = await collection_visits.find({ roomId }).toArray();
-      const existingRecordArray = fetchedRoom && fetchedRoom.length > 0 && fetchedRoom.filter((fr) => fr.teamName === teamName);
+      const existingRecordArray =
+        fetchedRoom &&
+        fetchedRoom.length > 0 &&
+        fetchedRoom.filter((fr) => fr.teamName === teamName);
       const existingRecord = existingRecordArray && existingRecordArray[0];
       if (existingRecord) {
         if (
@@ -284,8 +289,11 @@ module.exports = async (io, socket, rooms) => {
           },
           { upsert: true }
         );
-        const fetchAllTeamsVisits = await collection_visits.find({ roomId }).toArray();
-        const allTeamsVisitedLocations = visitedLocationDetails(fetchAllTeamsVisits);
+        const fetchAllTeamsVisits = await collection_visits
+          .find({ roomId })
+          .toArray();
+        const allTeamsVisitedLocations =
+          visitedLocationDetails(fetchAllTeamsVisits);
         io.sockets.in(roomId).emit("locationUpdatedForTeam", {
           roomId,
           teamName,
@@ -304,8 +312,11 @@ module.exports = async (io, socket, rooms) => {
           allVisitLocations: [],
           totalVisitPrice: parseInt(flyTicketPrice, 10),
         });
-        const fetchAllTeamsVisits = await collection_visits.find({ roomId }).toArray();
-        const allTeamsVisitedLocations = visitedLocationDetails(fetchAllTeamsVisits);
+        const fetchAllTeamsVisits = await collection_visits
+          .find({ roomId })
+          .toArray();
+        const allTeamsVisitedLocations =
+          visitedLocationDetails(fetchAllTeamsVisits);
         if (result)
           io.sockets.in(roomId).emit("locationUpdatedForTeam", {
             roomId,
@@ -377,14 +388,16 @@ module.exports = async (io, socket, rooms) => {
 
   const addEnglishAuctionBid = async (data) => {
     const { player, auctionId, englishAuctionsNumber } = data;
-    console.log('englishAuctionsNumber', englishAuctionsNumber);
+    console.log("englishAuctionsNumber", englishAuctionsNumber);
     if (englishAuctionsNumber === 1) {
       rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = data;
       io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
       await collection.findOneAndUpdate(
         { hostCode: player.hostCode },
         {
-          $set: { englishAuctionBids: rooms[player.hostCode].englishAuctionBids },
+          $set: {
+            englishAuctionBids: rooms[player.hostCode].englishAuctionBids,
+          },
         }
       );
     } else if (englishAuctionsNumber === 2) {
@@ -402,7 +415,9 @@ module.exports = async (io, socket, rooms) => {
       await collection.findOneAndUpdate(
         { hostCode: player.hostCode },
         {
-          $set: { englishAuctionBids3: rooms[player.hostCode].englishAuctionBids3 },
+          $set: {
+            englishAuctionBids3: rooms[player.hostCode].englishAuctionBids3,
+          },
         }
       );
     }
@@ -416,7 +431,11 @@ module.exports = async (io, socket, rooms) => {
     try {
       let englishAuctionBids = englishAuctionsNumber === 1 ? room.englishAuctionBids : (englishAuctionsNumber === 2 ? room.englishAuctionBids2 : room.englishAuctionBids3);
       classifyPoints.roomCode = roomId;
-      classifyPoints.classify = calculate(englishAuctionBids, "ENGLISH", room.leaderBoard);
+      classifyPoints.classify = calculate(
+        englishAuctionBids,
+        "ENGLISH",
+        room.leaderBoard
+      );
 
       const findRoom = await collection_classify.findOne({ roomCode: roomId });
       if (!findRoom) await collection_classify.insertOne(classifyPoints);
@@ -461,9 +480,9 @@ module.exports = async (io, socket, rooms) => {
             dutchAuctionResult[teamName]
           );
       });
-      
+
       resultingObj.roomCode = roomId;
-      
+
       await collection_classify.findOneAndUpdate(
         { roomCode: roomId },
         {
@@ -603,7 +622,6 @@ module.exports = async (io, socket, rooms) => {
     }
 
     try {
-
       const secretAuctionResult = calculate(result, "SECRET", room.leaderBoard);
       const resultingObj = {};
       resultingObj.classify = secretAuctionResult;
@@ -634,10 +652,10 @@ module.exports = async (io, socket, rooms) => {
 
   const expoBeginningTimerStart = ({ hostCode }) => {
     io.to(hostCode).emit("ExpoBeginTimerStarted");
-  }
+  };
   const expoBeginningEnded = () => {
-    console.log('ended expo');
-  }
+    console.log("ended expo");
+  };
 
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
