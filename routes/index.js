@@ -94,10 +94,10 @@ const startLocationPhaseServerTimer = async (hostCode, deadline) => {
 const startSellingServerTimer = async (serverRoom, deadline) => {
   let sellingPhaseTimerValue = getRemainingTime(deadline);
   if (sellingPhaseTimerValue.total <= 0) {
-    serverRoom.hasSellPaintingTimerEnded = true;
-    serverRoom.sellPaintingTimerValue = {};
+    // serverRoom.hasSellPaintingTimerEnded = true;
+    // serverRoom.sellPaintingTimerValue = {};
   } else if (sellingPhaseTimerValue.total > 0) {
-    serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
+    // serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
   }
 };
 

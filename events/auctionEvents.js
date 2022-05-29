@@ -187,9 +187,13 @@ module.exports = async (io, socket, rooms) => {
   const auctionConfirmation = (params) => {
     io.sockets.emit("auctionConfirmation", { teamName: params.teamColor });
   };
+  const sellToMarketConfirmation = (params) => {
+    io.sockets.emit("sellToMarketConfirmation", { ...params });
+  };
 
   socket.on("startLiveAuctions", startLiveAuctions);
   socket.on("startAuctionsTimer", startAuctionsTimer);
   socket.on("addNewBid", addNewBid);
   socket.on("auctionConfirmation", auctionConfirmation);
+  socket.on("sellToMarketConfirmation", sellToMarketConfirmation);
 };
