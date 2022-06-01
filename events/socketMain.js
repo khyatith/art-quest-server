@@ -650,12 +650,13 @@ module.exports = async (io, socket, rooms) => {
   const biddingStarted = async (roomId) => {
     io.sockets.in(roomId).emit("startBidding", true);
   };
-
+  
   const expoBeginningTimerStart = ({ hostCode }) => {
-    io.to(hostCode).emit("ExpoBeginTimerStarted");
+    io.to(hostCode).emit("ExpoBeginTimerStarted", true);
   };
-  const expoBeginningEnded = () => {
-    console.log("ended expo");
+  const expoBeginningEnded = ({hostCode}) => {
+    console.log('expo ended', hostCode);
+    io.sockets.in(hostCode).emit("ExpoBeginTimerEnded");
   };
 
   socket.on("createRoom", createRoom);

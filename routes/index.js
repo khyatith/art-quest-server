@@ -653,7 +653,7 @@ mongoClient
               room.locationPhaseTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.1 * 60 * 1000);
+            const deadline = new Date(currentTime + 0.4 * 60 * 1000); //0.5 original
             const timerValue = getRemainingTime(deadline);
             setInterval(
               () => startLocationPhaseServerTimer(roomId, deadline),
@@ -816,7 +816,7 @@ mongoClient
             selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.5 * 60 * 1000);
+            const deadline = new Date(currentTime + 0.3 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
             setInterval(() => startSellingServerTimer(room, deadline), 1000);
             selling_info.sellPaintingTimerValue = timerValue;
@@ -967,10 +967,25 @@ mongoClient
       res.status(200).json({ message: "updated" });
     });
 
+    router.get("/getNominatedForAuctionItems", async (req, res) => {
+      try {
+        const { roomId, roundId, locationId } = req.query;
+        console.log(roomId, roundId, locationId);
+        const data = await collection_nominatedForAuction.findOne({
+          roomId: roomId,
+          locationId: +locationId,
+          roundId: +roundId,
+        });
+        console.log('foundData ->', data);
+        res.status(200).send(data);
+      } catch (e) {
+        console.log(e);
+      }
+    });
+      
     router.post("/nominateForAuction", async (req, res) => {
       try {
         const { roomId, auction, roundId, locationId, teamColor } = req.body;
-        console.log("req->", req.body);
         const data = await collection_nominatedForAuction.findOne({
           roomId: roomId,
           locationId: locationId,
@@ -1018,7 +1033,7 @@ mongoClient
           const d = await collection_nominatedForAuction.findOne({
             roomId: roomId,
           });
-          res.status(200).json({ message: "updated data2", data: d });
+          res.status(200).json({ message: "updated data2" });
         }
       } catch (e) {
         console.log(e);
