@@ -93,6 +93,8 @@ module.exports = async (io, socket, rooms) => {
         sellPaintingTimerValue: {},
         hasSellPaintingTimerEnded: false,
         sellingResultsTimerValue: {},
+        hasNominatedAuctionTimerEnded: false,
+        nominatedAuctionTimerValue: {},
         hasSellingResultsTimerEnded: false,
         calculatedRoundRevenue: {},
       };
@@ -654,6 +656,12 @@ module.exports = async (io, socket, rooms) => {
   const expoBeginningTimerStart = ({ hostCode }) => {
     io.to(hostCode).emit("ExpoBeginTimerStarted", true);
   };
+
+  const startNominatedAuctionTimer = ({ hostCode }) => {
+    console.log('starting Nominated Auction Timer');
+    io.to(hostCode).emit("nominatedAuctionStarted");
+  };
+
   const expoBeginningEnded = ({hostCode}) => {
     console.log('expo ended', hostCode);
     io.sockets.in(hostCode).emit("ExpoBeginTimerEnded");
@@ -687,4 +695,6 @@ module.exports = async (io, socket, rooms) => {
   socket.on("secondPriceAuctionTimerEnded", renderSecondPriceAuctionsResult);
   socket.on("biddingStarted", biddingStarted);
   socket.on("dutchAuctionTimerEnded", renderDutchAuctionResults);
+  socket.on("startNominatedAuctionTimer", startNominatedAuctionTimer);
+
 }
