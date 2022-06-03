@@ -66,6 +66,7 @@ module.exports = async (io, socket, rooms) => {
         firstPricedSealedBids: {},
         secondPricedSealedBids: {},
         dutchAuctionBids: {},
+        nominatedAuctionBids: {},
         allPayAuctions: {},
         version: 1,
         hasLandingPageTimerStarted: false,
@@ -686,18 +687,14 @@ module.exports = async (io, socket, rooms) => {
     console.log('starting Nominated Auction Timer');
     io.to(hostCode).emit("nominatedAuctionStarted");
   };
-<<<<<<< HEAD
 
   const expoBeginningEnded = ({hostCode}) => {
     console.log('expo ended', hostCode);
     io.sockets.in(hostCode).emit("ExpoBeginTimerEnded");
-=======
-  const expoBeginningEnded = (data) => {
-    console.log("ended expo");
->>>>>>> 0ab53a3251e7f3713d7e1ce801b32e2cc264bbc8
   };
 
   const nominatedAuctionBids = async (data) => {
+    console.log('nominated Auction data->', data);
     const { player, auctionId, roundId } = data;
     rooms[player.hostCode].nominatedAuctionBids[`${auctionId}`] = data;
     if (rooms[player.hostCode].roundId === roundId) {
@@ -741,11 +738,6 @@ module.exports = async (io, socket, rooms) => {
   socket.on("secondPriceAuctionTimerEnded", renderSecondPriceAuctionsResult);
   socket.on("biddingStarted", biddingStarted);
   socket.on("dutchAuctionTimerEnded", renderDutchAuctionResults);
-<<<<<<< HEAD
   socket.on("startNominatedAuctionTimer", startNominatedAuctionTimer);
-
-}
-=======
   socket.on("nominatedAuctionBids", nominatedAuctionBids);
 };
->>>>>>> 0ab53a3251e7f3713d7e1ce801b32e2cc264bbc8
