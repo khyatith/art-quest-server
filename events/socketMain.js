@@ -66,6 +66,7 @@ module.exports = async (io, socket, rooms) => {
         firstPricedSealedBids: {},
         secondPricedSealedBids: {},
         dutchAuctionBids: {},
+        nominatedAuctionBids: {},
         allPayAuctions: {},
         version: 1,
         hasLandingPageTimerStarted: false,
@@ -93,11 +94,13 @@ module.exports = async (io, socket, rooms) => {
         sellPaintingTimerValue: {},
         hasSellPaintingTimerEnded: false,
         sellingResultsTimerValue: {},
+        hasNominatedAuctionTimerEnded: false,
+        nominatedAuctionTimerValue: {},
         hasSellingResultsTimerEnded: false,
         calculatedRoundRevenue: {},
       };
       rooms[player.hostCode] = parsedRoom;
-      console.log('inside create collection');
+      console.log("inside create collection");
       await collection.insertOne(parsedRoom);
     }
   };
@@ -373,7 +376,7 @@ module.exports = async (io, socket, rooms) => {
   const emitNominatedPaintingId = async (data) => {
     const { paintingId, roomCode, teamName } = data;
     const calculatedRevenue = await calculateRevenue(data);
-    console.log('paintingData ->', data);
+    console.log("paintingData ->", data);
     // io.sockets.in(roomCode).emit("emitNominatedPainting", {
     //   paintingId,
     //   teamName,
@@ -407,7 +410,9 @@ module.exports = async (io, socket, rooms) => {
       await collection.findOneAndUpdate(
         { hostCode: player.hostCode },
         {
-          $set: { englishAuctionBids2: rooms[player.hostCode].englishAuctionBids2 },
+          $set: {
+            englishAuctionBids2: rooms[player.hostCode].englishAuctionBids2,
+          },
         }
       );
     } else if (englishAuctionsNumber === 3) {
@@ -430,7 +435,12 @@ module.exports = async (io, socket, rooms) => {
     const classifyPoints = {};
 
     try {
-      let englishAuctionBids = englishAuctionsNumber === 1 ? room.englishAuctionBids : (englishAuctionsNumber === 2 ? room.englishAuctionBids2 : room.englishAuctionBids3);
+      let englishAuctionBids =
+        englishAuctionsNumber === 1
+          ? room.englishAuctionBids
+          : englishAuctionsNumber === 2
+          ? room.englishAuctionBids2
+          : room.englishAuctionBids3;
       classifyPoints.roomCode = roomId;
       classifyPoints.classify = calculate(
         englishAuctionBids,
@@ -456,7 +466,12 @@ module.exports = async (io, socket, rooms) => {
     // console.log(classifyPoints);
     // const results = await getNewLeaderboard(rooms, roomId, room.auctions.artifacts.length);
     io.sockets.in(roomId).emit("renderEnglishAuctionsResults", {
-      englishAutionBids: englishAuctionsNumber === 1 ? room.englishAuctionBids : (englishAuctionsNumber === 2 ? room.englishAuctionBids2 : room.englishAuctionBids3),
+      englishAutionBids:
+        englishAuctionsNumber === 1
+          ? room.englishAuctionBids
+          : englishAuctionsNumber === 2
+          ? room.englishAuctionBids2
+          : room.englishAuctionBids3,
       classifyPoints,
     });
     // await collection.findOneAndUpdate({ "hostCode": roomId }, { $set: {"leaderBoard": results.leaderboard, "totalAmountSpentByTeam": results.totalAmountByTeam, "teamEfficiency": results.totalPaintingsWonByTeams, "totalArtScoreForTeams": results.totalArtScoreForTeams, "totalPaintingsWonByTeam":  results.totalPaintingsWonByTeams, "allTeams": room.allTeams } });
@@ -550,7 +565,7 @@ module.exports = async (io, socket, rooms) => {
         },
       }
     );
-  }
+  };
 
   const renderSecondPriceAuctionsResult = async (roomId) => {
     let result = {};
@@ -559,11 +574,20 @@ module.exports = async (io, socket, rooms) => {
 
     if (secondPricedSealedBidAuctionsObj) {
       for (var secondPricedSealedAuction in secondPricedSealedBidAuctionsObj) {
-        const SPSBItem = secondPricedSealedBidAuctionsObj[secondPricedSealedAuction];
+        const SPSBItem =
+          secondPricedSealedBidAuctionsObj[secondPricedSealedAuction];
         //Find the second highest bid amount
         const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
-        const secondHighestBid = allBidsArr.length === 1 ? allBidsArr[0]: findSecondHighestBid(allBidsArr, allBidsArr.length);
-        let SPSBwinner = SPSBItem.length === 1 ? SPSBItem : SPSBItem.filter(item => parseInt(item.bidAmount) > parseInt(secondHighestBid));
+        const secondHighestBid =
+          allBidsArr.length === 1
+            ? allBidsArr[0]
+            : findSecondHighestBid(allBidsArr, allBidsArr.length);
+        let SPSBwinner =
+          SPSBItem.length === 1
+            ? SPSBItem
+            : SPSBItem.filter(
+                (item) => parseInt(item.bidAmount) > parseInt(secondHighestBid)
+              );
         if (SPSBwinner.length > 1) {
           SPSBwinner = SPSBwinner.reduce((acc, winner) => {
             return winner.bidAt < acc.bidAt ? winner : acc;
@@ -576,10 +600,14 @@ module.exports = async (io, socket, rooms) => {
       }
 
       try {
-        const secondPriceAuctionResult = calculate(result, "SECOND_PRICED", room.leaderBoard);
+        const secondPriceAuctionResult = calculate(
+          result,
+          "SECOND_PRICED",
+          room.leaderBoard
+        );
         const resultingObj = {};
         resultingObj.classify = secondPriceAuctionResult;
-  
+
         resultingObj.roomCode = roomId;
 
         io.sockets.in(roomId).emit("renderSecondPriceAuctionsResult", {
@@ -598,7 +626,7 @@ module.exports = async (io, socket, rooms) => {
         console.log(err);
       }
     }
-  }
+  };
 
   const renderSecretAuctionResults = async (roomId) => {
     let result = {};
@@ -650,12 +678,36 @@ module.exports = async (io, socket, rooms) => {
   const biddingStarted = async (roomId) => {
     io.sockets.in(roomId).emit("startBidding", true);
   };
-
+  
   const expoBeginningTimerStart = ({ hostCode }) => {
-    io.to(hostCode).emit("ExpoBeginTimerStarted");
+    io.to(hostCode).emit("ExpoBeginTimerStarted", true);
   };
-  const expoBeginningEnded = () => {
-    console.log("ended expo");
+
+  const startNominatedAuctionTimer = ({ hostCode }) => {
+    console.log('starting Nominated Auction Timer');
+    io.to(hostCode).emit("nominatedAuctionStarted");
+  };
+
+  const expoBeginningEnded = ({hostCode}) => {
+    console.log('expo ended', hostCode);
+    io.sockets.in(hostCode).emit("ExpoBeginTimerEnded");
+  };
+
+  const nominatedAuctionBids = async (data) => {
+    console.log('nominated Auction data->', data);
+    const { player, auctionId, roundId } = data;
+    rooms[player.hostCode].nominatedAuctionBids[`${auctionId}`] = data;
+    if (rooms[player.hostCode].roundId === roundId) {
+      io.sockets.in(player.hostCode).emit("setNominatedAuction", data);
+      await collection.findOneAndUpdate(
+        { hostCode: player.hostCode },
+        {
+          $set: {
+            nominatedAuctionBids: rooms[player.hostCode].nominatedAuctionBids,
+          },
+        }
+      );
+    }
   };
 
   socket.on("createRoom", createRoom);
@@ -686,4 +738,6 @@ module.exports = async (io, socket, rooms) => {
   socket.on("secondPriceAuctionTimerEnded", renderSecondPriceAuctionsResult);
   socket.on("biddingStarted", biddingStarted);
   socket.on("dutchAuctionTimerEnded", renderDutchAuctionResults);
-}
+  socket.on("startNominatedAuctionTimer", startNominatedAuctionTimer);
+  socket.on("nominatedAuctionBids", nominatedAuctionBids);
+};

@@ -94,10 +94,19 @@ const startLocationPhaseServerTimer = async (hostCode, deadline) => {
 const startSellingServerTimer = async (serverRoom, deadline) => {
   let sellingPhaseTimerValue = getRemainingTime(deadline);
   if (sellingPhaseTimerValue.total <= 0) {
-    // serverRoom.hasSellPaintingTimerEnded = true;
-    // serverRoom.sellPaintingTimerValue = {};
+    serverRoom.hasSellPaintingTimerEnded = true;
+    serverRoom.sellPaintingTimerValue = {};
   } else if (sellingPhaseTimerValue.total > 0) {
-    // serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
+    serverRoom.sellPaintingTimerValue = sellingPhaseTimerValue;
+  }
+};
+const startNominatedAuctionServerTimer = async (serverRoom, deadline) => {
+  let nominatedAuctionTimerValue = getRemainingTime(deadline);
+  if (nominatedAuctionTimerValue?.total <= 0) {
+    serverRoom.hasNominatedAuctionTimerEnded = true;
+    serverRoom.nominatedAuctionTimerValue = {};
+  } else if (nominatedAuctionTimerValue?.total > 0) {
+    serverRoom.nominatedAuctionTimerValue = nominatedAuctionTimerValue;
   }
 };
 
@@ -653,7 +662,7 @@ mongoClient
               room.locationPhaseTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.1 * 60 * 1000);
+            const deadline = new Date(currentTime + 0.4 * 60 * 1000); //0.5 original
             const timerValue = getRemainingTime(deadline);
             setInterval(
               () => startLocationPhaseServerTimer(roomId, deadline),
@@ -816,10 +825,38 @@ mongoClient
             selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.5 * 60 * 1000);
+            const deadline = new Date(currentTime + 0.3 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
             setInterval(() => startSellingServerTimer(room, deadline), 1000);
             selling_info.sellPaintingTimerValue = timerValue;
+          }
+          res.status(200).json(selling_info);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    });
+    router.get("/startNominatedAuction", async (req, res) => {
+      try {
+        let selling_info = new Object();
+        const { roomId } = req.query;
+        const results = await collection_room.findOne({ roomCode: roomId });
+        const room = rooms[roomId];
+        if (!results) {
+          res.status(404).json({ error: "Room not found" });
+        } else {
+          // selling phase timer value
+          if (room && room.hasNominatedAuctionTimerEnded) {
+            selling_info.nominatedAuctionTimerValue = {};
+          }
+          if (room && Object.keys(room.nominatedAuctionTimerValue).length > 0) {
+            selling_info.nominatedAuctionTimerValue = room.nominatedAuctionTimerValue;
+          } else {
+            const currentTime = Date.parse(new Date());
+            const deadline = new Date(currentTime + 0.3 * 60 * 1000); //0.5 original value
+            const timerValue = getRemainingTime(deadline);
+            setInterval(() => startNominatedAuctionServerTimer(room, deadline), 1000);
+            selling_info.nominatedAuctionTimerValue = timerValue;
           }
           res.status(200).json(selling_info);
         }
@@ -967,10 +1004,25 @@ mongoClient
       res.status(200).json({ message: "updated" });
     });
 
+    router.get("/getNominatedForAuctionItems", async (req, res) => {
+      try {
+        const { roomId, roundId, locationId } = req.query;
+        console.log(roomId, roundId, locationId);
+        const data = await collection_nominatedForAuction.findOne({
+          roomId: roomId,
+          locationId: +locationId,
+          roundId: +roundId,
+        });
+        console.log('foundData ->', data);
+        res.status(200).send(data);
+      } catch (e) {
+        console.log(e);
+      }
+    });
+      
     router.post("/nominateForAuction", async (req, res) => {
       try {
         const { roomId, auction, roundId, locationId, teamColor } = req.body;
-        console.log("req->", req.body);
         const data = await collection_nominatedForAuction.findOne({
           roomId: roomId,
           locationId: locationId,
@@ -1018,7 +1070,7 @@ mongoClient
           const d = await collection_nominatedForAuction.findOne({
             roomId: roomId,
           });
-          res.status(200).json({ message: "updated data2", data: d });
+          res.status(200).json({ message: "updated data2" });
         }
       } catch (e) {
         console.log(e);
