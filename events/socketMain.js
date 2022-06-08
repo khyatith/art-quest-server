@@ -684,7 +684,6 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const startNominatedAuctionTimer = ({ hostCode }) => {
-    console.log('starting Nominated Auction Timer');
     io.to(hostCode).emit("nominatedAuctionStarted");
   };
 
@@ -694,22 +693,39 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const nominatedAuctionBids = async (data) => {
-    console.log('nominated Auction data->', data);
-    const { player, auctionId, roundId } = data;
-    rooms[player.hostCode].nominatedAuctionBids[`${auctionId}`] = data;
-    if (rooms[player.hostCode].roundId === roundId) {
-      io.sockets.in(player.hostCode).emit("setNominatedAuction", data);
-      await collection.findOneAndUpdate(
-        { hostCode: player.hostCode },
-        {
-          $set: {
-            nominatedAuctionBids: rooms[player.hostCode].nominatedAuctionBids,
-          },
+    try {
+      const { player, auctionId, roundId } = data;
+      rooms[player.hostCode].nominatedAuctionBids[`${auctionId}`] = data;
+      if (rooms[player.hostCode].roundId === roundId) {
+        io.sockets.in(player.hostCode).emit("setNominatedAuction", data);
+        await collection.findOneAndUpdate(
+          { hostCode: player.hostCode },
+          {
+            $set: {
+              nominatedAuctionBids: rooms[player.hostCode].nominatedAuctionBids,
+            },
+          }
+          );
         }
-      );
+      } catch (e) {
+        console.log(e);
+      }
+  };
+
+  const renderNominatedAuctionResult = async (params) => {
+    try {
+      
+      const { roomId, nominatedAuctionNumber } = params;
+      const room = await collection.findOne({ hostCode: roomId });
+      io.sockets.in(roomId).emit("renderNominatedAuctionResult", {
+        nominatedAuctionBids: room.nominatedAuctionBids
+      });
+    } catch (e) {
+      console.log(e);
     }
   };
 
+    
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
@@ -740,4 +756,5 @@ module.exports = async (io, socket, rooms) => {
   socket.on("dutchAuctionTimerEnded", renderDutchAuctionResults);
   socket.on("startNominatedAuctionTimer", startNominatedAuctionTimer);
   socket.on("nominatedAuctionBids", nominatedAuctionBids);
+  socket.on("nominatedAuctionTimerEnded", renderNominatedAuctionResult);
 };

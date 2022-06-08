@@ -11,6 +11,7 @@ const {
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
   calculateTeamEfficiency,
+  updateLeaderBoardAfterNominationAuction,
 } = require("../helpers/game");
 router.use(express.json());
 var mod = require("../constants");
@@ -709,6 +710,7 @@ mongoClient
                 sellingResultsTimerValue: {},
                 hasSellingResultsTimerEnded: false,
                 sellingAuctions: { sellingArtifacts: sellingArtifacts },
+                nominatedAuctionBids: {},
               },
             }
           );
@@ -1013,7 +1015,6 @@ mongoClient
           locationId: +locationId,
           roundId: +roundId,
         });
-        console.log('foundData ->', data);
         res.status(200).send(data);
       } catch (e) {
         console.log(e);
@@ -1030,7 +1031,7 @@ mongoClient
         // if we auction more than one painting from one team then need to add function here, so that auctionData updates as per requirement.
         const auctionData = {};
         auctionData[`${teamColor}`] = [auction];
-
+        
         // console.log(auctionData);
         if (!data) {
           await collection_nominatedForAuction.insertOne({
@@ -1052,8 +1053,8 @@ mongoClient
                   auctions: auctions,
                 },
               }
-            );
-          } else {
+              );
+            } else {
             const auctions = { ...auctionData };
             await collection_nominatedForAuction.findOneAndUpdate(
               {
@@ -1065,7 +1066,7 @@ mongoClient
                   auctions: auctions,
                 },
               }
-            );
+              );
           }
           const d = await collection_nominatedForAuction.findOne({
             roomId: roomId,
@@ -1076,7 +1077,54 @@ mongoClient
         console.log(e);
       }
     });
+    router.get("/updateLeaderBoardAfterNominationAuction", async (req, res) => {
+      console.log('**updatingLeaderBoard**');
+      try {
+        const { roomId } = req.query;
+      const room = await collection_room.findOne({
+        roomCode: roomId,
+      });
+      if(!room) {
+        return res.status(404).json({ error: "Room not found" });
+      }
 
+      let nominatedAuctionBids = room?.nominatedAuctionBids;
+      if (!nominatedAuctionBids) {
+          return res.status(200).json({ mssg: "Nothing to update" });
+        } else {
+         const updatedLeaderBoard = updateLeaderBoardAfterNominationAuction(room);
+         const totalAmountByTeam = await calculateTotalAmountSpent(
+          leaderboard=updatedLeaderBoard,
+          hostCode=roomId,
+          rooms,
+          room
+        );
+        const teamStats = await calculateTeamEfficiency(
+          totalAmountByTeam,
+          leaderboard=updatedLeaderBoard,
+        );
+         
+          await collection_room.findOneAndUpdate(
+            { roomCode: roomId },
+            {
+              $set: {
+                leaderBoard: updatedLeaderBoard,
+                totalAmountSpentByTeam: totalAmountByTeam,
+                teamEfficiency: teamStats.efficiencyByTeam,
+                totalPaintingsWonByTeam: teamStats.totalPaintingsWonByTeams,
+              },
+            }
+          );
+          return res.status(200).json({mssg: 'updated leaderBoard'});
+        }
+        
+      } catch (e) {
+        console.log(e);
+      }
+      
+
+    });
+    
     const getFlyTicketPrice = async (roomId) => {
       const result = await collection_flyTicketPrice.findOne({
         roomId: roomId,
