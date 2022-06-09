@@ -695,14 +695,15 @@ module.exports = async (io, socket, rooms) => {
   const nominatedAuctionBids = async (data) => {
     try {
       const { player, auctionId, roundId } = data;
-      rooms[player.hostCode].nominatedAuctionBids[`${auctionId}`] = data;
+      const { nominatedAuctionBids } = await collection.findOne({hostCode: player.hostCode});
+      nominatedAuctionBids[`${auctionId}`] = data;
       if (rooms[player.hostCode].roundId === roundId) {
         io.sockets.in(player.hostCode).emit("setNominatedAuction", data);
         await collection.findOneAndUpdate(
           { hostCode: player.hostCode },
           {
             $set: {
-              nominatedAuctionBids: rooms[player.hostCode].nominatedAuctionBids,
+              nominatedAuctionBids: nominatedAuctionBids,
             },
           }
           );

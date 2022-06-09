@@ -18,6 +18,7 @@ var mod = require("../constants");
 let rooms = mod.rooms;
 const { nanoid } = require("nanoid");
 const { visitedLocationDetails } = require("../helpers/location-visits");
+const { calculate } = require("../helpers/classify-points");
 
 let db;
 
@@ -796,13 +797,11 @@ mongoClient
             })
             .toArray();
           var otherTeams = [];
-          console.log("resultCity->", results_visits);
 
           results_visits.forEach(function (visit, index) {
             if (!otherTeams.includes(visit.teamName))
               otherTeams.push(visit.teamName);
           });
-          console.log("otherTeams->", otherTeams);
           selling_info.otherteams = otherTeams;
           res.status(200).json(selling_info);
         }
@@ -1015,6 +1014,7 @@ mongoClient
           locationId: +locationId,
           roundId: +roundId,
         });
+        console.log("->", data);
         res.status(200).send(data);
       } catch (e) {
         console.log(e);
@@ -1026,27 +1026,27 @@ mongoClient
         const { roomId, auction, roundId, locationId, teamColor } = req.body;
         const data = await collection_nominatedForAuction.findOne({
           roomId: roomId,
-          locationId: locationId,
+          locationId: +locationId,
         });
         // if we auction more than one painting from one team then need to add function here, so that auctionData updates as per requirement.
         const auctionData = {};
         auctionData[`${teamColor}`] = [auction];
         
-        // console.log(auctionData);
         if (!data) {
           await collection_nominatedForAuction.insertOne({
-            roundId: 1,
-            locationId: locationId,
+            roundId: +roundId,
+            locationId: +locationId,
             auctions: auctionData,
             roomId: roomId,
           });
-          res.status(200).json({ message: "updated new data1" });
+         return res.status(200).json({ message: "updated new data1" });
         } else {
-          if (data.roundId === roundId) {
+          if (+data.roundId === +roundId) {
             const auctions = { ...data.auctions, ...auctionData };
             await collection_nominatedForAuction.findOneAndUpdate(
               {
                 roomId: roomId,
+                locationId: +locationId,
               },
               {
                 $set: {
@@ -1059,19 +1059,17 @@ mongoClient
             await collection_nominatedForAuction.findOneAndUpdate(
               {
                 roomId: roomId,
+                locationId: +locationId,
               },
               {
                 $set: {
-                  roundId: roundId,
+                  roundId: +roundId,
                   auctions: auctions,
                 },
               }
               );
           }
-          const d = await collection_nominatedForAuction.findOne({
-            roomId: roomId,
-          });
-          res.status(200).json({ message: "updated data2" });
+         return res.status(200).json({ message: "updated data2" });
         }
       } catch (e) {
         console.log(e);
@@ -1103,7 +1101,7 @@ mongoClient
           totalAmountByTeam,
           leaderboard=updatedLeaderBoard,
         );
-         
+         const classify = calculate({},AUCTION_TYPE="NOMINATED_AUCTION",pastLeaderBoard=updatedLeaderBoard);
           await collection_room.findOneAndUpdate(
             { roomCode: roomId },
             {
@@ -1112,6 +1110,14 @@ mongoClient
                 totalAmountSpentByTeam: totalAmountByTeam,
                 teamEfficiency: teamStats.efficiencyByTeam,
                 totalPaintingsWonByTeam: teamStats.totalPaintingsWonByTeams,
+              },
+            }
+          );
+          await collection_classify.findOneAndUpdate(
+            { roomCode: roomId },
+            {
+              $set: {
+                classify: classify,
               },
             }
           );
