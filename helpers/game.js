@@ -221,9 +221,12 @@ function getLeaderboard(rooms, roomCode) {
   return leaderboard;
 }
 
-async function calculateTotalAmountSpent(leaderboard, roomCode, rooms) {
+async function calculateTotalAmountSpent(leaderboard, roomCode, rooms, room) {
   if (!leaderboard || !roomCode) return null;
-  const currentRoom = rooms[roomCode];
+  let currentRoom = rooms[roomCode];
+  if(!currentRoom) {
+    currentRoom = room;
+  }
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
   let result;
   let totalAmt = Object.values(leaderboard).map(items => {
@@ -471,6 +474,51 @@ function getWinningEnglishAuctionBid(maxEnglishAuctionBids, highestBidObj, aucti
   return EAWinner;
 }
 
+const updateLeaderBoardAfterNominationAuction = (room) => {
+  const nominatedAuctionBids = room.nominatedAuctionBids;
+  const currentLeaderBoard = JSON.parse(JSON.stringify(room.leaderBoard));  //deepCopy
+  const nominatedBidsKeys = Object.keys(nominatedAuctionBids);
+  nominatedBidsKeys.forEach((bidsId) => {
+    const bidWonTeam = nominatedAuctionBids[bidsId].bidTeam;
+    const nominatedTeam = nominatedAuctionBids[bidsId].nominatedBy;
+    const nominatedTeamData = currentLeaderBoard[nominatedTeam].filter((pData)=> pData.auctionId !== nominatedAuctionBids[bidsId].auctionId);
+    currentLeaderBoard[nominatedTeam] = nominatedTeamData;
+    const data = {
+      auctionType: nominatedAuctionBids[bidsId].auctionType,
+      auctionId: nominatedAuctionBids[bidsId].auctionId,
+      imageURL: nominatedAuctionBids[bidsId].imageURL,
+      artMovement:
+      nominatedAuctionBids[bidsId].artMovement,
+      artMovementId:
+      nominatedAuctionBids[bidsId].artMovementId,
+      name:
+      nominatedAuctionBids[bidsId].name,
+      player: {
+        playerName: nominatedAuctionBids[bidsId].player.playerName,
+        teamName:
+        nominatedAuctionBids[bidsId].player.teamName,
+        playerId:
+        nominatedAuctionBids[bidsId].player.playerId,
+        hostCode:
+        nominatedAuctionBids[bidsId].player.hostCode,
+        teamColor:
+        nominatedAuctionBids[bidsId].player.teamColor,
+      },
+      bidAmount:
+      parseInt(nominatedAuctionBids[bidsId].bidAmount,10),
+      bidAt:
+      nominatedAuctionBids[bidsId].bidAt,
+      bidTeam:
+      nominatedAuctionBids[bidsId].bidTeam,
+      bidColor: nominatedAuctionBids[bidsId].bidColor,
+    }
+    console.log('->',nominatedTeamData?.length, room.leaderBoard[nominatedTeam]?.length)
+    if(nominatedTeamData?.length < room.leaderBoard[nominatedTeam]?.length){
+      currentLeaderBoard[bidWonTeam].push(data);
+    }
+  });
+  return currentLeaderBoard;
+}
 module.exports = {
 	gameLoop,
 	getNextObjectForLiveAuction,
@@ -485,4 +533,5 @@ module.exports = {
   getSecondPricedSealedBidWinner,
   getWinningEnglishAuctionBid,
   findSecondHighestBid,
+  updateLeaderBoardAfterNominationAuction,
 };

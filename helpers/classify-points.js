@@ -171,6 +171,44 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
       console.log(err);
     }
   }
+  if(AUCTION_TYPE === "NOMINATED_AUCTION"){
+    try {
+      let teamsScorecard = {};
+      let classifyPoints = {};
+      Object.values(pastLeaderBoard).forEach((details) => {
+        for (obj in details) {
+          const currentBidTeam = details[obj].bidTeam;
+          const currentArtMovement = details[obj].artMovement;
+          if (!teamsScorecard[currentBidTeam]) {
+            teamsScorecard = {
+              ...teamsScorecard,
+              [currentBidTeam]: [{
+                artMovement: currentArtMovement,
+              }]
+            };
+          } else {
+            teamsScorecard[currentBidTeam].push({
+              artMovement: currentArtMovement,
+            });
+          }
+
+          // classify points
+          if (!classifyPoints[currentBidTeam]) {
+            classifyPoints = {
+              ...classifyPoints,
+              [currentBidTeam]: 0
+            };
+          }
+        }
+      });
+      return calculateClassify(teamsScorecard, classifyPoints);
+      
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  
+  
 };
 
 module.exports = { calculate };
