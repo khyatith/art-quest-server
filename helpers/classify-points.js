@@ -165,7 +165,6 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
           }
         }
       });
-      console.log("teamsScorecard", teamsScorecard);
       return calculateClassify(teamsScorecard, classifyPoints);
     } catch (err) {
       console.log(err);

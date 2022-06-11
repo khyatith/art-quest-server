@@ -93,27 +93,6 @@ function getLeaderboard(rooms, roomCode) {
 		}
   }
 
-
-  // if (maxEnglishAuctionBids) {
-  //   for (let maxBids in maxEnglishAuctionBids) {
-  //     const leaderBoardKeys = Object.keys(leaderboard);
-  //     if (!leaderBoardKeys || !leaderBoardKeys.includes(maxBids)) {
-  //       const maxBidArr = maxEnglishAuctionBids[maxBids];
-  //       const allBidsArr = maxBidArr.map((obj) => parseInt(obj.bidAmount));
-  //       const highestBidInMaxAuctionBidsArray = allBidsArr.length === 1 ? allBidsArr[0]: findHighestBid(allBidsArr);
-  //       let englishMaxBidsWinner = maxBidArr.filter((obj) => parseInt(obj.bidAmount) === parseInt(highestBidInMaxAuctionBidsArray));
-  //       const maxBidsWinningTeam = englishMaxBidsWinner[0].bidTeam;
-  //       if (leaderBoardKeys && leaderBoardKeys.includes(maxBidsWinningTeam)) {
-  //         const isExistingMaxBidAuction = leaderboard[maxBidsWinningTeam].filter(item => item.auctionObj.id === englishMaxBidsWinner[0].auctionId)[0];
-  //         if (!isExistingMaxBidAuction) {
-  //           leaderboard[`${maxBidsWinningTeam}`].push(englishMaxBidsWinner[0]);
-  //         }
-  //       } else {
-  //         leaderboard[`${maxBidsWinningTeam}`] = [englishMaxBidsWinner[0]];
-  //       }
-  //     }
-  //   }
-  // }
   if (dutchAuctionObj) {
 		for (var dutchAuction in dutchAuctionObj) {
 			const leaderBoardKeys = Object.keys(leaderboard);
@@ -179,7 +158,7 @@ function getLeaderboard(rooms, roomCode) {
       SBSPWinnerFinal.bidAmount = secondHighestBid;
       const SPSBwinningteam = SBSPWinnerFinal.bidTeam;
       if (leaderBoardSPSBKeys && leaderBoardSPSBKeys.includes(SPSBwinningteam)) {
-        const isExistingSPSBAuction = leaderboard[SPSBwinningteam].filter(item => item.id === SBSPWinnerFinal.auctionId)[0];
+        const isExistingSPSBAuction = leaderboard[SPSBwinningteam].filter(item => item.auctionId === SBSPWinnerFinal.auctionId)[0];
         if (!isExistingSPSBAuction) {
           leaderboard[`${SPSBwinningteam}`].push(SBSPWinnerFinal);
         }
@@ -512,7 +491,6 @@ const updateLeaderBoardAfterNominationAuction = (room) => {
       nominatedAuctionBids[bidsId].bidTeam,
       bidColor: nominatedAuctionBids[bidsId].bidColor,
     }
-    console.log('->',nominatedTeamData?.length, room.leaderBoard[nominatedTeam]?.length)
     if(nominatedTeamData?.length < room.leaderBoard[nominatedTeam]?.length){
       currentLeaderBoard[bidWonTeam].push(data);
     }
