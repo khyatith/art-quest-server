@@ -2,6 +2,7 @@
     "artifacts": [
       {
         "id": 19,
+        "auctionType": "3",
         "name": "The Great Wave off Kanagawa",
         "region": "Asia",
         "country": "Japan",
@@ -15,6 +16,7 @@
       },
       {
         "id": 20,
+        "auctionType": "3",
         "name": "The Block",
         "region": "North America",
         "country": "USA",
@@ -28,6 +30,7 @@
       },
       {
         "id": 21,
+        "auctionType": "3",
         "name": "The Bridge in Curve",
         "region": "North America",
         "country": "USA",
@@ -41,6 +44,7 @@
       },
       {
         "id": 22,
+        "auctionType": "3",
         "name": "The Gleaners",
         "region": "Europe",
         "country": "France",
@@ -54,6 +58,7 @@
       },
       {
         "id": 23,
+        "auctionType": "3",
         "name": "Whaam",
         "region": "North America",
         "country": "USA",
@@ -67,6 +72,7 @@
       },
       {
         "id": 24,
+        "auctionType": "3",
         "name": "The Water Lillies",
         "region": "Europe",
         "country": "France",

@@ -100,7 +100,6 @@ module.exports = async (io, socket, rooms) => {
         calculatedRoundRevenue: {},
       };
       rooms[player.hostCode] = parsedRoom;
-      console.log("inside create collection");
       await collection.insertOne(parsedRoom);
     }
   };
@@ -376,7 +375,6 @@ module.exports = async (io, socket, rooms) => {
   const emitNominatedPaintingId = async (data) => {
     const { paintingId, roomCode, teamName } = data;
     const calculatedRevenue = await calculateRevenue(data);
-    console.log("paintingData ->", data);
     // io.sockets.in(roomCode).emit("emitNominatedPainting", {
     //   paintingId,
     //   teamName,
@@ -392,7 +390,6 @@ module.exports = async (io, socket, rooms) => {
 
   const addEnglishAuctionBid = async (data) => {
     const { player, auctionId, englishAuctionsNumber } = data;
-    console.log("englishAuctionsNumber", englishAuctionsNumber);
     if (englishAuctionsNumber === 1) {
       rooms[player.hostCode].englishAuctionBids[`${auctionId}`] = data;
       io.sockets.in(player.hostCode).emit("setPreviousEnglishAuctionBid", data);
@@ -568,6 +565,7 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const renderSecondPriceAuctionsResult = async (roomId) => {
+    console.log('inside render second price auction result');
     let result = {};
     const room = await collection.findOne({ hostCode: roomId });
     const secondPricedSealedBidAuctionsObj = room.secondPricedSealedBids;
@@ -598,7 +596,7 @@ module.exports = async (io, socket, rooms) => {
         result[secondPricedSealedAuction] = SPSBwinner;
         result[secondPricedSealedAuction].bidAmount = secondHighestBid;
       }
-
+      console.log('result in second price sealed bid auction', result);
       try {
         const secondPriceAuctionResult = calculate(
           result,
@@ -609,6 +607,7 @@ module.exports = async (io, socket, rooms) => {
         resultingObj.classify = secondPriceAuctionResult;
 
         resultingObj.roomCode = roomId;
+        console.log('resultingObj >>>>', resultingObj);
 
         io.sockets.in(roomId).emit("renderSecondPriceAuctionsResult", {
           result,
