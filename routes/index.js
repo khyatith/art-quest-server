@@ -664,7 +664,7 @@ mongoClient
               room.locationPhaseTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.4 * 60 * 1000); //0.5 original
+            const deadline = new Date(currentTime + 0.5 * 60 * 1000); //0.5 original
             const timerValue = getRemainingTime(deadline);
             setInterval(
               () => startLocationPhaseServerTimer(roomId, deadline),
@@ -826,7 +826,7 @@ mongoClient
             selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.3 * 60 * 1000); //0.5 original value
+            const deadline = new Date(currentTime + 0.1 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
             setInterval(() => startSellingServerTimer(room, deadline), 1000);
             selling_info.sellPaintingTimerValue = timerValue;
@@ -854,7 +854,7 @@ mongoClient
             selling_info.nominatedAuctionTimerValue = room.nominatedAuctionTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.3 * 60 * 1000); //0.5 original value
+            const deadline = new Date(currentTime + 5 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
             setInterval(() => startNominatedAuctionServerTimer(room, deadline), 1000);
             selling_info.nominatedAuctionTimerValue = timerValue;
@@ -960,6 +960,24 @@ mongoClient
           console.error(error);
         });
     });
+    router.get("/getSellToMarketResult", (req, res) => {
+      const { roundId, roomCode } = req.query;
+      collection_room
+        .findOne({ roomCode: roomCode })
+        .then((results) => {
+          if (!results) res.status(404).json({ error: "Room not found" });
+          else {
+            calculatedRevenueForRound =
+              results?.calculatedRoundRevenue[roundId] || {};
+         
+            res.status(200).json(calculatedRevenueForRound);
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+
 
     router.post("/updateEnglishAuctionResults", async (req, res) => {
       const { roomId, auctionId, englishAuctionsNumber } = req.body;
