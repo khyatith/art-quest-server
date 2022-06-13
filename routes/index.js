@@ -854,7 +854,7 @@ mongoClient
             selling_info.nominatedAuctionTimerValue = room.nominatedAuctionTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 5 * 60 * 1000); //0.5 original value
+            const deadline = new Date(currentTime + 1 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
             setInterval(() => startNominatedAuctionServerTimer(room, deadline), 1000);
             selling_info.nominatedAuctionTimerValue = timerValue;
