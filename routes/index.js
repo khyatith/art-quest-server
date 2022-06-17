@@ -20,6 +20,7 @@ const { nanoid } = require("nanoid");
 const { visitedLocationDetails } = require("../helpers/location-visits");
 const { calculate } = require("../helpers/classify-points");
 const intersection = require("lodash.intersection");
+const { async } = require("q");
 
 let db;
 
@@ -1196,6 +1197,96 @@ mongoClient
         } else {
           return res.status(200).json({ message: "GAME_NOT_ENDED" });
         }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    router.get("/finalResult/:roomCode/:teamName", async (req, res) => {
+      try {
+        const room = await collection_room.findOne({
+          roomCode: req.params.roomCode,
+        });
+
+        const classify = await collection_classify.findOne({
+          roomCode: req.params.roomCode,
+        });
+
+        const artMovements = [
+          "ukiyo-e",
+          "abstract",
+          "modernism",
+          "realism",
+          "pop-art",
+          "modern-art",
+        ];
+
+        const tempClassifyObj = {};
+
+        function getClassifyPoints(teamArray, artMovementName) {
+          var count = -1;
+          teamArray.map((ta) => {
+            if (ta.artMovement === artMovementName) {
+              count++;
+            }
+          });
+          if (count === -1) return 0;
+          return count * 5;
+        }
+
+        for (let k = 0; k < 6; k++) {
+          tempClassifyObj[artMovements[k]] = getClassifyPoints(
+            room.leaderBoard[req.params.teamName],
+            artMovements[k]
+          );
+        }
+
+        const visits = await getVisitData(room.allTeams, req.params.roomCode);
+        const totalObj = {};
+        let tempVisits = {};
+
+        visits.map((v) => {
+          if (v.teamName.length !== 0) {
+            tempVisits[v.teamName] = v.totalVisitPrice;
+          }
+        });
+
+        room.allTeams.map((t) => {
+          if (t.length !== 0) {
+            const formattedCash = parseFloat(
+              room.totalAmountSpentByTeam[t] / 10
+            ).toFixed(2);
+
+            const totalValue =
+              parseFloat(formattedCash) -
+              parseFloat(
+                visits.filter((i) => i.teamName === t)[0].totalVisitPrice
+              ) +
+              classify.classify[t];
+            totalObj[t] = totalValue;
+          }
+        });
+
+        let tempTotalPoints = totalObj[req.params.teamName];
+        let winner = req.params.teamName;
+
+        room.allTeams.map((teamName) => {
+          if (teamName.length !== 0) {
+            if (totalObj[teamName] > tempTotalPoints) {
+              winner = teamName;
+            }
+          }
+        });
+
+        return res.status(200).json({
+          leaderboard: room.leaderBoard,
+          amountSpentByTeams: room.totalAmountSpentByTeam,
+          classifyPoints: tempClassifyObj,
+          allClassifyPoints: classify,
+          visitsPrice: tempVisits,
+          totalObj,
+          winner,
+        });
       } catch (error) {
         console.log(error);
       }
