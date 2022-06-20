@@ -51,7 +51,8 @@ function getLeaderboard(rooms, roomCode) {
   const leaderboard = rooms[roomCode].leaderBoard;
 	const currentRoom = rooms[roomCode];
   const englishAuctionsObj = currentRoom.englishAuctionBids;
-  const englishAuctionsObj3 = currentRoom.englishAuctionBids2;
+  const englishAuctionsObj2 = currentRoom.englishAuctionBids2;
+  const englishAuctionsObj3 = currentRoom.englishAuctionBids3;
   const firstPricedSealedBidAuctionsObj = currentRoom.firstPricedSealedBids;
   const secondPricedSealedBidAuctionObj = currentRoom.secondPricedSealedBids;
   const allPayAuctionBidObj = currentRoom.allPayAuctions;
@@ -71,6 +72,23 @@ function getLeaderboard(rooms, roomCode) {
         }
       } else {
         leaderboard[`${EAwinningTeam}`] = [EAWinner];
+      }
+		}
+  }
+  //englishAuctions2
+	if (englishAuctionsObj2) {
+		for (var englishAuction2 in englishAuctionsObj2) {
+			const leaderBoardKeys = Object.keys(leaderboard);
+      const EAWinner2 = englishAuctionsObj2[englishAuction2];
+      // const EAWinner = getWinningEnglishAuctionBid(currentRoom.maxEnglishAuctionBids, HighestAuctionItem, HighestAuctionItem.auctionId);
+      const EAwinningTeam2 = EAWinner2.bidTeam;
+			if (leaderBoardKeys && leaderBoardKeys.includes(EAwinningTeam2)) {
+        const isExistingAuction = leaderboard[EAwinningTeam2].filter(item => parseInt(item.auctionId, 10) === parseInt(EAWinner2.auctionId, 10))[0];
+        if (!isExistingAuction) {
+          leaderboard[`${EAwinningTeam2}`].push(EAWinner2);
+        }
+      } else {
+        leaderboard[`${EAwinningTeam2}`] = [EAWinner2];
       }
 		}
   }
