@@ -329,19 +329,26 @@ router.put("/updateDutchAuctionResults/:hostCode", async (req, res) => {
 });
 
 router.get("/getWinner/:hostCode", async (req, res) => {
-  //db = await dbClient.createConnection();
-  //const collection = db.collection('room');
+  db = await dbClient.createConnection();
+  const collection = db.collection('room');
+  const collection_classify = db.collection("classify");
   const { params } = req;
   const hostCode = params.hostCode;
-  const room = rooms[hostCode];
+  const room = await collection.findOne({'hostCode': hostCode});
+  const classifyObj = await collection_classify.findOne({ roomCode: hostCode });
+
+  // let room = rooms[hostCode];
   //TODO: update winner in mongodb
-  //let room = await collection.findOne({'hostCode': hostCode});
+  if(!room) {
+    return res.send({mssg: 'room not found!'});
+    }
   let parsedRoom;
   if (room) {
     parsedRoom = room;
   }
-  if (parsedRoom && parsedRoom.winner) return parsedRoom.winner;
-  const winnerData = calculateBuyingPhaseWinner(parsedRoom);
+  // if (parsedRoom && parsedRoom.winner) return parsedRoom.winner;
+  const winnerD = calculateBuyingPhaseWinner(parsedRoom);
+  const winnerData = { ...winnerD, classifyPoints: classifyObj.classify};
   res.send(winnerData);
 });
 
