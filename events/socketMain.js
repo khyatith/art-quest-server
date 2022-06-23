@@ -595,7 +595,7 @@ module.exports = async (io, socket, rooms) => {
         result[secondPricedSealedAuction] = SPSBwinner;
         result[secondPricedSealedAuction].bidAmount = secondHighestBid;
       }
-      console.log('result in second price sealed bid auction', result);
+
       try {
         const secondPriceAuctionResult = calculate(
           result,
@@ -606,7 +606,6 @@ module.exports = async (io, socket, rooms) => {
         resultingObj.classify = secondPriceAuctionResult;
 
         resultingObj.roomCode = roomId;
-        console.log('resultingObj >>>>', resultingObj);
 
         io.sockets.in(roomId).emit("renderSecondPriceAuctionsResult", {
           result,
