@@ -676,7 +676,7 @@ module.exports = async (io, socket, rooms) => {
   const biddingStarted = async (roomId) => {
     io.sockets.in(roomId).emit("startBidding", true);
   };
-  
+
   const expoBeginningTimerStart = ({ hostCode }) => {
     io.to(hostCode).emit("ExpoBeginTimerStarted", true);
   };
@@ -704,27 +704,25 @@ module.exports = async (io, socket, rooms) => {
               nominatedAuctionBids: nominatedAuctionBids,
             },
           }
-          );
-        }
-      } catch (e) {
-        console.log(e);
+        );
       }
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   const renderNominatedAuctionResult = async (params) => {
     try {
-      
       const { roomId, nominatedAuctionNumber } = params;
       const room = await collection.findOne({ hostCode: roomId });
       io.sockets.in(roomId).emit("renderNominatedAuctionResult", {
-        nominatedAuctionBids: room.nominatedAuctionBids
+        nominatedAuctionBids: room.nominatedAuctionBids,
       });
     } catch (e) {
       console.log(e);
     }
   };
 
-    
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
   socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
