@@ -529,7 +529,7 @@ router.get("/getDutchAuctionData/:hostCode", async (req, res) => {
     val = updateRoom.dutchAuctionTimerValue;
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 1 * 60 * 1000); // 1
+    const deadline = new Date(currentTime + 0.1 * 60 * 1000); // 1
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startDutchAuctionTimer(updateRoom, deadline), 1000);
     val = timerValue;
@@ -866,7 +866,7 @@ mongoClient
               room.nominatedAuctionTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 1 * 60 * 1000); //0.5 original value
+            const deadline = new Date(currentTime + 0.1 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
             setInterval(
               () => startNominatedAuctionServerTimer(room, deadline),
