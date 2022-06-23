@@ -564,36 +564,42 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const renderSecondPriceAuctionsResult = async (roomId) => {
-    console.log('inside render second price auction result');
+    console.log("inside render second price auction result");
     let result = {};
     const room = await collection.findOne({ hostCode: roomId });
     const secondPricedSealedBidAuctionsObj = room.secondPricedSealedBids;
 
     if (secondPricedSealedBidAuctionsObj) {
-      for (var secondPricedSealedAuction in secondPricedSealedBidAuctionsObj) {
-        const SPSBItem =
-          secondPricedSealedBidAuctionsObj[secondPricedSealedAuction];
-        //Find the second highest bid amount
-        const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
-        const secondHighestBid =
-          allBidsArr.length === 1
-            ? allBidsArr[0]
-            : findSecondHighestBid(allBidsArr, allBidsArr.length);
-        let SPSBwinner =
-          SPSBItem.length === 1
-            ? SPSBItem
-            : SPSBItem.filter(
-                (item) => parseInt(item.bidAmount) > parseInt(secondHighestBid)
-              );
-        if (SPSBwinner.length > 1) {
-          SPSBwinner = SPSBwinner.reduce((acc, winner) => {
-            return winner.bidAt < acc.bidAt ? winner : acc;
-          });
-        } else {
-          SPSBwinner = SPSBwinner[0];
+      try {
+        for (var secondPricedSealedAuction in secondPricedSealedBidAuctionsObj) {
+          const SPSBItem =
+            secondPricedSealedBidAuctionsObj[secondPricedSealedAuction];
+          //Find the second highest bid amount
+          const allBidsArr = SPSBItem.map((obj) => parseInt(obj.bidAmount));
+          const secondHighestBid =
+            allBidsArr.length === 1
+              ? allBidsArr[0]
+              : findSecondHighestBid(allBidsArr, allBidsArr.length);
+          let SPSBwinner =
+            SPSBItem.length === 1
+              ? SPSBItem
+              : SPSBItem.filter(
+                  (item) =>
+                    parseInt(item.bidAmount) > parseInt(secondHighestBid)
+                );
+          if (SPSBwinner.length > 1) {
+            SPSBwinner = SPSBwinner.reduce((acc, winner) => {
+              return winner.bidAt < acc.bidAt ? winner : acc;
+            });
+          } else {
+            SPSBwinner = SPSBwinner[0];
+          }
+          result[secondPricedSealedAuction] = SPSBwinner;
+          if (result[secondPricedSealedAuction])
+            result[secondPricedSealedAuction].bidAmount = secondHighestBid;
         }
-        result[secondPricedSealedAuction] = SPSBwinner;
-        result[secondPricedSealedAuction].bidAmount = secondHighestBid;
+      } catch (error) {
+        console.log(error);
       }
 
       try {
@@ -684,15 +690,17 @@ module.exports = async (io, socket, rooms) => {
     io.to(hostCode).emit("nominatedAuctionStarted");
   };
 
-  const expoBeginningEnded = ({hostCode}) => {
-    console.log('expo ended', hostCode);
+  const expoBeginningEnded = ({ hostCode }) => {
+    console.log("expo ended", hostCode);
     io.sockets.in(hostCode).emit("ExpoBeginTimerEnded");
   };
 
   const nominatedAuctionBids = async (data) => {
     try {
       const { player, auctionId, roundId } = data;
-      const { nominatedAuctionBids } = await collection.findOne({hostCode: player.hostCode});
+      const { nominatedAuctionBids } = await collection.findOne({
+        hostCode: player.hostCode,
+      });
       nominatedAuctionBids[`${auctionId}`] = data;
       if (rooms[player.hostCode].roundId === roundId) {
         io.sockets.in(player.hostCode).emit("setNominatedAuction", data);
