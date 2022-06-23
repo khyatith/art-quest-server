@@ -19,6 +19,8 @@ let rooms = mod.rooms;
 const { nanoid } = require("nanoid");
 const { visitedLocationDetails } = require("../helpers/location-visits");
 const { calculate } = require("../helpers/classify-points");
+const intersection = require("lodash.intersection");
+const { async } = require("q");
 
 let db;
 
@@ -225,7 +227,9 @@ router.get(
   }
 );
 
-router.get('/secondPricedTimer/:hostCode/:secondPricedSealedBidAuctions', (req, res) => {
+router.get(
+  "/secondPricedTimer/:hostCode/:secondPricedSealedBidAuctions",
+  (req, res) => {
     const { params } = req;
     const hostCode = params.hostCode;
     let room = rooms[hostCode];
@@ -241,7 +245,7 @@ router.get('/secondPricedTimer/:hostCode/:secondPricedSealedBidAuctions', (req, 
       res.send({ secondPriceAuctionTimer: room.secondPriceAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.1 * 60 * 1000);// 0.3
+      const deadline = new Date(currentTime + 0.1 * 60 * 1000); // 0.3
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startSecondPriceAuctionTimer(room, deadline), 1000);
       res.send({ secondPriceAuctionTimer: timerValue });
@@ -858,12 +862,16 @@ mongoClient
             selling_info.nominatedAuctionTimerValue = {};
           }
           if (room && Object.keys(room.nominatedAuctionTimerValue).length > 0) {
-            selling_info.nominatedAuctionTimerValue = room.nominatedAuctionTimerValue;
+            selling_info.nominatedAuctionTimerValue =
+              room.nominatedAuctionTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
             const deadline = new Date(currentTime + 1 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
-            setInterval(() => startNominatedAuctionServerTimer(room, deadline), 1000);
+            setInterval(
+              () => startNominatedAuctionServerTimer(room, deadline),
+              1000
+            );
             selling_info.nominatedAuctionTimerValue = timerValue;
           }
           res.status(200).json(selling_info);
@@ -976,7 +984,7 @@ mongoClient
           else {
             calculatedRevenueForRound =
               results?.calculatedRoundRevenue[roundId] || {};
-         
+
             res.status(200).json(calculatedRevenueForRound);
           }
         })
@@ -985,11 +993,15 @@ mongoClient
         });
     });
 
-
     router.post("/updateEnglishAuctionResults", async (req, res) => {
       const { roomId, auctionId, englishAuctionsNumber } = req.body;
       const currentRoom = rooms[roomId];
-      const auctionItem = englishAuctionsNumber === 1 ? currentRoom.englishAuctionBids[auctionId] : (englishAuctionsNumber === 2 ? currentRoom.englishAuctionBids2[auctionId] : currentRoom.englishAuctionBids3[auctionId]);
+      const auctionItem =
+        englishAuctionsNumber === 1
+          ? currentRoom.englishAuctionBids[auctionId]
+          : englishAuctionsNumber === 2
+          ? currentRoom.englishAuctionBids2[auctionId]
+          : currentRoom.englishAuctionBids3[auctionId];
       if (auctionItem) {
         const roomInServer = await collection_room.findOne({
           roomCode: roomId,
@@ -1045,7 +1057,7 @@ mongoClient
         console.log(e);
       }
     });
-      
+
     router.post("/nominateForAuction", async (req, res) => {
       try {
         const { roomId, auction, roundId, locationId, teamColor } = req.body;
@@ -1056,7 +1068,7 @@ mongoClient
         // if we auction more than one painting from one team then need to add function here, so that auctionData updates as per requirement.
         const auctionData = {};
         auctionData[`${teamColor}`] = [auction];
-        
+
         if (!data) {
           await collection_nominatedForAuction.insertOne({
             roundId: +roundId,
@@ -1064,7 +1076,7 @@ mongoClient
             auctions: auctionData,
             roomId: roomId,
           });
-         return res.status(200).json({ message: "updated new data1" });
+          return res.status(200).json({ message: "updated new data1" });
         } else {
           if (+data.roundId === +roundId) {
             const auctions = { ...data.auctions, ...auctionData };
@@ -1078,8 +1090,8 @@ mongoClient
                   auctions: auctions,
                 },
               }
-              );
-            } else {
+            );
+          } else {
             const auctions = { ...auctionData };
             await collection_nominatedForAuction.findOneAndUpdate(
               {
@@ -1092,41 +1104,46 @@ mongoClient
                   auctions: auctions,
                 },
               }
-              );
+            );
           }
-         return res.status(200).json({ message: "updated data2" });
+          return res.status(200).json({ message: "updated data2" });
         }
       } catch (e) {
         console.log(e);
       }
     });
     router.get("/updateLeaderBoardAfterNominationAuction", async (req, res) => {
-      console.log('**updatingLeaderBoard**');
+      console.log("**updatingLeaderBoard**");
       try {
         const { roomId } = req.query;
-      const room = await collection_room.findOne({
-        roomCode: roomId,
-      });
-      if(!room) {
-        return res.status(404).json({ error: "Room not found" });
-      }
+        const room = await collection_room.findOne({
+          roomCode: roomId,
+        });
+        if (!room) {
+          return res.status(404).json({ error: "Room not found" });
+        }
 
-      let nominatedAuctionBids = room?.nominatedAuctionBids;
-      if (!nominatedAuctionBids) {
+        let nominatedAuctionBids = room?.nominatedAuctionBids;
+        if (!nominatedAuctionBids) {
           return res.status(200).json({ mssg: "Nothing to update" });
         } else {
-         const updatedLeaderBoard = updateLeaderBoardAfterNominationAuction(room);
-         const totalAmountByTeam = await calculateTotalAmountSpent(
-          leaderboard=updatedLeaderBoard,
-          hostCode=roomId,
-          rooms,
-          room
-        );
-        const teamStats = await calculateTeamEfficiency(
-          totalAmountByTeam,
-          leaderboard=updatedLeaderBoard,
-        );
-         const classify = calculate({},AUCTION_TYPE="NOMINATED_AUCTION",pastLeaderBoard=updatedLeaderBoard);
+          const updatedLeaderBoard =
+            updateLeaderBoardAfterNominationAuction(room);
+          const totalAmountByTeam = await calculateTotalAmountSpent(
+            (leaderboard = updatedLeaderBoard),
+            (hostCode = roomId),
+            rooms,
+            room
+          );
+          const teamStats = await calculateTeamEfficiency(
+            totalAmountByTeam,
+            (leaderboard = updatedLeaderBoard)
+          );
+          const classify = calculate(
+            {},
+            (AUCTION_TYPE = "NOMINATED_AUCTION"),
+            (pastLeaderBoard = updatedLeaderBoard)
+          );
           await collection_room.findOneAndUpdate(
             { roomCode: roomId },
             {
@@ -1146,16 +1163,135 @@ mongoClient
               },
             }
           );
-          return res.status(200).json({mssg: 'updated leaderBoard'});
+          return res.status(200).json({ mssg: "updated leaderBoard" });
         }
-        
       } catch (e) {
         console.log(e);
       }
-      
-
     });
-    
+
+    router.post("/hasGameEnded", async (req, res) => {
+      const teamsInRoom = await collection_visits
+        .find({ roomId: req.body.roomId })
+        .toArray();
+
+      const allLocations = [1, 2, 3, 4, 5, 6];
+      try {
+        const locationsVisitedByTeams = teamsInRoom.map((team) => {
+          return team.locations;
+        });
+
+        if (
+          JSON.stringify(intersection(...locationsVisitedByTeams)) ===
+          JSON.stringify(allLocations)
+        ) {
+          await collection_room.findOneAndUpdate(
+            { roomCode: req.body.roomId },
+            {
+              $set: {
+                gameEnded: true,
+              },
+            }
+          );
+          return res.status(200).json({ message: "GAME_ENDED" });
+        } else {
+          return res.status(200).json({ message: "GAME_NOT_ENDED" });
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    router.get("/finalResult/:roomCode/:teamName", async (req, res) => {
+      try {
+        const room = await collection_room.findOne({
+          roomCode: req.params.roomCode,
+        });
+
+        const classify = await collection_classify.findOne({
+          roomCode: req.params.roomCode,
+        });
+
+        const artMovements = [
+          "ukiyo-e",
+          "abstract",
+          "modernism",
+          "realism",
+          "pop-art",
+          "modern-art",
+        ];
+
+        const tempClassifyObj = {};
+
+        function getClassifyPoints(teamArray, artMovementName) {
+          var count = -1;
+          teamArray.map((ta) => {
+            if (ta.artMovement === artMovementName) {
+              count++;
+            }
+          });
+          if (count === -1) return 0;
+          return count * 5;
+        }
+
+        for (let k = 0; k < 6; k++) {
+          tempClassifyObj[artMovements[k]] = getClassifyPoints(
+            room.leaderBoard[req.params.teamName],
+            artMovements[k]
+          );
+        }
+
+        const visits = await getVisitData(room.allTeams, req.params.roomCode);
+        const totalObj = {};
+        let tempVisits = {};
+
+        visits.map((v) => {
+          if (v.teamName.length !== 0) {
+            tempVisits[v.teamName] = v.totalVisitPrice;
+          }
+        });
+
+        room.allTeams.map((t) => {
+          if (t.length !== 0) {
+            const formattedCash = parseFloat(
+              room.totalAmountSpentByTeam[t] / 10
+            ).toFixed(2);
+
+            const totalValue =
+              parseFloat(formattedCash) -
+              parseFloat(
+                visits.filter((i) => i.teamName === t)[0].totalVisitPrice
+              ) +
+              classify.classify[t];
+            totalObj[t] = totalValue;
+          }
+        });
+
+        let tempTotalPoints = totalObj[req.params.teamName];
+        let winner = req.params.teamName;
+
+        room.allTeams.map((teamName) => {
+          if (teamName.length !== 0) {
+            if (totalObj[teamName] > tempTotalPoints) {
+              winner = teamName;
+            }
+          }
+        });
+
+        return res.status(200).json({
+          leaderboard: room.leaderBoard,
+          amountSpentByTeams: room.totalAmountSpentByTeam,
+          classifyPoints: tempClassifyObj,
+          allClassifyPoints: classify,
+          visitsPrice: tempVisits,
+          totalObj,
+          winner,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
     const getFlyTicketPrice = async (roomId) => {
       const result = await collection_flyTicketPrice.findOne({
         roomId: roomId,
