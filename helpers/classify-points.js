@@ -1,5 +1,3 @@
-const leaderboard = require("../events/leaderboard");
-
 const calculateClassify = (teams, classifyPoints) => {
   function sub(teamArray, artMovementName) {
     var count = -1;
@@ -29,12 +27,27 @@ const calculateClassify = (teams, classifyPoints) => {
   return classifyPoints;
 };
 
+const isPresentAuctionsInLeaderboard = (auctionBidsIds, leaderboardIds) => {
+  const isPresentInLeaderboard = auctionBidsIds.every(v => leaderboardIds.includes(v));
+  return isPresentInLeaderboard;
+}
+
 const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
+  const auctionIdsInLeaderboard = pastLeaderBoard && Object.values(pastLeaderBoard)
+  .reduce((acc, value) => {
+    const auctionidsinvalue = value.map((v) => v.auctionId);
+    return [
+      ...acc,
+      ...auctionidsinvalue,
+    ];
+  }, []);
+  console.log('auctionIdsInLeaderboard', auctionIdsInLeaderboard);
   if (AUCTION_TYPE === "ENGLISH") {
     try {
       let teamsScorecard = {};
       let classifyPoints = {};
-
+      const isPresentInLeaderboard = isPresentAuctionsInLeaderboard(Object.keys(auctionBidsDetails), auctionIdsInLeaderboard);
+      console.log('isPresentInLeaderboard', isPresentInLeaderboard);
       Object.entries(auctionBidsDetails).forEach(([key, obj]) => {
         if (!teamsScorecard[obj.bidTeam]) {
           teamsScorecard = {
@@ -53,32 +66,34 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
         };
       });
 
-      pastLeaderBoard && Object.values(pastLeaderBoard).forEach((details) => {
-        for (obj in details) {
-          const currentBidTeam = details[obj].bidTeam;
-          const currentArtMovement = details[obj].artMovement;
-          if (!teamsScorecard[currentBidTeam]) {
-            teamsScorecard = {
-              ...teamsScorecard,
-              [currentBidTeam]: [{
+      if (!isPresentInLeaderboard) {
+        pastLeaderBoard && Object.values(pastLeaderBoard).forEach((details) => {
+          for (obj in details) {
+            const currentBidTeam = details[obj].bidTeam;
+            const currentArtMovement = details[obj].artMovement;
+            if (!teamsScorecard[currentBidTeam]) {
+              teamsScorecard = {
+                ...teamsScorecard,
+                [currentBidTeam]: [{
+                  artMovement: currentArtMovement,
+                }]
+              };
+            } else {
+              teamsScorecard[currentBidTeam].push({
                 artMovement: currentArtMovement,
-              }]
-            };
-          } else {
-            teamsScorecard[currentBidTeam].push({
-              artMovement: currentArtMovement,
-            });
-          }
+              });
+            }
 
-          // classify points
-          if (!classifyPoints[currentBidTeam]) {
-            classifyPoints = {
-              ...classifyPoints,
-              [currentBidTeam]: 0
-            };
+            // classify points
+            if (!classifyPoints[currentBidTeam]) {
+              classifyPoints = {
+                ...classifyPoints,
+                [currentBidTeam]: 0
+              };
+            }
           }
-        }
-      });
+        });
+      }
 
       return calculateClassify(teamsScorecard, classifyPoints);
     } catch (err) {
