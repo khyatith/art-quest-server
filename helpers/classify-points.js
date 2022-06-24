@@ -28,7 +28,9 @@ const calculateClassify = (teams, classifyPoints) => {
 };
 
 const isPresentAuctionsInLeaderboard = (auctionBidsIds, leaderboardIds) => {
-  const isPresentInLeaderboard = auctionBidsIds.every(v => leaderboardIds.includes(v));
+  console.log('auctionBidsIds', auctionBidsIds);
+  console.log('leaderboardIds', leaderboardIds);
+  const isPresentInLeaderboard = auctionBidsIds.every(v => leaderboardIds.includes(parseInt(v)));
   return isPresentInLeaderboard;
 }
 
@@ -48,52 +50,53 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
       let classifyPoints = {};
       const isPresentInLeaderboard = isPresentAuctionsInLeaderboard(Object.keys(auctionBidsDetails), auctionIdsInLeaderboard);
       console.log('isPresentInLeaderboard', isPresentInLeaderboard);
-      Object.entries(auctionBidsDetails).forEach(([key, obj]) => {
-        if (!teamsScorecard[obj.bidTeam]) {
-          teamsScorecard = {
-            ...teamsScorecard,
-            [obj.bidTeam]: [{
-              artMovement: obj.artMovement
-            }],
-          }
-        } else {
-          teamsScorecard[obj.bidTeam].push({
-            artMovement: obj.artMovement,
-          });
-        }
-        classifyPoints = {
-          [obj.bidTeam] : 0
-        };
-      });
 
       if (!isPresentInLeaderboard) {
-        pastLeaderBoard && Object.values(pastLeaderBoard).forEach((details) => {
-          for (obj in details) {
-            const currentBidTeam = details[obj].bidTeam;
-            const currentArtMovement = details[obj].artMovement;
-            if (!teamsScorecard[currentBidTeam]) {
-              teamsScorecard = {
-                ...teamsScorecard,
-                [currentBidTeam]: [{
-                  artMovement: currentArtMovement,
-                }]
-              };
-            } else {
-              teamsScorecard[currentBidTeam].push({
-                artMovement: currentArtMovement,
-              });
+        Object.entries(auctionBidsDetails).forEach(([key, obj]) => {
+          if (!teamsScorecard[obj.bidTeam]) {
+            teamsScorecard = {
+              ...teamsScorecard,
+              [obj.bidTeam]: [{
+                artMovement: obj.artMovement
+              }],
             }
-
-            // classify points
-            if (!classifyPoints[currentBidTeam]) {
-              classifyPoints = {
-                ...classifyPoints,
-                [currentBidTeam]: 0
-              };
-            }
+          } else {
+            teamsScorecard[obj.bidTeam].push({
+              artMovement: obj.artMovement,
+            });
           }
+          classifyPoints = {
+            [obj.bidTeam] : 0
+          };
         });
       }
+
+      pastLeaderBoard && Object.values(pastLeaderBoard).forEach((details) => {
+        for (obj in details) {
+          const currentBidTeam = details[obj].bidTeam;
+          const currentArtMovement = details[obj].artMovement;
+          if (!teamsScorecard[currentBidTeam]) {
+            teamsScorecard = {
+              ...teamsScorecard,
+              [currentBidTeam]: [{
+                artMovement: currentArtMovement,
+              }]
+            };
+          } else {
+            teamsScorecard[currentBidTeam].push({
+              artMovement: currentArtMovement,
+            });
+          }
+
+          // classify points
+          if (!classifyPoints[currentBidTeam]) {
+            classifyPoints = {
+              ...classifyPoints,
+              [currentBidTeam]: 0
+            };
+          }
+        }
+      });
 
       return calculateClassify(teamsScorecard, classifyPoints);
     } catch (err) {
@@ -135,25 +138,26 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
     try {
       let teamsScorecard = {};
       let classifyPoints = {};
-
-      Object.entries(auctionBidsDetails).forEach(([key, obj]) => {
-        if (!teamsScorecard[obj.bidTeam]) {
-          teamsScorecard = {
-            ...teamsScorecard,
-            [obj.bidTeam]: [{
-              artMovement: obj.artMovement
-            }],
+      const isPresentInLeaderboard = isPresentAuctionsInLeaderboard(Object.keys(auctionBidsDetails), auctionIdsInLeaderboard);
+      if (!isPresentInLeaderboard) {
+        Object.entries(auctionBidsDetails).forEach(([key, obj]) => {
+          if (!teamsScorecard[obj.bidTeam]) {
+            teamsScorecard = {
+              ...teamsScorecard,
+              [obj.bidTeam]: [{
+                artMovement: obj.artMovement
+              }],
+            }
+          } else {
+            teamsScorecard[obj.bidTeam].push({
+              artMovement: obj.artMovement,
+            });
           }
-        } else {
-          teamsScorecard[obj.bidTeam].push({
-            artMovement: obj.artMovement,
-          });
-        }
-        classifyPoints = {
-          [obj.bidTeam] : 0
-        };
-      });
-
+          classifyPoints = {
+            [obj.bidTeam] : 0
+          };
+        });
+      }
       Object.values(pastLeaderBoard).forEach((details) => {
         for (obj in details) {
           const currentBidTeam = details[obj].bidTeam;
