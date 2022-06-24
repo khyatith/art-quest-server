@@ -125,6 +125,10 @@ module.exports = async (io, socket, rooms) => {
         rooms[parsedPlayer.hostCode].players.push(parsedPlayer);
       }
       socket.join(parsedPlayer.hostCode);
+      io.sockets.in(room.roomCode).emit("numberOfPlayersJoined", {
+        numberOfPlayers: room.numberOfPlayers,
+        playersJoined: rooms[parsedPlayer.hostCode].players.length - 1,
+      });
       await collection.findOneAndUpdate(
         { hostCode: parsedPlayer.hostCode },
         { $set: parsedRoom }
@@ -132,16 +136,18 @@ module.exports = async (io, socket, rooms) => {
     }
   };
 
-  const getPlayersJoinedInfo = async (data) => {
-    const { roomCode } = data;
-    const room = await collection.findOne({ hostCode: roomCode });
-    if (room) {
-      io.sockets.in(roomCode).emit("numberOfPlayersJoined", {
-        numberOfPlayers: room.numberOfPlayers,
-        playersJoined: room.players.length,
-      });
-    }
-  };
+  // const getPlayersJoinedInfo = async (data) => {
+  //   console.log('data inside player joined info', data);
+  //   const { roomCode } = data;
+  //   const room = await collection.findOne({ hostCode: roomCode });
+  //   if (room) {
+  //     io.sockets.in(roomCode).emit("numberOfPlayersJoined", {
+  //       roomCode: roomCode,
+  //       numberOfPlayers: room.numberOfPlayers,
+  //       playersJoined: room.players.length,
+  //     });
+  //   }
+  // };
 
   const startGame = async (player) => {
     const parsedPlayer = JSON.parse(player);
@@ -149,7 +155,7 @@ module.exports = async (io, socket, rooms) => {
       { hostCode: parsedPlayer.hostCode },
       async (err, room) => {
         if (room) {
-          io.to(parsedPlayer.hostCode).emit("gameState", room);
+          io.sockets.in(parsedPlayer.hostCode).emit("gameState", room);
         }
       }
     );
@@ -161,7 +167,7 @@ module.exports = async (io, socket, rooms) => {
       { hostCode: parsedPlayer.hostCode },
       async (err, room) => {
         if (room) {
-          io.to(parsedPlayer.hostCode).emit("redirectToNextPage", room);
+          io.sockets.in(parsedPlayer.hostCode).emit("redirectToNextPage", room);
         }
       }
     );
@@ -169,31 +175,31 @@ module.exports = async (io, socket, rooms) => {
 
   const hasAuctionTimerEnded = async ({ player, auctionId }) => {
     const hostCode = player.hostCode;
-    io.to(hostCode).emit("redirectToResults", auctionId);
+    io.sockets.in(hostCode).emit("redirectToResults", auctionId);
   };
 
   const hasAuctionResultTimerEnded = async ({ player, auctionId }) => {
     const hostCode = player.hostCode;
-    io.to(hostCode).emit("goToNextAuction", auctionId);
+    io.sockets.in(hostCode).emit("goToNextAuction", auctionId);
   };
 
   const hasLocationPhaseTimerEnded = ({ player }) => {
     const hostCode = player.hostCode;
-    io.to(hostCode).emit("goToExpo");
+    io.sockets.in(hostCode).emit("goToExpo");
   };
 
   const locationPhaseStartTimer = ({ player }) => {
     const hostCode = player.hostCode;
-    io.to(hostCode).emit("timerStarted");
+    io.sockets.in(hostCode).emit("timerStarted");
   };
 
   const hasSellingResultsTimerEnded = ({ player }) => {
     const hostCode = player.hostCode;
-    io.to(hostCode).emit("startNextRound");
+    io.sockets.in(hostCode).emit("startNextRound");
   };
 
   const hasExpoBeginningTimerEnded = ({ hostCode }) => {
-    io.to(hostCode).emit("goToSellingResults");
+    io.sockets.in(hostCode).emit("goToSellingResults");
   };
 
   const setTotalNumberOfPlayers = async ({
@@ -683,11 +689,11 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const expoBeginningTimerStart = ({ hostCode }) => {
-    io.to(hostCode).emit("ExpoBeginTimerStarted", true);
+    io.sockets.in(hostCode).emit("ExpoBeginTimerStarted", true);
   };
 
   const startNominatedAuctionTimer = ({ hostCode }) => {
-    io.to(hostCode).emit("nominatedAuctionStarted");
+    io.sockets.in(hostCode).emit("nominatedAuctionStarted");
   };
 
   const expoBeginningEnded = ({ hostCode }) => {
@@ -732,7 +738,7 @@ module.exports = async (io, socket, rooms) => {
 
   socket.on("createRoom", createRoom);
   socket.on("joinRoom", joinRoom);
-  socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
+  // socket.on("getPlayersJoinedInfo", getPlayersJoinedInfo);
   socket.on("startGame", startGame);
   socket.on("landingPageTimerEnded", landingPageTimerEnded);
   socket.on("auctionTimerEnded", hasAuctionTimerEnded);
