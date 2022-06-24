@@ -155,7 +155,7 @@ module.exports = async (io, socket, rooms) => {
       { hostCode: parsedPlayer.hostCode },
       async (err, room) => {
         if (room) {
-          io.sockets.in(parsedPlayer.hostCode).emit("gameState", room);
+          io.to(parsedPlayer.hostCode).emit("gameState", room);
         }
       }
     );
@@ -167,7 +167,7 @@ module.exports = async (io, socket, rooms) => {
       { hostCode: parsedPlayer.hostCode },
       async (err, room) => {
         if (room) {
-          io.sockets.in(parsedPlayer.hostCode).emit("redirectToNextPage", room);
+          io.to(parsedPlayer.hostCode).emit("redirectToNextPage", room);
         }
       }
     );
@@ -175,31 +175,31 @@ module.exports = async (io, socket, rooms) => {
 
   const hasAuctionTimerEnded = async ({ player, auctionId }) => {
     const hostCode = player.hostCode;
-    io.sockets.in(hostCode).emit("redirectToResults", auctionId);
+    io.to(hostCode).emit("redirectToResults", auctionId);
   };
 
   const hasAuctionResultTimerEnded = async ({ player, auctionId }) => {
     const hostCode = player.hostCode;
-    io.sockets.in(hostCode).emit("goToNextAuction", auctionId);
+    io.to(hostCode).emit("goToNextAuction", auctionId);
   };
 
   const hasLocationPhaseTimerEnded = ({ player }) => {
     const hostCode = player.hostCode;
-    io.sockets.in(hostCode).emit("goToExpo");
+    io.to(hostCode).emit("goToExpo");
   };
 
   const locationPhaseStartTimer = ({ player }) => {
     const hostCode = player.hostCode;
-    io.sockets.in(hostCode).emit("timerStarted");
+    io.to(hostCode).emit("timerStarted");
   };
 
   const hasSellingResultsTimerEnded = ({ player }) => {
     const hostCode = player.hostCode;
-    io.sockets.in(hostCode).emit("startNextRound");
+    io.to(hostCode).emit("startNextRound");
   };
 
   const hasExpoBeginningTimerEnded = ({ hostCode }) => {
-    io.sockets.in(hostCode).emit("goToSellingResults");
+    io.to(hostCode).emit("goToSellingResults");
   };
 
   const setTotalNumberOfPlayers = async ({
@@ -689,11 +689,11 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const expoBeginningTimerStart = ({ hostCode }) => {
-    io.sockets.in(hostCode).emit("ExpoBeginTimerStarted", true);
+    io.to(hostCode).emit("ExpoBeginTimerStarted", true);
   };
 
   const startNominatedAuctionTimer = ({ hostCode }) => {
-    io.sockets.in(hostCode).emit("nominatedAuctionStarted");
+    io.to(hostCode).emit("nominatedAuctionStarted");
   };
 
   const expoBeginningEnded = ({ hostCode }) => {
