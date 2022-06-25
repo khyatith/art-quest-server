@@ -219,7 +219,7 @@ router.get(
       res.send({ secretAuctionTimer: room.secretAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.7 * 60 * 1000); // 0.3
+      const deadline = new Date(currentTime + 1 * 60 * 1000); // 0.3
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
       res.send({ secretAuctionTimer: timerValue });
@@ -245,7 +245,7 @@ router.get(
       res.send({ secondPriceAuctionTimer: room.secondPriceAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.7 * 60 * 1000); // 0.3
+      const deadline = new Date(currentTime + 1 * 60 * 1000); // 0.3
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startSecondPriceAuctionTimer(room, deadline), 1000);
       res.send({ secondPriceAuctionTimer: timerValue });
