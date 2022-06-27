@@ -43,7 +43,7 @@ const calculate = (auctionBidsDetails, AUCTION_TYPE, pastLeaderBoard = {}) => {
       ...auctionidsinvalue,
     ];
   }, []);
-  console.log('auctionIdsInLeaderboard', auctionIdsInLeaderboard);
+
   if (AUCTION_TYPE === "ENGLISH") {
     try {
       let teamsScorecard = {};

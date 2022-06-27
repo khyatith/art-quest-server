@@ -1160,7 +1160,6 @@ mongoClient
       }
     });
     router.get("/updateLeaderBoardAfterNominationAuction", async (req, res) => {
-      console.log("**updatingLeaderBoard**");
       try {
         const { roomId } = req.query;
         const room = await collection_room.findOne({
