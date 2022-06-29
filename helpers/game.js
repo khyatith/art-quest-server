@@ -510,7 +510,11 @@ const updateLeaderBoardAfterNominationAuction = (room) => {
       bidColor: nominatedAuctionBids[bidsId].bidColor,
     }
     if(nominatedTeamData?.length < room.leaderBoard[nominatedTeam]?.length){
-      currentLeaderBoard[bidWonTeam].push(data);
+      if(currentLeaderBoard[bidWonTeam]){
+        currentLeaderBoard[bidWonTeam].push(data);
+      }else{
+        currentLeaderBoard[bidWonTeam] = [data];
+      }
     }
   });
   return currentLeaderBoard;
