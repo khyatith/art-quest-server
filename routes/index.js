@@ -135,6 +135,39 @@ const startAuctionResultTimer = (room, deadline) => {
   }
 };
 
+const hasGameEnded = async (roomId) => {
+  db = await dbClient.createConnection();
+  const collection_visits = db.collection("visits");
+  const teamsInRoom = await collection_visits.find({ roomId }).toArray();
+
+  const allLocations = [1, 2, 3, 4, 5, 6];
+  try {
+    const locationsVisitedByTeams = teamsInRoom.map((team) => {
+      return team.locations;
+    });
+
+    if (
+      JSON.stringify(intersection(...locationsVisitedByTeams)) ===
+      JSON.stringify(allLocations)
+    ) {
+      const collection_room = db.collection("room");
+      await collection_room.findOneAndUpdate(
+        { roomCode: roomId },
+        {
+          $set: {
+            gameEnded: true,
+          },
+        }
+      );
+      return { message: "GAME_ENDED" };
+    } else {
+      return { message: "GAME_NOT_ENDED" };
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 router.get("/collection_visits", async (req, res) => {
   db = await dbClient.createConnection();
   const collection_visits = db.collection("visits");
@@ -149,11 +182,17 @@ router.get("/getUID", (req, res) => {
   res.send(nanoid(5));
 });
 
-router.get("/getVersionID/:hostCode", (req, res) => {
-  const { params } = req;
-  const hostCode = params.hostCode;
-  let room = rooms[hostCode];
-  res.send({ version: room.version });
+router.get("/getVersionID/:hostCode", async (req, res) => {
+  try {
+    db = await dbClient.createConnection();
+    const { params } = req;
+    const hostCode = params.hostCode;
+    const room = await db.collection("room").findOne({ roomCode: hostCode });
+
+    res.send({ version: room.version });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 router.get("/timer/:hostCode", function (req, res) {
@@ -334,25 +373,25 @@ router.put("/updateDutchAuctionResults/:hostCode", async (req, res) => {
 
 router.get("/getWinner/:hostCode", async (req, res) => {
   db = await dbClient.createConnection();
-  const collection = db.collection('room');
+  const collection = db.collection("room");
   const collection_classify = db.collection("classify");
   const { params } = req;
   const hostCode = params.hostCode;
-  const room = await collection.findOne({'hostCode': hostCode});
+  const room = await collection.findOne({ hostCode: hostCode });
   const classifyObj = await collection_classify.findOne({ roomCode: hostCode });
 
   // let room = rooms[hostCode];
   //TODO: update winner in mongodb
-  if(!room) {
-    return res.send({mssg: 'room not found!'});
-    }
+  if (!room) {
+    return res.send({ mssg: "room not found!" });
+  }
   let parsedRoom;
   if (room) {
     parsedRoom = room;
   }
   // if (parsedRoom && parsedRoom.winner) return parsedRoom.winner;
   const winnerD = calculateBuyingPhaseWinner(parsedRoom);
-  const winnerData = { ...winnerD, classifyPoints: classifyObj.classify};
+  const winnerData = { ...winnerD, classifyPoints: classifyObj.classify };
   res.send(winnerData);
 });
 
@@ -626,34 +665,42 @@ mongoClient
     router.get("/getSellingResults", async (req, res) => {
       var selling_result = new Object();
       const { roomId } = req.query;
-      const results = await collection_room.findOne({ roomCode: roomId });
-      const classifyObj = await collection_classify.findOne({
-        roomCode: roomId,
-      });
-      const room = rooms[roomId];
-      if (!results) {
-        res.status(404).json({ error: "Room not found" });
-      } else {
-        const fetchedRoomVisits = await collection_visits
-          .find({ roomId })
-          .toArray();
-        const allTeamsVisitedLocations =
-          visitedLocationDetails(fetchedRoomVisits);
-        selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
-        selling_result.totalArtScoreForTeams = results.totalArtScoreForTeams;
-        selling_result.roundNumber = results.sellingRoundNumber;
-        selling_result.players = results.players;
-        selling_result.disabledLocations = allTeamsVisitedLocations;
-        var keys = results.allTeams;
 
-        // //location phase timer value -> moved to new api //startAirportTimer
-        const visitObjects = await getVisitData(keys, roomId);
-        selling_result.visits = visitObjects;
-        selling_result.allTeams = keys;
-        const flyTicketsPriceData = await getFlyTicketPrice(roomId);
-        selling_result.flyTicketsPrice = flyTicketsPriceData;
-        selling_result.classifyPoints = classifyObj ? classifyObj.classify : {};
-        res.status(200).json(selling_result);
+      const hasGameEndedFlag = await hasGameEnded(roomId);
+      if (hasGameEndedFlag.message === "GAME_ENDED") {
+        return res.status(200).json({ message: "GAME_ENDED" });
+      } else {
+        const results = await collection_room.findOne({ roomCode: roomId });
+        const classifyObj = await collection_classify.findOne({
+          roomCode: roomId,
+        });
+        const room = rooms[roomId];
+        if (!results) {
+          res.status(404).json({ error: "Room not found" });
+        } else {
+          const fetchedRoomVisits = await collection_visits
+            .find({ roomId })
+            .toArray();
+          const allTeamsVisitedLocations =
+            visitedLocationDetails(fetchedRoomVisits);
+          selling_result.amountSpentByTeam = results.totalAmountSpentByTeam;
+          selling_result.totalArtScoreForTeams = results.totalArtScoreForTeams;
+          selling_result.roundNumber = results.sellingRoundNumber;
+          selling_result.players = results.players;
+          selling_result.disabledLocations = allTeamsVisitedLocations;
+          var keys = results.allTeams;
+
+          // //location phase timer value -> moved to new api //startAirportTimer
+          const visitObjects = await getVisitData(keys, roomId);
+          selling_result.visits = visitObjects;
+          selling_result.allTeams = keys;
+          const flyTicketsPriceData = await getFlyTicketPrice(roomId);
+          selling_result.flyTicketsPrice = flyTicketsPriceData;
+          selling_result.classifyPoints = classifyObj
+            ? classifyObj.classify
+            : {};
+          res.status(200).json(selling_result);
+        }
       }
     });
 
@@ -1113,7 +1160,6 @@ mongoClient
       }
     });
     router.get("/updateLeaderBoardAfterNominationAuction", async (req, res) => {
-      console.log("**updatingLeaderBoard**");
       try {
         const { roomId } = req.query;
         const room = await collection_room.findOne({
@@ -1167,38 +1213,6 @@ mongoClient
         }
       } catch (e) {
         console.log(e);
-      }
-    });
-
-    router.post("/hasGameEnded", async (req, res) => {
-      const teamsInRoom = await collection_visits
-        .find({ roomId: req.body.roomId })
-        .toArray();
-
-      const allLocations = [1, 2, 3, 4, 5, 6];
-      try {
-        const locationsVisitedByTeams = teamsInRoom.map((team) => {
-          return team.locations;
-        });
-
-        if (
-          JSON.stringify(intersection(...locationsVisitedByTeams)) ===
-          JSON.stringify(allLocations)
-        ) {
-          await collection_room.findOneAndUpdate(
-            { roomCode: req.body.roomId },
-            {
-              $set: {
-                gameEnded: true,
-              },
-            }
-          );
-          return res.status(200).json({ message: "GAME_ENDED" });
-        } else {
-          return res.status(200).json({ message: "GAME_NOT_ENDED" });
-        }
-      } catch (error) {
-        console.log(error);
       }
     });
 
