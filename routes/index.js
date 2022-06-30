@@ -1274,7 +1274,7 @@ mongoClient
             const totalValue =
               parseFloat(formattedCash) -
               parseFloat(
-                visits.filter((i) => i.teamName === t)[0].totalVisitPrice
+                visits.filter((i) => i.teamName === t)[0]?.totalVisitPrice
               ) +
               classify.classify[t];
             totalObj[t] = totalValue;
