@@ -20,7 +20,6 @@ const { nanoid } = require("nanoid");
 const { visitedLocationDetails } = require("../helpers/location-visits");
 const { calculate } = require("../helpers/classify-points");
 const intersection = require("lodash.intersection");
-const { async } = require("q");
 
 let db;
 
