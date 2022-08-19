@@ -207,7 +207,7 @@ router.get("/timer/:hostCode", function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 0.2 * 60 * 1000); //1.5
+    const deadline = new Date(currentTime + 1 * 60 * 1000); //1.5
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
@@ -232,7 +232,7 @@ router.get(
       res.send({ englishAuctionTimer: room.englishAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.2 * 60 * 1000); // 1
+      const deadline = new Date(currentTime + 0.5 * 60 * 1000); // 1
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
       res.send({ englishAuctionTimer: timerValue });
@@ -258,7 +258,7 @@ router.get(
       res.send({ secretAuctionTimer: room.secretAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.2 * 60 * 1000); // 0.7
+      const deadline = new Date(currentTime + 0.5 * 60 * 1000); // 0.7
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
       res.send({ secretAuctionTimer: timerValue });
@@ -284,7 +284,7 @@ router.get(
       res.send({ secondPriceAuctionTimer: room.secondPriceAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.2 * 60 * 1000); // 0.7
+      const deadline = new Date(currentTime + 0.5 * 60 * 1000); // 0.7
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startSecondPriceAuctionTimer(room, deadline), 1000);
       res.send({ secondPriceAuctionTimer: timerValue });
@@ -515,7 +515,7 @@ router.get(
         auction_result.auctionResultTimerValue = room.auctionResultTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 0.2 * 60 * 1000);
+        const deadline = new Date(currentTime + 0.5 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startAuctionResultTimer(room, deadline), 1000);
         auction_result.auctionResultTimerValue = timerValue;
@@ -590,7 +590,7 @@ router.get("/auctionTimer/:hostCode/:auctionId", function (req, res) {
   if (!auctionObj) return;
   const currentAuctionObj = auctionObj[0];
   const timerValueForAuction =
-    currentAuctionObj.auctionType === "2" ? 0.5 : 0.3;
+    currentAuctionObj.auctionType === "2" ? 1 : 0.5;
   if (currentAuctionObj && currentAuctionObj.hasAuctionTimerEnded) {
     res.send({ currentAuctionObjTimer: {} });
     return;
@@ -884,7 +884,7 @@ mongoClient
             selling_info.sellPaintingTimerValue = room.sellPaintingTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.1 * 60 * 1000); //0.5 original value
+            const deadline = new Date(currentTime + 0.5 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
             setInterval(() => startSellingServerTimer(room, deadline), 1000);
             selling_info.sellPaintingTimerValue = timerValue;
@@ -913,7 +913,7 @@ mongoClient
               room.nominatedAuctionTimerValue;
           } else {
             const currentTime = Date.parse(new Date());
-            const deadline = new Date(currentTime + 0.1 * 60 * 1000); //0.5 original value
+            const deadline = new Date(currentTime + 0.5 * 60 * 1000); //0.5 original value
             const timerValue = getRemainingTime(deadline);
             setInterval(
               () => startNominatedAuctionServerTimer(room, deadline),
@@ -1007,7 +1007,7 @@ mongoClient
                 room.sellingResultsTimerValue;
             } else {
               const currentTime = Date.parse(new Date());
-              const deadline = new Date(currentTime + 0.2 * 60 * 1000);
+              const deadline = new Date(currentTime + 0.5 * 60 * 1000);
               const timerValue = getRemainingTime(deadline);
               setInterval(
                 () => startSellingResultsServerTimer(roomCode, deadline),
