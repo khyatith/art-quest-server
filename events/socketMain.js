@@ -69,6 +69,7 @@ module.exports = async (io, socket, rooms) => {
         nominatedAuctionBids: {},
         allPayAuctions: {},
         version: 1,
+        startingBudget: 100,
         hasLandingPageTimerStarted: false,
         hasDutchAuctionTimerStarted: false,
         landingPageTimerDeadline: 0,

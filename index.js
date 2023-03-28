@@ -8,6 +8,11 @@ const routes = require("./routes/index");
 
 app.use(cors());
 
+app.use((req, res, next)=>{
+  console.log(req.method, req.path);
+  next();
+})
+
 //HTTP connection
 app.use("/buying", routes);
 

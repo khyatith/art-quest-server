@@ -214,7 +214,7 @@ function getLeaderboard(rooms, roomCode) {
       }
     }
   }
-
+  
   return leaderboard;
 }
 
@@ -253,7 +253,7 @@ async function calculateTotalAmountSpent(leaderboard, roomCode, rooms, room) {
   });
   if (totalAmt.length !== 0 && Object.keys(totalAmt[0]).length !== 0) {
   result = totalAmt && totalAmt.reduce(
-    (obj, item) => Object.assign(obj, { [item.key]: -item.value }), {});
+    (obj, item) => Object.assign(obj, { [item.key]: currentRoom.startingBudget - item.value }), {});
   }
 
   if (Object.keys(allPayAuctionBidObj).length > 0){
