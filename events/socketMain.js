@@ -1,6 +1,9 @@
 const {
   calculateSellingRevenue,
   findSecondHighestBid,
+  getLeaderboard,
+  calculateTotalAmountSpent,
+  calculateTeamEfficiency,
 } = require("../helpers/game");
 var englishAuctionObj1 = require("../data/englishAuctionData1.json");
 var englishAuctionObj2 = require("../data/englishAuctionData2.json");
@@ -448,7 +451,6 @@ module.exports = async (io, socket, rooms) => {
       currentAuctionRound = room.currentAuctionRound;
     }
 
-    console.log(currentAuctionRound);
     io.sockets.in(hostCode).emit("currentAuctionRound", currentAuctionRound);
     return currentAuctionRound;
   };
@@ -791,71 +793,116 @@ module.exports = async (io, socket, rooms) => {
 
       // add painting to sold_paintings
       const room = await collection.findOne({ hostCode: player.hostCode });
+      const classifyPoints = await collection_classify.findOne({
+        roomCode: player.hostCode,
+      });
 
       let {
         leaderBoard,
         totalAmountSpentByTeam,
         paintingsSold,
-        classifyPoints,
         // totalPaintingsWonByTeams,
       } = room;
 
-      // paintingsSold.push(painting);
+      paintingsSold.push(painting);
 
-      // if (leaderBoard && teamName in leaderBoard) {
-      //   console.log(1);
-      //   let paintings = leaderBoard[teamName].filter(
-      //     (p) => p.name != painting.name
-      //   );
-      //   console.log("new paintings array");
-      //   paintings.forEach((p) => console.log(p.name));
-      //   leaderBoard[teamName] = paintings;
-      // }
-      // if (totalAmountSpentByTeam && teamName in totalAmountSpentByTeam) {
-      //   console.log(2);
-      //   totalAmountSpentByTeam[teamName] += painting.sellingPrice;
-      // }
-      // // if (totalPaintingsWonByTeams && teamName in totalPaintingsWonByTeams) {
-      // //   console.log(3);
-      // //   totalPaintingsWonByTeams[teamName]--;
-      // // }
-      // if (
-      //   classifyPoints &&
-      //   classifyPoints.classify &&
-      //   teamName in classifyPoints.classify
-      // ) {
-      //   console.log(4);
-      //   classifyPoints.classify[teamName] -= painting.classifyPoint;
-      // }
+      if (leaderBoard && teamName in leaderBoard) {
+        console.log(1);
+        let paintings = leaderBoard[teamName].filter(
+          (p) => p.name != painting.name
+        );
+        console.log("new paintings array");
+        paintings.forEach((p) => console.log(p.name));
+        leaderBoard[teamName] = paintings;
+      }
+      if (totalAmountSpentByTeam && teamName in totalAmountSpentByTeam) {
+        console.log(2);
+        totalAmountSpentByTeam[teamName] += painting.sellingPrice;
+      }
 
-      // await collection.findOneAndUpdate(
-      //   { hostCode: hostCode },
-      //   {
-      //     $set: {
-      //       leaderBoard,
-      //       totalAmountSpentByTeam,
-      //       // totalPaintingsWonByTeam,
-      //       paintingsSold,
-      //     },
-      //   }
-      // );
-      // await collection_classify.findOneAndUpdate(
-      //   { hostCode: hostCode },
-      //   {
-      //     $set: {
-      //       classify: classifyPoints.classify
-      //     },
-      //   }
-      // );
+      if (
+        classifyPoints &&
+        classifyPoints.classify &&
+        teamName in classifyPoints.classify
+      ) {
+        console.log(3);
+        classifyPoints.classify[teamName] -= painting.classifyPoint;
+      }
 
-      io.sockets
-        .in(hostCode)
-        .emit("refetchLeaderboard", {
-          leaderBoard,
-          totalAmountSpentByTeam,
-          paintingsSold,
-          classifyPoints,
-        });
+      console.log(
+        "===updated leaderboard length, amt spent by team, paintingSold len, classify pts ========="
+      );
+      console.log(
+        leaderBoard[teamName].length,
+        totalAmountSpentByTeam[teamName],
+        paintingsSold.length,
+        classifyPoints
+      );
+      console.log("===========================================");
+
+      // update room at both db and rooms array
+      room.leaderBoard = leaderBoard;
+      room.totalAmountSpentByTeam = totalAmountSpentByTeam;
+      room.paintingsSold = paintingsSold;
+      rooms[player.hostCode] = room;
+
+      console.log(
+        "has rooms wla room updated?",
+        rooms[player.hostCode].leaderBoard[teamName].length,
+        rooms[player.hostCode].totalAmountSpentByTeam[teamName],
+        rooms[player.hostCode].paintingsSold.length
+      );
+
+      await collection.findOneAndUpdate({ hostCode: hostCode }, { $set: room });
+      await collection_classify.findOneAndUpdate(
+        { hostCode: hostCode },
+        {
+          $set: {
+            classify: classifyPoints.classify,
+          },
+        }
+      );
+      console.log("collections should be updated at this point");
+
+      const newRoom = await collection.findOne({ hostCode: hostCode });
+      console.log(
+        "new room updated",
+        newRoom.leaderBoard[teamName].length,
+        newRoom.totalAmountSpentByTeam[teamName],
+        newRoom.paintingsSold.length
+      );
+
+      // BUILD LEADERBOARD
+      // leaderboard obj available above
+      const totalAmountByTeam = totalAmountSpentByTeam;
+      const teamStats = await calculateTeamEfficiency(
+        totalAmountByTeam,
+        leaderBoard
+      );
+      room.teamEfficiency = teamStats.efficiencyByTeam;
+      room.totalPaintingsWonByTeam = teamStats.totalPaintingsWonByTeams;
+
+      const result = {
+        leaderBoard,
+        totalAmountByTeam,
+        totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams,
+        classifyPoints,
+      };
+      await collection.findOneAndUpdate(
+        { hostCode: hostCode },
+        {
+          $set: {
+            leaderBoard: leaderBoard,
+            totalAmountSpentByTeam: totalAmountByTeam,
+            teamEfficiency: teamStats.efficiencyByTeam,
+            totalPaintingsWonByTeam: teamStats.totalPaintingsWonByTeams,
+          },
+        }
+      );
+
+      io.sockets.in(hostCode).emit("refetchLeaderboard", {
+        leaderBoardAfterSelling: result,
+      });
     } catch (error) {
       console.log(error);
     }
