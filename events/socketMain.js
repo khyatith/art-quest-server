@@ -472,7 +472,7 @@ module.exports = async (io, socket, rooms) => {
         },
       }
     );
-    console.log("new", currentAuctionRound);
+    return currentAuctionRound;
   };
 
   const renderEnglishAuctionResults = async (params) => {
@@ -942,5 +942,4 @@ module.exports = async (io, socket, rooms) => {
 
   // sell paintings
   socket.on("sellPaintingVersion1", sellPaintingVersion1);
-  socket.on("getCurrentAuctionRound", getCurrentAuctionRound);
 };
