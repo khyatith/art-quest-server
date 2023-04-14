@@ -207,7 +207,7 @@ router.get("/timer/:hostCode", function (req, res) {
     res.send({ landingPageTimerValue: room.landingPageTimerValue });
   } else {
     const currentTime = Date.parse(new Date());
-    const deadline = new Date(currentTime + 1 * 60 * 1000); //1.5
+    const deadline = new Date(currentTime + 0.2 * 60 * 1000); //1.5
     const timerValue = getRemainingTime(deadline);
     setInterval(() => startServerTimer(room, deadline), 1000);
     res.send({ landingPageTimerValue: timerValue });
@@ -232,7 +232,7 @@ router.get(
       res.send({ englishAuctionTimer: room.englishAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.5 * 60 * 1000); // 1
+      const deadline = new Date(currentTime + 0.1 * 60 * 1000); // 1
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startEnglishAuctionTimer(room, deadline), 1000);
       res.send({ englishAuctionTimer: timerValue });
@@ -258,7 +258,7 @@ router.get(
       res.send({ secretAuctionTimer: room.secretAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.5 * 60 * 1000); // 0.7
+      const deadline = new Date(currentTime + 0.1 * 60 * 1000); // 0.7
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startSecretAuctionTimer(room, deadline), 1000);
       res.send({ secretAuctionTimer: timerValue });
@@ -284,7 +284,7 @@ router.get(
       res.send({ secondPriceAuctionTimer: room.secondPriceAuctionTimer });
     } else {
       const currentTime = Date.parse(new Date());
-      const deadline = new Date(currentTime + 0.5 * 60 * 1000); // 0.7
+      const deadline = new Date(currentTime + 0.1 * 60 * 1000); // 0.7
       const timerValue = getRemainingTime(deadline);
       setInterval(() => startSecondPriceAuctionTimer(room, deadline), 1000);
       res.send({ secondPriceAuctionTimer: timerValue });
@@ -298,16 +298,14 @@ router.get("/getResults/:hostCode", async (req, res) => {
   const collection_classify = db.collection("classify");
   const { params } = req;
   const hostCode = params.hostCode;
-  const room = rooms[hostCode];
+  // const room = rooms[hostCode];
+  const room = await collection.findOne({ roomCode: hostCode });
+  console.log(`room getResults`, room.hostCode);
   //leaderboard
-  const leaderboard = await getLeaderboard(rooms, hostCode);
+  const leaderboard = await getLeaderboard(room);
   room.leaderBoard = leaderboard;
   //total amt by teams
-  const totalAmountByTeam = await calculateTotalAmountSpent(
-    leaderboard,
-    hostCode,
-    rooms
-  );
+  const totalAmountByTeam = await calculateTotalAmountSpent(leaderboard, room);
   room.totalAmountSpentByTeam = totalAmountByTeam;
 
   const teamStats = await calculateTeamEfficiency(
@@ -327,6 +325,7 @@ router.get("/getResults/:hostCode", async (req, res) => {
     totalAmountByTeam,
     totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams,
     classifyPoints: classifyObj,
+    currentAuctionRound: room.currentAuctionRound,
   });
   await collection.findOneAndUpdate(
     { hostCode: hostCode },
@@ -339,6 +338,7 @@ router.get("/getResults/:hostCode", async (req, res) => {
       },
     }
   );
+  console.log("sammy getResults updated the db");
   res.send(result);
 });
 
@@ -515,7 +515,7 @@ router.get(
         auction_result.auctionResultTimerValue = room.auctionResultTimerValue;
       } else {
         const currentTime = Date.parse(new Date());
-        const deadline = new Date(currentTime + 0.5 * 60 * 1000);
+        const deadline = new Date(currentTime + 0.1 * 60 * 1000);
         const timerValue = getRemainingTime(deadline);
         setInterval(() => startAuctionResultTimer(room, deadline), 1000);
         auction_result.auctionResultTimerValue = timerValue;
@@ -589,8 +589,8 @@ router.get("/auctionTimer/:hostCode/:auctionId", function (req, res) {
   );
   if (!auctionObj) return;
   const currentAuctionObj = auctionObj[0];
-  const timerValueForAuction =
-    currentAuctionObj.auctionType === "2" ? 1 : 0.5;
+  // const timerValueForAuction = currentAuctionObj.auctionType === "2" ? 1 : 0.5;
+  const timerValueForAuction = 0.1;
   if (currentAuctionObj && currentAuctionObj.hasAuctionTimerEnded) {
     res.send({ currentAuctionObjTimer: {} });
     return;

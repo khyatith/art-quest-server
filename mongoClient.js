@@ -1,5 +1,7 @@
 var { MongoClient } = require('mongodb');
-var connectionString = 'mongodb+srv://admin:admin@cluster0.ojmn8.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
+// var connectionString = 'mongodb+srv://admin:admin@cluster0.ojmn8.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
+var connectionString = 'mongodb://127.0.0.1:27017/kogniti';
+
 var db = null;
 exports.createConnection = async () => {
    if(db == null){ 

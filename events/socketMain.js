@@ -440,11 +440,8 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const getCurrentAuctionRound = async (hostCode) => {
-    console.log("getCurrentAuctionRound called", hostCode);
-
     let currentAuctionRound;
     if (rooms[hostCode]) {
-      console.log(`in getCurrentAuctionRound rooms[${hostCode}] in rooms`);
       currentAuctionRound = rooms[hostCode].currentAuctionRound;
     } else {
       const room = await collection.findOne({ hostCode });
@@ -457,7 +454,6 @@ module.exports = async (io, socket, rooms) => {
 
   const increaseCurrentAuctionRound = async (hostCode) => {
     let currentAuctionRound = await getCurrentAuctionRound(hostCode);
-    console.log("old", currentAuctionRound);
 
     currentAuctionRound++; // increase by 1;
 
@@ -787,6 +783,7 @@ module.exports = async (io, socket, rooms) => {
   };
 
   const sellPaintingVersion1 = async (params) => {
+    console.log("------ sellPaintingVersion1-----");
     try {
       const { painting, player } = params;
       const { teamName, hostCode } = player;
@@ -801,22 +798,56 @@ module.exports = async (io, socket, rooms) => {
         leaderBoard,
         totalAmountSpentByTeam,
         paintingsSold,
-        // totalPaintingsWonByTeams,
+        englishAuctionBids,
+        englishAuctionBids2,
+        englishAuctionBids3,
+        firstPricedSealedBids,
+        secondPricedSealedBids,
       } = room;
+
+      // check all english auctions
+      if ("englishAuctionsNumber" in painting) {
+        if (painting["englishAuctionsNumber"] == 1) {
+          delete englishAuctionBids[painting.auctionId];
+          room.englishAuctionBids = englishAuctionBids;
+          console.log(1111111111);
+        }
+        if (painting["englishAuctionsNumber"] == 2) {
+          delete englishAuctionBids2[painting.auctionId];
+          room.englishAuctionBids2 = englishAuctionBids2;
+          console.log(22222222222);
+        }
+        if (painting["englishAuctionsNumber"] == 3) {
+          delete englishAuctionBids3[painting.auctionId];
+          room.englishAuctionBids3 = englishAuctionBids3;
+          console.log(333333333333);
+        }
+      }
+
+      // check firstPricedSealedBids
+      if (painting.auctionId in firstPricedSealedBids) {
+        delete firstPricedSealedBids[painting.auctionId];
+        room.firstPricedSealedBids = firstPricedSealedBids;
+        console.log(444444444444);
+      }
+
+      // check secondePricedSealedBids
+      if (painting.auctionId in secondPricedSealedBids) {
+        delete secondPricedSealedBids[painting.auctionId];
+        room.secondPricedSealedBids = secondPricedSealedBids;
+        console.log(55555555555555);
+      }
 
       paintingsSold.push(painting);
 
       if (leaderBoard && teamName in leaderBoard) {
-        console.log(1);
         let paintings = leaderBoard[teamName].filter(
           (p) => p.name != painting.name
         );
-        console.log("new paintings array");
         paintings.forEach((p) => console.log(p.name));
         leaderBoard[teamName] = paintings;
       }
       if (totalAmountSpentByTeam && teamName in totalAmountSpentByTeam) {
-        console.log(2);
         totalAmountSpentByTeam[teamName] += painting.sellingPrice;
       }
 
@@ -825,20 +856,8 @@ module.exports = async (io, socket, rooms) => {
         classifyPoints.classify &&
         teamName in classifyPoints.classify
       ) {
-        console.log(3);
         classifyPoints.classify[teamName] -= painting.classifyPoint;
       }
-
-      console.log(
-        "===updated leaderboard length, amt spent by team, paintingSold len, classify pts ========="
-      );
-      console.log(
-        leaderBoard[teamName].length,
-        totalAmountSpentByTeam[teamName],
-        paintingsSold.length,
-        classifyPoints
-      );
-      console.log("===========================================");
 
       // update room at both db and rooms array
       room.leaderBoard = leaderBoard;
@@ -846,14 +865,8 @@ module.exports = async (io, socket, rooms) => {
       room.paintingsSold = paintingsSold;
       rooms[player.hostCode] = room;
 
-      console.log(
-        "has rooms wla room updated?",
-        rooms[player.hostCode].leaderBoard[teamName].length,
-        rooms[player.hostCode].totalAmountSpentByTeam[teamName],
-        rooms[player.hostCode].paintingsSold.length
-      );
-
-      await collection.findOneAndUpdate({ hostCode: hostCode }, { $set: room });
+      // await collection.findOneAndUpdate({ hostCode: hostCode }, { $set: room });
+      // updated below
       await collection_classify.findOneAndUpdate(
         { hostCode: hostCode },
         {
@@ -861,15 +874,6 @@ module.exports = async (io, socket, rooms) => {
             classify: classifyPoints.classify,
           },
         }
-      );
-      console.log("collections should be updated at this point");
-
-      const newRoom = await collection.findOne({ hostCode: hostCode });
-      console.log(
-        "new room updated",
-        newRoom.leaderBoard[teamName].length,
-        newRoom.totalAmountSpentByTeam[teamName],
-        newRoom.paintingsSold.length
       );
 
       // BUILD LEADERBOARD
@@ -883,7 +887,7 @@ module.exports = async (io, socket, rooms) => {
       room.totalPaintingsWonByTeam = teamStats.totalPaintingsWonByTeams;
 
       const result = {
-        leaderBoard,
+        leaderboard: leaderBoard,
         totalAmountByTeam,
         totalPaintingsWonByTeams: teamStats.totalPaintingsWonByTeams,
         classifyPoints,
@@ -892,6 +896,7 @@ module.exports = async (io, socket, rooms) => {
         { hostCode: hostCode },
         {
           $set: {
+            ...room,
             leaderBoard: leaderBoard,
             totalAmountSpentByTeam: totalAmountByTeam,
             teamEfficiency: teamStats.efficiencyByTeam,
@@ -906,6 +911,7 @@ module.exports = async (io, socket, rooms) => {
     } catch (error) {
       console.log(error);
     }
+    console.log("--sell painting end--");
   };
 
   socket.on("createRoom", createRoom);
